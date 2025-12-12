@@ -1,0 +1,24 @@
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: acs-fdd140
+          region: asia-southeast1
+          image: asia-southeast1-docker.pkg.dev/acs-founders-day-140/acs-repo/acs-fdd140:latest
+          env_vars: |
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}
+            HITPAY_API_KEY=${{ secrets.HITPAY_API_KEY }}
+            HITPAY_SALT=${{ secrets.HITPAY_SALT }}
+            NEXT_PUBLIC_SITE_URL=https://acs-fdd140.run.app
