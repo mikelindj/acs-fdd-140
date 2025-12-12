@@ -103,53 +103,67 @@ export default function TablesPage() {
   }
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-slate-600">Loading...</div>
+      </div>
+    )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-blue-900 text-yellow-400 p-4">
-        <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-2xl font-bold">ACS FDD Admin</h1>
-          <div className="space-x-4">
-            <a href="/admin/dashboard" className="hover:underline">Dashboard</a>
-            <a href="/admin/tables" className="hover:underline">Tables</a>
-            <a href="/admin/broadcast" className="hover:underline">Broadcast</a>
-            <Link href="/api/auth/signout" className="hover:underline">Logout</Link>
+    <div className="min-h-screen bg-white">
+      <nav className="border-b border-slate-200 bg-white">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center justify-between">
+            <h1 className="text-xl font-semibold text-slate-900">ACS FDD Admin</h1>
+            <div className="flex items-center space-x-6">
+              <Link href="/admin/dashboard" className="text-sm font-medium text-slate-700 hover:text-slate-900">
+                Dashboard
+              </Link>
+              <Link href="/admin/tables" className="text-sm font-medium text-slate-700 hover:text-slate-900">
+                Tables
+              </Link>
+              <Link href="/admin/broadcast" className="text-sm font-medium text-slate-700 hover:text-slate-900">
+                Broadcast
+              </Link>
+              <Link href="/api/auth/signout" className="text-sm font-medium text-slate-700 hover:text-slate-900">
+                Logout
+              </Link>
+            </div>
           </div>
         </div>
       </nav>
 
-      <div className="container mx-auto p-8">
-        <h2 className="text-3xl font-bold text-blue-900 mb-8">Table Management</h2>
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+        <h2 className="text-3xl font-semibold tracking-tight text-slate-900 mb-8">Table Management</h2>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-xl font-bold mb-4">Tables</h3>
+            <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+              <h3 className="text-xl font-semibold text-slate-900 mb-4">Tables</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {tables.map((table) => (
                   <div
                     key={table.id}
                     onClick={() => setSelectedTable(table.id)}
-                    className={`border-2 rounded-lg p-4 cursor-pointer ${
+                    className={`rounded-lg border p-4 cursor-pointer transition-colors ${
                       selectedTable === table.id
-                        ? "border-blue-900 bg-blue-50"
-                        : "border-gray-200"
+                        ? "border-blue-600 bg-blue-50 ring-2 ring-blue-600"
+                        : "border-slate-200 bg-white hover:border-slate-300"
                     }`}
                   >
-                    <div className="font-bold text-lg">{table.tableNumber}</div>
-                    <div className="text-sm text-gray-600">
+                    <div className="font-semibold text-lg text-slate-900">{table.tableNumber}</div>
+                    <div className="text-sm text-slate-500">
                       {table.guests.length} / {table.capacity} guests
                     </div>
                     <div className="text-xs mt-2">
                       <span
-                        className={`px-2 py-1 rounded ${
+                        className={`inline-flex rounded-full px-2 py-1 font-semibold ${
                           table.status === "FULL"
                             ? "bg-green-100 text-green-800"
                             : table.status === "RESERVED"
                             ? "bg-yellow-100 text-yellow-800"
-                            : "bg-gray-100 text-gray-800"
+                            : "bg-slate-100 text-slate-800"
                         }`}
                       >
                         {table.status}
@@ -162,8 +176,8 @@ export default function TablesPage() {
           </div>
 
           <div>
-            <div className="bg-white rounded-lg shadow p-6 mb-4">
-              <h3 className="text-xl font-bold mb-4">Unseated Guests</h3>
+            <div className="rounded-lg border border-slate-200 bg-white p-6 mb-4 shadow-sm">
+              <h3 className="text-xl font-semibold text-slate-900 mb-4">Unseated Guests</h3>
               <div className="space-y-2 max-h-96 overflow-y-auto">
                 {unseatedGuests.map((guest) => (
                   <div
@@ -175,15 +189,15 @@ export default function TablesPage() {
                         setSelectedGuests([...selectedGuests, guest.id])
                       }
                     }}
-                    className={`border rounded p-2 cursor-pointer ${
+                    className={`rounded-lg border p-2 cursor-pointer transition-colors ${
                       selectedGuests.includes(guest.id)
-                        ? "border-blue-900 bg-blue-50"
-                        : "border-gray-200"
+                        ? "border-blue-600 bg-blue-50 ring-2 ring-blue-600"
+                        : "border-slate-200 bg-white hover:border-slate-300"
                     }`}
                   >
-                    <div className="font-semibold">{guest.name}</div>
+                    <div className="font-semibold text-slate-900">{guest.name}</div>
                     {guest.email && (
-                      <div className="text-sm text-gray-600">{guest.email}</div>
+                      <div className="text-sm text-slate-500">{guest.email}</div>
                     )}
                   </div>
                 ))}
@@ -193,7 +207,7 @@ export default function TablesPage() {
             {selectedTable && selectedGuests.length > 0 && (
               <Button
                 onClick={handleAssign}
-                className="w-full bg-blue-900 text-yellow-400 hover:bg-blue-800"
+                className="w-full"
               >
                 Assign {selectedGuests.length} Guest(s) to Table
               </Button>

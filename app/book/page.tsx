@@ -52,47 +52,48 @@ export default function BookPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 py-12 px-4">
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-lg shadow-2xl p-8">
-          <h1 className="text-3xl font-bold text-blue-900 mb-6 text-center">
+    <div className="min-h-screen bg-white py-12 px-4">
+      <div className="mx-auto max-w-2xl">
+        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+          <h1 className="text-3xl font-semibold tracking-tight text-slate-900 mb-6 text-center">
             Book Your Table or Seats
           </h1>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <Label>Booking Type</Label>
+              <Label htmlFor="booking-type">Booking Type</Label>
               <div className="grid grid-cols-2 gap-4 mt-2">
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, type: "TABLE" })}
-                  className={`p-4 border-2 rounded-lg ${
+                  className={`rounded-lg border p-4 text-left transition-colors ${
                     formData.type === "TABLE"
-                      ? "border-blue-900 bg-blue-50"
-                      : "border-gray-200"
+                      ? "border-blue-600 bg-blue-50 ring-2 ring-blue-600"
+                      : "border-slate-300 bg-white hover:border-slate-400"
                   }`}
                 >
-                  <div className="font-bold">Full Table</div>
-                  <div className="text-sm text-gray-600">10-11 seats</div>
+                  <div className="font-semibold text-slate-900">Full Table</div>
+                  <div className="text-sm text-slate-500">10-11 seats</div>
                 </button>
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, type: "SEAT" })}
-                  className={`p-4 border-2 rounded-lg ${
+                  className={`rounded-lg border p-4 text-left transition-colors ${
                     formData.type === "SEAT"
-                      ? "border-blue-900 bg-blue-50"
-                      : "border-gray-200"
+                      ? "border-blue-600 bg-blue-50 ring-2 ring-blue-600"
+                      : "border-slate-300 bg-white hover:border-slate-400"
                   }`}
                 >
-                  <div className="font-bold">Individual Seat</div>
-                  <div className="text-sm text-gray-600">Per person</div>
+                  <div className="font-semibold text-slate-900">Individual Seat</div>
+                  <div className="text-sm text-slate-500">Per person</div>
                 </button>
               </div>
             </div>
 
             <div>
-              <Label>Category</Label>
+              <Label htmlFor="category">Category</Label>
               <select
+                id="category"
                 value={formData.category}
                 onChange={(e) =>
                   setFormData({
@@ -100,7 +101,7 @@ export default function BookPage() {
                     category: e.target.value as any,
                   })
                 }
-                className="w-full mt-2 p-2 border rounded-lg"
+                className="mt-2 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 <option value="VIP">VIP - $1,200 / $120</option>
                 <option value="SCHOOL">School - $1,000 / $100</option>
@@ -110,8 +111,9 @@ export default function BookPage() {
             </div>
 
             <div>
-              <Label>Quantity</Label>
+              <Label htmlFor="quantity">Quantity</Label>
               <Input
+                id="quantity"
                 type="number"
                 min="1"
                 max={formData.type === "TABLE" ? 1 : 11}
@@ -128,8 +130,9 @@ export default function BookPage() {
             </div>
 
             <div>
-              <Label>Your Name *</Label>
+              <Label htmlFor="buyerName">Your Name *</Label>
               <Input
+                id="buyerName"
                 value={formData.buyerName}
                 onChange={(e) =>
                   setFormData({ ...formData, buyerName: e.target.value })
@@ -140,8 +143,9 @@ export default function BookPage() {
             </div>
 
             <div>
-              <Label>Email *</Label>
+              <Label htmlFor="buyerEmail">Email *</Label>
               <Input
+                id="buyerEmail"
                 type="email"
                 value={formData.buyerEmail}
                 onChange={(e) =>
@@ -153,8 +157,9 @@ export default function BookPage() {
             </div>
 
             <div>
-              <Label>Mobile</Label>
+              <Label htmlFor="buyerMobile">Mobile</Label>
               <Input
+                id="buyerMobile"
                 type="tel"
                 value={formData.buyerMobile}
                 onChange={(e) =>
@@ -165,8 +170,9 @@ export default function BookPage() {
             </div>
 
             <div>
-              <Label>Membership Number (Optional)</Label>
+              <Label htmlFor="membershipNo">Membership Number (Optional)</Label>
               <Input
+                id="membershipNo"
                 value={formData.membershipNo}
                 onChange={(e) =>
                   setFormData({ ...formData, membershipNo: e.target.value })
@@ -175,12 +181,12 @@ export default function BookPage() {
               />
             </div>
 
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <div className="flex justify-between text-lg font-bold">
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+              <div className="flex justify-between text-lg font-semibold text-slate-900">
                 <span>Total Amount:</span>
-                <span className="text-yellow-600">S${total.toFixed(2)}</span>
+                <span className="text-blue-600">S${total.toFixed(2)}</span>
               </div>
-              <p className="text-sm text-gray-600 mt-2">
+              <p className="text-sm text-slate-500 mt-2">
                 Includes transaction fee
               </p>
             </div>
@@ -188,7 +194,7 @@ export default function BookPage() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-900 text-yellow-400 hover:bg-blue-800"
+              className="w-full"
             >
               {loading ? "Processing..." : "Proceed to Payment"}
             </Button>

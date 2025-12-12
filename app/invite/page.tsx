@@ -70,30 +70,31 @@ function InvitePageContent() {
 
   if (!code) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Invalid Invite Code</h1>
-          <p>Please use a valid invite link.</p>
+          <h1 className="text-2xl font-semibold text-slate-900 mb-4">Invalid Invite Code</h1>
+          <p className="text-slate-600">Please use a valid invite link.</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 py-12 px-4">
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-lg shadow-2xl p-8">
-          <h1 className="text-3xl font-bold text-blue-900 mb-6 text-center">
+    <div className="min-h-screen bg-white py-12 px-4">
+      <div className="mx-auto max-w-2xl">
+        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+          <h1 className="text-3xl font-semibold tracking-tight text-slate-900 mb-6 text-center">
             Complete Your Registration
           </h1>
-          <p className="text-center text-gray-600 mb-8">
-            Invite Code: <span className="font-mono font-bold">{code}</span>
+          <p className="text-center text-slate-600 mb-8">
+            Invite Code: <span className="font-mono font-semibold text-slate-900">{code}</span>
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <Label>Full Name *</Label>
+              <Label htmlFor="name">Full Name *</Label>
               <Input
+                id="name"
                 value={formData.name}
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
@@ -104,8 +105,9 @@ function InvitePageContent() {
             </div>
 
             <div>
-              <Label>Email *</Label>
+              <Label htmlFor="email">Email *</Label>
               <Input
+                id="email"
                 type="email"
                 value={formData.email}
                 onChange={(e) =>
@@ -117,8 +119,9 @@ function InvitePageContent() {
             </div>
 
             <div>
-              <Label>Mobile</Label>
+              <Label htmlFor="mobile">Mobile</Label>
               <Input
+                id="mobile"
                 type="tel"
                 value={formData.mobile}
                 onChange={(e) =>
@@ -129,8 +132,9 @@ function InvitePageContent() {
             </div>
 
             <div>
-              <Label>Birth Year</Label>
+              <Label htmlFor="birthYear">Birth Year</Label>
               <Input
+                id="birthYear"
                 type="number"
                 min="1900"
                 max={new Date().getFullYear()}
@@ -143,8 +147,9 @@ function InvitePageContent() {
             </div>
 
             <div>
-              <Label>School</Label>
+              <Label htmlFor="school">School</Label>
               <Input
+                id="school"
                 value={formData.school}
                 onChange={(e) =>
                   setFormData({ ...formData, school: e.target.value })
@@ -155,8 +160,9 @@ function InvitePageContent() {
             </div>
 
             <div>
-              <Label>Graduation Year</Label>
+              <Label htmlFor="gradYear">Graduation Year</Label>
               <Input
+                id="gradYear"
                 type="number"
                 min="1900"
                 max={new Date().getFullYear()}
@@ -169,8 +175,9 @@ function InvitePageContent() {
             </div>
 
             <div>
-              <Label>Dietary Requirements</Label>
+              <Label htmlFor="dietary">Dietary Requirements</Label>
               <Input
+                id="dietary"
                 value={formData.dietary}
                 onChange={(e) =>
                   setFormData({ ...formData, dietary: e.target.value })
@@ -183,7 +190,7 @@ function InvitePageContent() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-900 text-yellow-400 hover:bg-blue-800"
+              className="w-full"
             >
               {loading ? "Registering..." : "Complete Registration"}
             </Button>
@@ -196,7 +203,11 @@ function InvitePageContent() {
 
 export default function InvitePage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-slate-600">Loading...</div>
+      </div>
+    }>
       <InvitePageContent />
     </Suspense>
   )

@@ -25,12 +25,12 @@ const config = {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#1e3a8a", // Navy blue
-          foreground: "#fbbf24", // Gold
+          DEFAULT: "hsl(217.2, 91.2%, 59.8%)", // Bright blue (Tailwind UI style)
+          foreground: "#ffffff",
         },
         secondary: {
-          DEFAULT: "#fbbf24", // Gold
-          foreground: "#1e3a8a", // Navy blue
+          DEFAULT: "hsl(210, 40%, 96.1%)",
+          foreground: "hsl(222.2, 47.4%, 11.2%)",
         },
         accent: {
           DEFAULT: "hsl(var(--accent))",

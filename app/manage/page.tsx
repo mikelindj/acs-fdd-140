@@ -41,46 +41,50 @@ function ManagePageContent() {
   }
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-slate-600">Loading...</div>
+      </div>
+    )
   }
 
   if (!booking) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Booking Not Found</h1>
-          <p>The table link is invalid or has expired.</p>
+          <h1 className="text-2xl font-semibold text-slate-900 mb-4">Booking Not Found</h1>
+          <p className="text-slate-600">The table link is invalid or has expired.</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          <h1 className="text-3xl font-bold text-blue-900 mb-6">
+    <div className="min-h-screen bg-white py-12 px-4">
+      <div className="mx-auto max-w-4xl">
+        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+          <h1 className="text-3xl font-semibold tracking-tight text-slate-900 mb-6">
             Manage Your Table
           </h1>
 
           <div className="mb-8">
-            <h2 className="text-xl font-bold mb-4">Booking Details</h2>
+            <h2 className="text-xl font-semibold text-slate-900 mb-4">Booking Details</h2>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Type</Label>
-                <p className="font-semibold">{booking.type}</p>
+                <Label className="text-slate-500">Type</Label>
+                <p className="mt-1 font-semibold text-slate-900">{booking.type}</p>
               </div>
               <div>
-                <Label>Status</Label>
-                <p className="font-semibold">{booking.status}</p>
+                <Label className="text-slate-500">Status</Label>
+                <p className="mt-1 font-semibold text-slate-900">{booking.status}</p>
               </div>
               <div>
-                <Label>Total Amount</Label>
-                <p className="font-semibold">S${booking.totalAmount}</p>
+                <Label className="text-slate-500">Total Amount</Label>
+                <p className="mt-1 font-semibold text-slate-900">S${booking.totalAmount}</p>
               </div>
               <div>
-                <Label>Table Number</Label>
-                <p className="font-semibold">
+                <Label className="text-slate-500">Table Number</Label>
+                <p className="mt-1 font-semibold text-slate-900">
                   {booking.table?.tableNumber || "Not assigned"}
                 </p>
               </div>
@@ -88,22 +92,22 @@ function ManagePageContent() {
           </div>
 
           <div>
-            <h2 className="text-xl font-bold mb-4">Guests</h2>
+            <h2 className="text-xl font-semibold text-slate-900 mb-4">Guests</h2>
             {guests.length === 0 ? (
-              <p className="text-gray-600">No guests registered yet.</p>
+              <p className="text-slate-600">No guests registered yet.</p>
             ) : (
               <div className="space-y-2">
                 {guests.map((guest) => (
                   <div
                     key={guest.id}
-                    className="border rounded-lg p-4 flex justify-between items-center"
+                    className="rounded-lg border border-slate-200 bg-white p-4 flex justify-between items-center shadow-sm"
                   >
                     <div>
-                      <p className="font-semibold">{guest.name}</p>
-                      {guest.email && <p className="text-sm text-gray-600">{guest.email}</p>}
+                      <p className="font-semibold text-slate-900">{guest.name}</p>
+                      {guest.email && <p className="text-sm text-slate-500">{guest.email}</p>}
                     </div>
                     {guest.tableId && (
-                      <span className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">
+                      <span className="inline-flex rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-800">
                         Seated
                       </span>
                     )}
@@ -114,15 +118,15 @@ function ManagePageContent() {
           </div>
 
           <div className="mt-8">
-            <h2 className="text-xl font-bold mb-4">Invite Codes</h2>
-            <p className="text-gray-600 mb-4">
+            <h2 className="text-xl font-semibold text-slate-900 mb-4">Invite Codes</h2>
+            <p className="text-slate-600 mb-4">
               Share these codes with your guests to register:
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {booking.inviteCodes?.map((code: any) => (
                 <div
                   key={code.id}
-                  className="border rounded-lg p-4 text-center font-mono text-lg"
+                  className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-center font-mono text-lg text-slate-900 shadow-sm"
                 >
                   {code.code}
                 </div>
@@ -137,7 +141,11 @@ function ManagePageContent() {
 
 export default function ManagePage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-slate-600">Loading...</div>
+      </div>
+    }>
       <ManagePageContent />
     </Suspense>
   )

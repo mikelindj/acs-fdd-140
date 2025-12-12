@@ -49,15 +49,16 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 flex items-center justify-center px-4">
-      <div className="bg-white rounded-lg shadow-2xl p-8 max-w-md w-full">
-        <h1 className="text-3xl font-bold text-blue-900 mb-6 text-center">
+    <div className="min-h-screen bg-white flex items-center justify-center px-4">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 max-w-md w-full">
+        <h1 className="text-3xl font-semibold tracking-tight text-slate-900 mb-6 text-center">
           Admin Login
         </h1>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <Label>Email</Label>
+            <Label htmlFor="email">Email</Label>
             <Input
+              id="email"
               type="email"
               value={formData.email}
               onChange={(e) =>
@@ -68,8 +69,9 @@ export default function AdminLoginPage() {
             />
           </div>
           <div>
-            <Label>Password</Label>
+            <Label htmlFor="password">Password</Label>
             <Input
+              id="password"
               type="password"
               value={formData.password}
               onChange={(e) =>
@@ -82,7 +84,7 @@ export default function AdminLoginPage() {
           <Button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-900 text-yellow-400 hover:bg-blue-800"
+            className="w-full"
           >
             {loading ? "Logging in..." : "Login"}
           </Button>
