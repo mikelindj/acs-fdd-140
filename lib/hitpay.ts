@@ -70,6 +70,7 @@ export function verifyHitPayWebhook(
     const hmac = data.hmac || signature
     
     // Remove hmac from payload for verification
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { hmac: _, ...dataWithoutHmac } = data
     const payloadString = JSON.stringify(dataWithoutHmac)
     

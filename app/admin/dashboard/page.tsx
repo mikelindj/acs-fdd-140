@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation"
 import { getCurrentAdmin } from "@/lib/auth-helpers"
 import { prisma } from "@/lib/prisma"
 import Link from "next/link"

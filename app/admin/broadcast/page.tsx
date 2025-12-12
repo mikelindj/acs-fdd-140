@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { sendBroadcast } from "@/app/actions/broadcast"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -59,7 +60,7 @@ export default function BroadcastPage() {
             <a href="/admin/dashboard" className="hover:underline">Dashboard</a>
             <a href="/admin/tables" className="hover:underline">Tables</a>
             <a href="/admin/broadcast" className="hover:underline">Broadcast</a>
-            <a href="/api/auth/signout" className="hover:underline">Logout</a>
+            <Link href="/api/auth/signout" className="hover:underline">Logout</Link>
           </div>
         </div>
       </nav>

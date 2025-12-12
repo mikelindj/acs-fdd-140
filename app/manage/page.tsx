@@ -1,13 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 
-export default function ManagePage() {
+function ManagePageContent() {
   const searchParams = useSearchParams()
   const tableHash = searchParams.get("table")
   const { toast } = useToast()
@@ -132,6 +132,14 @@ export default function ManagePage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function ManagePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <ManagePageContent />
+    </Suspense>
   )
 }
 

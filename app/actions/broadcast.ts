@@ -54,7 +54,6 @@ export async function sendBroadcast(data: z.infer<typeof broadcastSchema>) {
           to: recipient.email!,
           subject: validated.subject,
           html: getBroadcastEmail(validated.subject, validated.content),
-          type: 'broadcast',
         })
         results.push({ email: recipient.email, success: true })
       } catch (error) {

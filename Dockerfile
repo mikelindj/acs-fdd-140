@@ -5,6 +5,8 @@ FROM base AS deps
 RUN apk add --no-cache libc6-compat openssl python3 make g++ postgresql-dev
 WORKDIR /app
 COPY package.json package-lock.json* ./
+# Copy Prisma schema for postinstall script
+COPY prisma ./prisma
 RUN npm ci --legacy-peer-deps
 
 # Rebuild the source code only when needed
@@ -12,8 +14,9 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-# Copy Prisma schema for migrations
-COPY prisma ./prisma
+# Ensure public directory exists
+RUN mkdir -p ./public
+# Prisma client already generated in deps stage, but regenerate to be safe
 RUN npx prisma generate
 RUN npm run build
 
@@ -31,7 +34,9 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
-COPY --from=builder /app/public ./public
+# Copy public directory (create empty if doesn't exist)
+RUN mkdir -p ./public
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 

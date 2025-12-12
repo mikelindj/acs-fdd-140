@@ -110,7 +110,6 @@ export async function createBooking(data: z.infer<typeof bookingSchema>) {
         to: validated.buyerEmail,
         subject: "Manage Your Table - ACS Founders' Day Dinner",
         html: getMagicLinkEmail(tableHash, validated.buyerName),
-        type: 'magic_link',
       })
     }
 
@@ -120,7 +119,6 @@ export async function createBooking(data: z.infer<typeof bookingSchema>) {
         to: validated.buyerEmail,
         subject: "Invite Your Guests - ACS Founders' Day Dinner",
         html: getInviteEmail(code, validated.buyerName, 'Guest'),
-        type: 'invite',
       })
     }
 

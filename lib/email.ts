@@ -35,18 +35,21 @@ export async function sendEmail({
   to,
   subject,
   html,
-  type = 'transactional',
 }: {
   to: string
   subject: string
   html: string
-  type?: string
 }) {
   try {
+    const fromEmail = process.env.GMAIL_FROM_EMAIL || process.env.GMAIL_USER
+    if (!fromEmail) {
+      throw new Error('GMAIL_FROM_EMAIL or GMAIL_USER must be set')
+    }
+
     const info = await transporter.sendMail({
       from: {
         name: 'The ACSOBA',
-        address: process.env.GMAIL_FROM_EMAIL || process.env.GMAIL_USER,
+        address: fromEmail,
       },
       to,
       subject,

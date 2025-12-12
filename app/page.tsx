@@ -6,7 +6,7 @@ export default function HomePage() {
       <div className="container mx-auto px-4 py-16">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-5xl md:text-6xl font-bold text-yellow-400 mb-6">
-            ACS Founders' Day Dinner
+            ACS Founders&apos; Day Dinner
           </h1>
           <p className="text-2xl md:text-3xl text-white mb-4">140 Years Celebration</p>
           <p className="text-lg text-blue-100 mb-12">

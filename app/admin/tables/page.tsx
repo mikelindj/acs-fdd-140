@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Link from "next/link"
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core"
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
@@ -114,7 +115,7 @@ export default function TablesPage() {
             <a href="/admin/dashboard" className="hover:underline">Dashboard</a>
             <a href="/admin/tables" className="hover:underline">Tables</a>
             <a href="/admin/broadcast" className="hover:underline">Broadcast</a>
-            <a href="/api/auth/signout" className="hover:underline">Logout</a>
+            <Link href="/api/auth/signout" className="hover:underline">Logout</Link>
           </div>
         </div>
       </nav>
