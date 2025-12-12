@@ -47,8 +47,9 @@ jobs:
             DATABASE_URL=${{ secrets.DATABASE_URL }}
             NEXTAUTH_URL=https://acs-fdd140.run.app
             NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
-            RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}
-            RESEND_FROM_EMAIL=${{ secrets.RESEND_FROM_EMAIL }}
+            GMAIL_USER=admin@acsoba.org
+            GMAIL_APP_PASSWORD=${{ secrets.GMAIL_APP_PASSWORD }}
+            GMAIL_FROM_EMAIL=plsdonotreply@acsoba.org
             HITPAY_API_KEY=${{ secrets.HITPAY_API_KEY }}
             HITPAY_SALT=${{ secrets.HITPAY_SALT }}
             HITPAY_WEBHOOK_SECRET=${{ secrets.HITPAY_WEBHOOK_SECRET }}

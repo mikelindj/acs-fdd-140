@@ -9,7 +9,7 @@ A complete event ticketing and seating management system for the ACS Founders' D
 - **PostgreSQL** with Prisma ORM
 - **NextAuth.js** for admin authentication
 - **HitPay** payment gateway integration
-- **Resend** for transactional emails
+- **Nodemailer** for transactional emails (Gmail SMTP)
 - **Zod** for validation
 - **dnd-kit** for drag-and-drop table management
 
@@ -30,7 +30,7 @@ A complete event ticketing and seating management system for the ACS Founders' D
 - Node.js 18+ and npm
 - PostgreSQL 16+ (for local development)
 - HitPay account and API credentials
-- Resend account and API key
+- Gmail account with App Password enabled
 
 ## Local Development Setup
 
@@ -96,9 +96,10 @@ HITPAY_API_KEY="your-hitpay-api-key"
 HITPAY_SALT="your-hitpay-salt"
 HITPAY_WEBHOOK_SECRET="your-webhook-secret"
 
-# Resend (use test API key for local dev)
-RESEND_API_KEY="re_your-resend-api-key"
-RESEND_FROM_EMAIL="noreply@acs.edu.sg"
+# Gmail SMTP (for sending emails)
+GMAIL_USER="your-email@gmail.com"
+GMAIL_APP_PASSWORD="your-gmail-app-password"
+GMAIL_FROM_EMAIL="your-email@gmail.com"
 
 # Site
 NEXT_PUBLIC_SITE_URL="http://localhost:3000"
@@ -111,6 +112,24 @@ NEXT_PUBLIC_SITE_URL="http://localhost:3000"
 ```bash
 openssl rand -base64 32
 ```
+
+**Set up Gmail App Password (required for sending emails):**
+
+1. Go to your Google Account settings: https://myaccount.google.com/
+2. Click **Security** in the left sidebar
+3. Under "How you sign in to Google", enable **2-Step Verification** (if not already enabled)
+4. After enabling 2-Step Verification, go back to Security
+5. Under "How you sign in to Google", click **App passwords**
+6. Select **Mail** and **Other (Custom name)**
+7. Enter a name like "ACS FDD Portal"
+8. Click **Generate**
+9. Copy the 16-character app password (you'll only see it once)
+10. Use this app password (not your regular Gmail password) for `GMAIL_APP_PASSWORD`
+
+**Important:** 
+- Use your full Gmail address for `GMAIL_USER` (e.g., `yourname@gmail.com`)
+- Use the 16-character app password (not your regular password) for `GMAIL_APP_PASSWORD`
+- `GMAIL_FROM_EMAIL` can be the same as `GMAIL_USER` or a different email if you have multiple accounts
 
 ### 5. Database Setup
 
@@ -234,7 +253,7 @@ gcloud run deploy acs-fdd140 \
   --platform managed \
   --region asia-southeast1 \
   --allow-unauthenticated \
-  --set-env-vars DATABASE_URL=$DATABASE_URL,RESEND_API_KEY=$RESEND_API_KEY,HITPAY_API_KEY=$HITPAY_API_KEY,HITPAY_SALT=$HITPAY_SALT,NEXTAUTH_SECRET=$NEXTAUTH_SECRET,NEXTAUTH_URL=https://acs-fdd140.run.app,NEXT_PUBLIC_SITE_URL=https://acs-fdd140.run.app
+  --set-env-vars DATABASE_URL=$DATABASE_URL,GMAIL_USER=$GMAIL_USER,GMAIL_APP_PASSWORD=$GMAIL_APP_PASSWORD,GMAIL_FROM_EMAIL=$GMAIL_FROM_EMAIL,HITPAY_API_KEY=$HITPAY_API_KEY,HITPAY_SALT=$HITPAY_SALT,NEXTAUTH_SECRET=$NEXTAUTH_SECRET,NEXTAUTH_URL=https://acs-fdd140.run.app,NEXT_PUBLIC_SITE_URL=https://acs-fdd140.run.app
 ```
 
 ### 3. Create Dockerfile
