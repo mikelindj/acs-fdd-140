@@ -45,7 +45,7 @@ jobs:
           image: asia-southeast1-docker.pkg.dev/acs-founders-day-140/acs-repo/acs-fdd140:${{ github.sha }}
           env_vars: |
             DATABASE_URL=${{ secrets.DATABASE_URL }}
-            NEXTAUTH_URL=https://acs-fdd140.run.app
+            NEXTAUTH_URL=https://acs-fdd140-361501297750.asia-southeast1.run.app
             NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
             GMAIL_USER=admin@acsoba.org
             GMAIL_APP_PASSWORD=${{ secrets.GMAIL_APP_PASSWORD }}
@@ -53,5 +53,5 @@ jobs:
             HITPAY_API_KEY=${{ secrets.HITPAY_API_KEY }}
             HITPAY_SALT=${{ secrets.HITPAY_SALT }}
             HITPAY_WEBHOOK_SECRET=${{ secrets.HITPAY_WEBHOOK_SECRET }}
-            NEXT_PUBLIC_SITE_URL=https://acs-fdd140.run.app
+            NEXT_PUBLIC_SITE_URL=https://acs-fdd140-361501297750.asia-southeast1.run.app
           flags: '--allow-unauthenticated --service-account=361501297750-compute@developer.gserviceaccount.com'
