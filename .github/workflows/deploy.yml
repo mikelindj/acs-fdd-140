@@ -7,18 +7,50 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      id-token: write
+    
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for GCR
+        run: gcloud auth configure-docker asia-southeast1-docker.pkg.dev
+
+      - name: Build Docker image
+        run: |
+          docker build -t asia-southeast1-docker.pkg.dev/acs-founders-day-140/acs-repo/acs-fdd140:${{ github.sha }} .
+          docker build -t asia-southeast1-docker.pkg.dev/acs-founders-day-140/acs-repo/acs-fdd140:latest .
+
+      - name: Push Docker image
+        run: |
+          docker push asia-southeast1-docker.pkg.dev/acs-founders-day-140/acs-repo/acs-fdd140:${{ github.sha }}
+          docker push asia-southeast1-docker.pkg.dev/acs-founders-day-140/acs-repo/acs-fdd140:latest
 
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@v2
         with:
           service: acs-fdd140
           region: asia-southeast1
-          image: asia-southeast1-docker.pkg.dev/acs-founders-day-140/acs-repo/acs-fdd140:latest
+          image: asia-southeast1-docker.pkg.dev/acs-founders-day-140/acs-repo/acs-fdd140:${{ github.sha }}
           env_vars: |
             DATABASE_URL=${{ secrets.DATABASE_URL }}
+            NEXTAUTH_URL=https://acs-fdd140.run.app
+            NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
             RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}
+            RESEND_FROM_EMAIL=${{ secrets.RESEND_FROM_EMAIL }}
             HITPAY_API_KEY=${{ secrets.HITPAY_API_KEY }}
             HITPAY_SALT=${{ secrets.HITPAY_SALT }}
+            HITPAY_WEBHOOK_SECRET=${{ secrets.HITPAY_WEBHOOK_SECRET }}
             NEXT_PUBLIC_SITE_URL=https://acs-fdd140.run.app
+          flags: '--allow-unauthenticated'
