@@ -1,0 +1,94 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Guest {
+  id          String   @id @default(cuid())
+  name        String
+  email       String?  @unique
+  mobile      String?
+  birthYear   Int?
+  school      String?  // e.g. ACS(I), ACS(O), Barker, etc.
+  gradYear    Int?     // year they graduated
+  dietary     String?  // e.g. "No beef", "Vegetarian", "Halal"
+  isVip       Boolean  @default(false)
+
+  // Relations
+  bookings    Booking[] @relation("GuestBookings")
+  tableId String? // null = not seated yet
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("guests")
+}
+
+model Table {
+  id            String   @id @default(cuid())
+  tableNumber   String   @unique // e.g. "VIP-01", "A12", "101"
+  capacity      Int      // 10 or 11
+  status        TableStatus @default(AVAILABLE)
+
+  // Relations
+  booking       Booking? @relation(fields: [bookingId], references: [id])
+  bookingId     String?     String?  @unique
+  guests        Guest[]  @relation("TableGuests")
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("tables")
+}
+
+model Booking {
+  id               String         @id @default(cuid())
+  type             BookingType    // TABLE or SEAT
+  category         BookingCategory // VIP / SCHOOL / OBA / GUEST
+  quantity         Int            // 1 table or 1–11 seats
+  totalAmount      Decimal        @db.Decimal(10,2)
+  transactionFee   Decimal?       @db.Decimal(10,2)
+  balanceDue       Decimal        @db.Decimal(10,2) @default(0)
+  hitpayPaymentId  String?        @unique
+  status           PaymentStatus  @default(PENDING)
+
+  // Relations
+  buyer            Guest          @relation("GuestBookings", fields: [buyerId], references: [id])
+  buyerId          String
+  table            Table?
+  guests           Guest[]        @relation("BookingGuests")
+
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@map("bookings")
+}
+
+enum BookingType {
+  TABLE
+  SEAT
+}
+
+enum BookingCategory {
+  VIP
+  SCHOOL
+  OBA
+  GUEST
+}
+
+enum TableStatus {
+  AVAILABLE
+  RESERVED
+  FULL
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
