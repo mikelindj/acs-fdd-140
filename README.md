@@ -208,6 +208,12 @@ acs-fdd-140/
 - `GET /api/bookings?tableHash=xxx` - Get booking by table hash
 - `GET /api/admin/tables` - Get tables and guests (admin only)
 
+
+
+
+
+
+
 ## Deployment to Google Cloud Run
 
 ### 1. Build Docker Image
