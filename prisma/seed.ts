@@ -22,8 +22,10 @@ async function main() {
   // Create sample tables
   const tables = []
   for (let i = 1; i <= 20; i++) {
-    const table = await prisma.table.create({
-      data: {
+    const table = await prisma.table.upsert({
+      where: { tableNumber: `T${i.toString().padStart(2, "0")}` },
+      update: {},
+      create: {
         tableNumber: `T${i.toString().padStart(2, "0")}`,
         capacity: 11,
         status: "AVAILABLE",
@@ -32,11 +34,13 @@ async function main() {
     })
     tables.push(table)
   }
-  console.log(`Created ${tables.length} tables`)
+  console.log(`Created/updated ${tables.length} tables`)
 
   // Create sample buyer
-  const buyer = await prisma.guest.create({
-    data: {
+  const buyer = await prisma.guest.upsert({
+    where: { email: "john.doe@example.com" },
+    update: {},
+    create: {
       name: "John Doe",
       email: "john.doe@example.com",
       mobile: "+65 9123 4567",
@@ -44,19 +48,25 @@ async function main() {
     },
   })
 
-  // Create sample booking
-  const booking = await prisma.booking.create({
-    data: {
-      type: "TABLE",
-      category: "OBA",
-      quantity: 1,
-      totalAmount: 1034.0,
-      transactionFee: 34.0,
-      balanceDue: 1034.0,
-      status: "PAID",
-      buyerId: buyer.id,
-    },
+  // Create sample booking (only if it doesn't exist)
+  let booking = await prisma.booking.findFirst({
+    where: { buyerId: buyer.id, type: "TABLE" },
   })
+
+  if (!booking) {
+    booking = await prisma.booking.create({
+      data: {
+        type: "TABLE",
+        category: "OBA",
+        quantity: 1,
+        totalAmount: 1034.0,
+        transactionFee: 34.0,
+        balanceDue: 1034.0,
+        status: "PAID",
+        buyerId: buyer.id,
+      },
+    })
+  }
 
   // Assign table to booking
   await prisma.table.update({
@@ -70,8 +80,10 @@ async function main() {
   // Create sample guests
   const guests = []
   for (let i = 1; i <= 5; i++) {
-    const guest = await prisma.guest.create({
-      data: {
+    const guest = await prisma.guest.upsert({
+      where: { email: `guest${i}@example.com` },
+      update: {},
+      create: {
         name: `Guest ${i}`,
         email: `guest${i}@example.com`,
         mobile: `+65 9123 ${4567 + i}`,
@@ -100,8 +112,10 @@ async function main() {
 
   // Create invite codes
   for (let i = 0; i < 5; i++) {
-    await prisma.inviteCode.create({
-      data: {
+    await prisma.inviteCode.upsert({
+      where: { code: `INV${i.toString().padStart(5, "0")}` },
+      update: {},
+      create: {
         code: `INV${i.toString().padStart(5, "0")}`,
         bookingId: booking.id,
         email: buyer.email!,
