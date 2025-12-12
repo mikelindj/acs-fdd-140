@@ -54,4 +54,4 @@ jobs:
             HITPAY_SALT=${{ secrets.HITPAY_SALT }}
             HITPAY_WEBHOOK_SECRET=${{ secrets.HITPAY_WEBHOOK_SECRET }}
             NEXT_PUBLIC_SITE_URL=https://acs-fdd140.run.app
-          flags: '--allow-unauthenticated'
+          flags: '--allow-unauthenticated --service-account=361501297750-compute@developer.gserviceaccount.com'
