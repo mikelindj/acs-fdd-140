@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { verifyHitPayWebhook, HitPayWebhookPayload } from "@/lib/hitpay"
-import { sendEmail } from "@/lib/email"
-import { getMagicLinkEmail, getInviteEmail } from "@/lib/email-templates"
 
 export async function POST(request: NextRequest) {
   try {
@@ -58,9 +56,16 @@ export async function POST(request: NextRequest) {
       const buyerEmail = booking.buyer?.email
       const buyerName = booking.buyer?.name ?? "Guest"
       const tableHash = booking.table?.tableHash
-      const inviteCodes = booking.inviteCodes?.map((c) => c.code).filter(Boolean) ?? []
+      const inviteCodes =
+        booking.inviteCodes?.map((c) => c.code).filter(Boolean) ?? []
 
       try {
+        const [{ sendEmail }, { getMagicLinkEmail, getInviteEmail }] =
+          await Promise.all([
+            import("@/lib/email"),
+            import("@/lib/email-templates"),
+          ])
+
         if (tableHash && buyerEmail) {
           await sendEmail({
             to: buyerEmail,
