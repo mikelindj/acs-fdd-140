@@ -1,0 +1,21 @@
+# Local PostgreSQL Database - using full connection string format
+DATABASE_URL="postgresql://michael@localhost:5432/acs_fdd140?schema=public"
+
+# NextAuth
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="local-dev-secret-change-in-production"
+
+# HitPay (use test/sandbox credentials for local dev)
+HITPAY_API_KEY="fda7fb09c58c399ede32878e0a6ea9a8cb30bc314732c4fc99618ed55fbbcaf0"
+HITPAY_SALT="BZZZCpJdUR9DBPbN27sPfdnoRxiZozCD66iyin6oWCVjKYcGPPWJWCmkYDf75ZOY"
+HITPAY_WEBHOOK_SECRET="your-webhook-secret"
+
+# Resend (use test API key for local dev)
+RESEND_API_KEY="re_your-resend-api-key"
+RESEND_FROM_EMAIL="noreply@acs.edu.sg"
+
+# Site
+NEXT_PUBLIC_SITE_URL="http://localhost:3000"
+
+# Membership Database (optional - leave commented if not using)
+# MEMBERSHIP_DB_URL="postgresql://michael@localhost:5432/membership_db?schema=public"

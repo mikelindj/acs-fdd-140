@@ -34,9 +34,15 @@ export async function createBooking(data: z.infer<typeof bookingSchema>) {
       : (validated.category === 'VIP' ? 120 : 100) * validated.quantity
     const transactionFee = totalAmount - subtotal
 
-    // Create buyer guest
-    const buyer = await prisma.guest.create({
-      data: {
+    // Create or reuse buyer guest (email is unique)
+    const buyer = await prisma.guest.upsert({
+      where: { email: validated.buyerEmail },
+      update: {
+        name: validated.buyerName,
+        mobile: validated.buyerMobile,
+        membershipNo: validated.membershipNo ?? undefined,
+      },
+      create: {
         name: validated.buyerName,
         email: validated.buyerEmail,
         mobile: validated.buyerMobile,
@@ -88,50 +94,61 @@ export async function createBooking(data: z.infer<typeof bookingSchema>) {
       inviteCodes.push(code)
     }
 
-    // Create HitPay payment
+    const trimSlash = (value: string) => value.replace(/\/+$/, "")
+    const isLocalhost = (value: string) =>
+      value.includes("localhost") || value.includes("127.0.0.1")
+
+    const redirectBase =
+      process.env.HITPAY_RETURN_URL ?? process.env.NEXT_PUBLIC_SITE_URL
+    const webhookBase =
+      process.env.HITPAY_WEBHOOK_URL ??
+      process.env.HITPAY_RETURN_URL ??
+      process.env.NEXT_PUBLIC_SITE_URL
+
+    const redirectUrl = `${trimSlash(redirectBase)}/payment/success?booking=${booking.id}`
+    const webhookUrl = `${trimSlash(webhookBase)}/api/webhooks/hitpay`
+
+    if (isLocalhost(redirectUrl) || isLocalhost(webhookUrl)) {
+      console.error("HitPay requires public URLs for redirect/webhook", {
+        redirectUrl,
+        webhookUrl,
+      })
+      return {
+        error:
+          "Payment is not configured: HitPay needs public https URLs for redirect and webhook. Set HITPAY_RETURN_URL and HITPAY_WEBHOOK_URL to a public domain.",
+      }
+    }
+
+    // Create HitPay payment request
     const payment = await createHitPayPayment({
       amount: totalAmount,
       email: validated.buyerEmail,
       name: validated.buyerName,
       referenceNumber: booking.id,
-      redirectUrl: `${process.env.NEXT_PUBLIC_SITE_URL}/payment/success?booking=${booking.id}`,
-      webhookUrl: `${process.env.NEXT_PUBLIC_SITE_URL}/api/webhooks/hitpay`,
+      redirectUrl,
+      webhookUrl,
     })
+    const paymentRequestId = payment.payment_request_id || payment.id
 
     // Update booking with payment ID
     await prisma.booking.update({
       where: { id: booking.id },
-      data: { hitpayPaymentId: payment.payment_request_id },
+      data: { hitpayPaymentId: paymentRequestId },
     })
-
-    // Send magic link email if table booking
-    if (tableHash) {
-      await sendEmail({
-        to: validated.buyerEmail,
-        subject: "Manage Your Table - ACS Founders' Day Dinner",
-        html: getMagicLinkEmail(tableHash, validated.buyerName),
-      })
-    }
-
-    // Send invite emails
-    for (const code of inviteCodes) {
-      await sendEmail({
-        to: validated.buyerEmail,
-        subject: "Invite Your Guests - ACS Founders' Day Dinner",
-        html: getInviteEmail(code, validated.buyerName, 'Guest'),
-      })
-    }
 
     return {
       success: true,
       bookingId: booking.id,
-      paymentUrl: payment.redirect_url,
+      paymentUrl: payment.url ?? payment.redirect_url,
       tableHash,
     }
   } catch (error) {
     console.error('Booking creation error:', error)
     if (error instanceof z.ZodError) {
       return { error: error.errors[0].message }
+    }
+    if (error instanceof Error) {
+      return { error: error.message }
     }
     return { error: "Failed to create booking" }
   }

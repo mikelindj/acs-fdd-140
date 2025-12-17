@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { verifyHitPayWebhook, HitPayWebhookPayload } from "@/lib/hitpay"
+import { sendEmail } from "@/lib/email"
+import { getMagicLinkEmail, getInviteEmail } from "@/lib/email-templates"
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,6 +24,11 @@ export async function POST(request: NextRequest) {
     // Find booking by reference number
     const booking = await prisma.booking.findUnique({
       where: { id: payload.reference_number },
+      include: {
+        buyer: true,
+        table: true,
+        inviteCodes: true,
+      },
     })
 
     if (!booking) {
@@ -36,6 +43,8 @@ export async function POST(request: NextRequest) {
       status = "FAILED"
     }
 
+    const alreadyPaid = booking.status === "PAID"
+
     await prisma.booking.update({
       where: { id: booking.id },
       data: {
@@ -43,6 +52,36 @@ export async function POST(request: NextRequest) {
         hitpayPaymentId: payload.payment_id,
       },
     })
+
+    // Send emails only on first transition to PAID
+    if (status === "PAID" && !alreadyPaid) {
+      const buyerEmail = booking.buyer?.email
+      const buyerName = booking.buyer?.name ?? "Guest"
+      const tableHash = booking.table?.tableHash
+      const inviteCodes = booking.inviteCodes?.map((c) => c.code).filter(Boolean) ?? []
+
+      try {
+        if (tableHash && buyerEmail) {
+          await sendEmail({
+            to: buyerEmail,
+            subject: "Manage Your Table - ACS Founders' Day Dinner",
+            html: getMagicLinkEmail(tableHash, buyerName),
+          })
+        }
+
+        if (buyerEmail && inviteCodes.length > 0) {
+          for (const code of inviteCodes) {
+            await sendEmail({
+              to: buyerEmail,
+              subject: "Invite Your Guests - ACS Founders' Day Dinner",
+              html: getInviteEmail(code, buyerName, "Guest"),
+            })
+          }
+        }
+      } catch (emailError) {
+        console.error("HitPay webhook email error:", emailError)
+      }
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {

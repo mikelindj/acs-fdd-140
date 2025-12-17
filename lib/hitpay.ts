@@ -1,64 +1,286 @@
-import crypto from 'crypto'
+import crypto from "crypto"
 
-const HITPAY_API_KEY = process.env.HITPAY_API_KEY!
-const HITPAY_SALT = process.env.HITPAY_SALT!
-const HITPAY_BASE_URL = 'https://api.hit-pay.com/v1'
+const HITPAY_API_KEY = process.env.HITPAY_API_KEY?.trim()
+const HITPAY_SALT = process.env.HITPAY_SALT?.trim()
+const HITPAY_ENV =
+  process.env.HITPAY_ENV ??
+  (process.env.NODE_ENV === "production" ? "production" : "sandbox")
+const HITPAY_API_VERSION = process.env.HITPAY_API_VERSION ?? "v1"
+const HITPAY_DEFAULT_PURPOSE =
+  process.env.HITPAY_DEFAULT_PURPOSE ?? "ACS Founders Day Dinner Booking"
+const HITPAY_BASE_URL_RAW =
+  process.env.HITPAY_BASE_URL ??
+  (HITPAY_ENV === "production"
+    ? "https://api.hit-pay.com"
+    : "https://api.sandbox.hit-pay.com")
+const HITPAY_SANDBOX_BASE_URL_RAW =
+  process.env.HITPAY_SANDBOX_BASE_URL ?? "https://api.sandbox.hit-pay.com"
 
-export interface HitPayPaymentRequest {
+const HITPAY_PAYMENT_METHODS = parsePaymentMethods(
+  process.env.HITPAY_PAYMENT_METHODS
+)
+const HITPAY_ALLOW_REPEATED_PAYMENTS = parseBoolean(
+  process.env.HITPAY_ALLOW_REPEATED_PAYMENTS,
+  false
+)
+const HITPAY_BASE_URL = normalizeBaseUrl(HITPAY_BASE_URL_RAW)
+const HITPAY_SANDBOX_BASE_URL = normalizeBaseUrl(HITPAY_SANDBOX_BASE_URL_RAW)
+
+function parseBoolean(value: string | undefined, fallback: boolean) {
+  if (value === undefined) return fallback
+  return ["true", "1", "yes"].includes(value.toLowerCase())
+}
+
+function parsePaymentMethods(value: string | undefined) {
+  if (!value) return ["card", "paynow_online"]
+  return value
+    .split(",")
+    .map((method) => method.trim())
+    .filter(Boolean)
+}
+
+function normalizeBaseUrl(base: string) {
+  const trimmed = base.trim()
+  const withProtocol = /^https?:\/\//i.test(trimmed)
+    ? trimmed
+    : `https://${trimmed.replace(/^\/+/, "")}`
+  return withProtocol.replace(/\/+$/, "")
+}
+
+function fingerprint(secret?: string) {
+  if (!secret) return "unset"
+  if (secret.length <= 8) return "***"
+  return `${secret.slice(0, 4)}…${secret.slice(-4)}`
+}
+
+function isLocalhostUrl(url?: string) {
+  if (!url) return false
+  return /localhost|127\.0\.0\.1|0\.0\.0\.0/i.test(url)
+}
+
+function ensureConfig() {
+  if (!HITPAY_API_KEY) {
+    throw new Error("HITPAY_API_KEY is not set")
+  }
+  if (!HITPAY_SALT) {
+    throw new Error("HITPAY_SALT is not set")
+  }
+}
+
+function buildBaseUrlFrom(base: string) {
+  const trimmedBase = base.replace(/\/+$/, "")
+  const trimmedVersion = HITPAY_API_VERSION.replace(/^\/+/, "")
+  if (trimmedBase.endsWith(`/${trimmedVersion}`)) {
+    return trimmedBase
+  }
+  return `${trimmedBase}/${trimmedVersion}`
+}
+
+export const hitPayConfig = {
+  baseUrl: buildBaseUrlFrom(HITPAY_BASE_URL),
+  paymentMethods: HITPAY_PAYMENT_METHODS,
+  allowRepeatedPayments: HITPAY_ALLOW_REPEATED_PAYMENTS,
+}
+
+export interface HitPayPaymentRequestPayload {
   amount: number
   currency: string
-  email: string
-  name: string
-  purpose: string
+  email?: string
+  name?: string
+  phone?: string
+  purpose?: string
   redirect_url: string
   webhook: string
   reference_number: string
+  payment_methods?: string[]
+  allow_repeated_payments?: boolean
+  generate_qr?: boolean
+  send_email?: boolean
+  send_sms?: boolean
 }
 
-export interface HitPayPaymentResponse {
+export interface HitPayPaymentRequestResponse {
   id: string
-  payment_request_id: string
-  payment_type: string
-  amount: number
+  name?: string
+  email?: string
+  phone?: string
+  amount: string
   currency: string
-  status: string
-  redirect_url: string
+  status:
+    | "pending"
+    | "completed"
+    | "failed"
+    | "expired"
+    | "canceled"
+    | "inactive"
+  purpose?: string
+  reference_number?: string
+  payment_methods?: string[]
+  url: string
+  redirect_url?: string
+  webhook?: string
+  send_sms?: boolean
+  send_email?: boolean
+  allow_repeated_payments?: boolean
+  expiry_date?: string
+  created_at?: string
+  updated_at?: string
+  staff_id?: string | null
+  business_location_id?: string | null
+  payment_request_id?: string
 }
 
-export async function createHitPayPayment(data: {
+export interface CreateHitPayPaymentOptions {
   amount: number
-  email: string
-  name: string
+  currency?: string
+  email?: string
+  name?: string
+  phone?: string
   referenceNumber: string
   redirectUrl: string
   webhookUrl: string
-}): Promise<HitPayPaymentResponse> {
-  const payload: HitPayPaymentRequest = {
-    amount: data.amount,
-    currency: 'SGD',
-    email: data.email,
-    name: data.name,
-    purpose: 'ACS Founders Day Dinner Booking',
-    redirect_url: data.redirectUrl,
-    webhook: data.webhookUrl,
-    reference_number: data.referenceNumber,
+  purpose?: string
+  paymentMethods?: string[]
+  allowRepeatedPayments?: boolean
+  sendEmail?: boolean
+  sendSms?: boolean
+  generateQr?: boolean
+}
+
+export async function createHitPayPayment(
+  options: CreateHitPayPaymentOptions
+): Promise<HitPayPaymentRequestResponse> {
+  ensureConfig()
+
+  if (isLocalhostUrl(options.redirectUrl) || isLocalhostUrl(options.webhookUrl)) {
+    throw new Error(
+      "HitPay requires public HTTPS URLs for redirect and webhook; please set HITPAY_RETURN_URL / HITPAY_WEBHOOK_URL to a public domain."
+    )
   }
 
-  const response = await fetch(`${HITPAY_BASE_URL}/payment-requests`, {
-    method: 'POST',
+  const payload: HitPayPaymentRequestPayload = {
+    amount: options.amount,
+    currency: options.currency ?? "SGD",
+    email: options.email,
+    name: options.name,
+    phone: options.phone,
+    purpose: options.purpose ?? HITPAY_DEFAULT_PURPOSE,
+    redirect_url: options.redirectUrl,
+    webhook: options.webhookUrl,
+    reference_number: options.referenceNumber,
+    payment_methods: options.paymentMethods ?? HITPAY_PAYMENT_METHODS,
+    allow_repeated_payments:
+      options.allowRepeatedPayments ?? HITPAY_ALLOW_REPEATED_PAYMENTS,
+    generate_qr: options.generateQr,
+    send_email: options.sendEmail,
+    send_sms: options.sendSms,
+  }
+
+  const initialBaseUrl = buildBaseUrlFrom(HITPAY_BASE_URL)
+  const initialResult = await postPaymentRequest(initialBaseUrl, payload)
+
+  if (initialResult.ok) {
+    return initialResult.parsed
+  }
+
+  const isInvalidKey =
+    initialResult.message.toLowerCase().includes("invalid business api key") ||
+    initialResult.status === 404
+  const alreadySandbox = initialBaseUrl.includes("sandbox.hit-pay.com")
+  const alreadyProd = !alreadySandbox
+
+  // Auto-fallback to sandbox if we appear to be using a sandbox key against prod
+  if (isInvalidKey && !alreadySandbox) {
+    const sandboxBaseUrl = buildBaseUrlFrom(HITPAY_SANDBOX_BASE_URL)
+    const sandboxResult = await postPaymentRequest(sandboxBaseUrl, payload)
+    if (sandboxResult.ok) {
+      return sandboxResult.parsed
+    }
+    throw new Error(
+      `HitPay API error: ${sandboxResult.status} ${sandboxResult.message}`
+    )
+  }
+
+  // Auto-fallback to production if we appear to be using a production key against sandbox
+  if (isInvalidKey && alreadySandbox) {
+    const prodBaseUrl = buildBaseUrlFrom("https://api.hit-pay.com")
+    const prodResult = await postPaymentRequest(prodBaseUrl, payload)
+    if (prodResult.ok) {
+      return prodResult.parsed
+    }
+    throw new Error(
+      `HitPay API error: ${prodResult.status} ${prodResult.message}`
+    )
+  }
+
+  throw new Error(
+    `HitPay API error: ${initialResult.status} ${initialResult.message}`
+  )
+}
+
+async function postPaymentRequest(
+  baseUrl: string,
+  payload: HitPayPaymentRequestPayload
+): Promise<{
+  ok: boolean
+  status: number
+  message: string
+  parsed: HitPayPaymentRequestResponse
+}> {
+  const response = await fetch(`${baseUrl}/payment-requests`, {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
-      'X-BUSINESS-API-KEY': HITPAY_API_KEY,
+      "Content-Type": "application/json",
+      "X-BUSINESS-API-KEY": HITPAY_API_KEY as string,
     },
     body: JSON.stringify(payload),
   })
 
-  if (!response.ok) {
-    const error = await response.text()
-    throw new Error(`HitPay API error: ${error}`)
+  const rawBody = await response.text()
+  let parsed: HitPayPaymentRequestResponse
+
+  try {
+    parsed = JSON.parse(rawBody)
+  } catch {
+    const result = {
+      ok: response.ok,
+      status: response.status,
+      message: rawBody,
+      parsed: {} as HitPayPaymentRequestResponse,
+    }
+    if (!result.ok) {
+      console.error("HitPay request failed", {
+        baseUrl,
+        status: response.status,
+        message: rawBody,
+        key: fingerprint(HITPAY_API_KEY),
+        env: HITPAY_ENV,
+      })
+    }
+    return result
   }
 
-  return response.json()
+  const message =
+    (parsed as { error?: string }).error ??
+    (parsed as { message?: string }).message ??
+    rawBody
+
+  const result = {
+    ok: response.ok,
+    status: response.status,
+    message,
+    parsed,
+  }
+  if (!result.ok) {
+    console.error("HitPay request failed", {
+      baseUrl,
+      status: response.status,
+      message,
+      key: fingerprint(HITPAY_API_KEY),
+      env: HITPAY_ENV,
+    })
+  }
+  return result
 }
 
 export function verifyHitPayWebhook(
@@ -66,21 +288,25 @@ export function verifyHitPayWebhook(
   signature: string
 ): boolean {
   try {
+    if (!HITPAY_SALT) {
+      throw new Error("HITPAY_SALT is not set")
+    }
+
     const data = JSON.parse(payload)
     const hmac = data.hmac || signature
-    
+
     // Remove hmac from payload for verification
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { hmac: _, ...dataWithoutHmac } = data
     const payloadString = JSON.stringify(dataWithoutHmac)
-    
+
     const hash = crypto
-      .createHmac('sha256', HITPAY_SALT)
+      .createHmac("sha256", HITPAY_SALT)
       .update(payloadString)
-      .digest('hex')
+      .digest("hex")
     return hash === hmac
   } catch (error) {
-    console.error('Webhook verification error:', error)
+    console.error("Webhook verification error:", error)
     return false
   }
 }
