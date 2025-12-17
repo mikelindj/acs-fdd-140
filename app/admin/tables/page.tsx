@@ -1,11 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core"
-import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable } from "@dnd-kit/sortable"
-import { CSS } from "@dnd-kit/utilities"
-import { assignTableToGuests, updateTablePosition } from "@/app/actions/table"
+import { assignTableToGuests } from "@/app/actions/table"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 
@@ -34,24 +31,13 @@ export default function TablesPage() {
   const [selectedGuests, setSelectedGuests] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
 
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  )
-
-  useEffect(() => {
-    fetchData()
-  }, [])
-
-  async function fetchData() {
+  const fetchData = useCallback(async () => {
     try {
       const res = await fetch("/api/admin/tables")
       const data = await res.json()
       setTables(data.tables || [])
       setUnseatedGuests(data.unseatedGuests || [])
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to load data",
@@ -60,7 +46,11 @@ export default function TablesPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [toast])
+
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
 
   async function handleAssign() {
     if (!selectedTable || selectedGuests.length === 0) {
@@ -93,7 +83,7 @@ export default function TablesPage() {
         setSelectedGuests([])
         fetchData()
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to assign guests",

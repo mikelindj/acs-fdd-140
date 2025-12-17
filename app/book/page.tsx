@@ -1,16 +1,14 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { createBooking } from "@/app/actions/booking"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
-import { PRICING, calculateTotal } from "@/lib/pricing"
+import { calculateTotal } from "@/lib/pricing"
 
 export default function BookPage() {
-  const router = useRouter()
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
@@ -40,7 +38,7 @@ export default function BookPage() {
       } else if (result.paymentUrl) {
         window.location.href = result.paymentUrl
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to create booking",
@@ -98,7 +96,7 @@ export default function BookPage() {
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    category: e.target.value as any,
+                    category: e.target.value as "VIP" | "SCHOOL" | "OBA" | "GUEST",
                   })
                 }
                 className="mt-2 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"

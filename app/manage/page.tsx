@@ -1,27 +1,44 @@
 "use client"
 
-import { useState, useEffect, Suspense } from "react"
+import { useState, useEffect, useCallback, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
+
+interface InviteCode {
+  id: string
+  code: string
+}
+
+interface Table {
+  tableNumber?: string | null
+}
+
+interface Booking {
+  id: string
+  type: string
+  status: string
+  totalAmount: string | number
+  table?: Table | null
+  inviteCodes?: InviteCode[]
+}
+
+interface Guest {
+  id: string
+  name: string
+  email?: string | null
+  tableId?: string | null
+}
 
 function ManagePageContent() {
   const searchParams = useSearchParams()
   const tableHash = searchParams.get("table")
   const { toast } = useToast()
-  const [booking, setBooking] = useState<any>(null)
-  const [guests, setGuests] = useState<any[]>([])
+  const [booking, setBooking] = useState<Booking | null>(null)
+  const [guests, setGuests] = useState<Guest[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    if (tableHash) {
-      fetchBooking()
-    }
-  }, [tableHash])
-
-  async function fetchBooking() {
+  const fetchBooking = useCallback(async () => {
     try {
       const res = await fetch(`/api/bookings?tableHash=${tableHash}`)
       const data = await res.json()
@@ -29,7 +46,7 @@ function ManagePageContent() {
         setBooking(data.booking)
         setGuests(data.guests || [])
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to load booking",
@@ -38,7 +55,13 @@ function ManagePageContent() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [tableHash, toast])
+
+  useEffect(() => {
+    if (tableHash) {
+      fetchBooking()
+    }
+  }, [fetchBooking, tableHash])
 
   if (loading) {
     return (
