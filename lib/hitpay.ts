@@ -187,7 +187,6 @@ export async function createHitPayPayment(
     initialResult.message.toLowerCase().includes("invalid business api key") ||
     initialResult.status === 404
   const alreadySandbox = initialBaseUrl.includes("sandbox.hit-pay.com")
-  const alreadyProd = !alreadySandbox
 
   // Auto-fallback to sandbox if we appear to be using a sandbox key against prod
   if (isInvalidKey && !alreadySandbox) {

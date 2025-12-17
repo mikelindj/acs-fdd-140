@@ -105,6 +105,13 @@ export async function createBooking(data: z.infer<typeof bookingSchema>) {
       process.env.HITPAY_RETURN_URL ??
       process.env.NEXT_PUBLIC_SITE_URL
 
+    if (!redirectBase || !webhookBase) {
+      return {
+        error:
+          "Payment is not configured: set HITPAY_RETURN_URL (and HITPAY_WEBHOOK_URL or NEXT_PUBLIC_SITE_URL) to a public domain.",
+      }
+    }
+
     const redirectUrl = `${trimSlash(redirectBase)}/payment/success?booking=${booking.id}`
     const webhookUrl = `${trimSlash(webhookBase)}/api/webhooks/hitpay`
 
