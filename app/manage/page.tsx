@@ -33,10 +33,13 @@ interface Guest {
 function ManagePageContent() {
   const searchParams = useSearchParams()
   const tableHash = searchParams.get("table")
+  const paymentStatus = searchParams.get("paymentStatus")
+  const paymentId = searchParams.get("paymentId")
   const { toast } = useToast()
   const [booking, setBooking] = useState<Booking | null>(null)
   const [guests, setGuests] = useState<Guest[]>([])
   const [loading, setLoading] = useState(true)
+  const [announced, setAnnounced] = useState(false)
 
   const fetchBooking = useCallback(async () => {
     try {
@@ -62,6 +65,33 @@ function ManagePageContent() {
       fetchBooking()
     }
   }, [fetchBooking, tableHash])
+
+  // Surface payment result if redirected from HitPay
+  useEffect(() => {
+    if (announced) return
+    if (!paymentStatus) return
+
+    const normalized = paymentStatus.toLowerCase()
+    const isSuccess = ["completed", "success", "succeeded", "paid"].includes(
+      normalized
+    )
+    const isFailure = ["failed", "canceled", "cancelled", "expired"].includes(
+      normalized
+    )
+
+    toast({
+      title: isSuccess
+        ? "Payment completed"
+        : isFailure
+        ? "Payment not completed"
+        : "Payment update",
+      description: paymentId
+        ? `Reference: ${paymentId}`
+        : "Payment status received.",
+      variant: isFailure ? "destructive" : "default",
+    })
+    setAnnounced(true)
+  }, [paymentStatus, paymentId, toast, announced])
 
   if (loading) {
     return (
@@ -146,7 +176,7 @@ function ManagePageContent() {
               Share these codes with your guests to register:
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {booking.inviteCodes?.map((code: any) => (
+              {booking.inviteCodes?.map((code: InviteCode) => (
                 <div
                   key={code.id}
                   className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-center font-mono text-lg text-slate-900 shadow-sm"

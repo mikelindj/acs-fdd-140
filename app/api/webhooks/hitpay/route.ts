@@ -1,27 +1,53 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { verifyHitPayWebhook, HitPayWebhookPayload } from "@/lib/hitpay"
+import {
+  parseHitPayWebhookPayload,
+  verifyHitPayWebhook,
+} from "@/lib/hitpay"
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.text()
-    const payload: HitPayWebhookPayload = JSON.parse(body)
+    const payload = parseHitPayWebhookPayload(body)
     
+    const getString = (keys: string[]) => {
+      for (const key of keys) {
+        const value = (payload as Record<string, unknown>)[key]
+        if (typeof value === "string" && value.trim().length > 0) {
+          return value
+        }
+      }
+      return undefined
+    }
+
     // Verify webhook signature
-    const signature = request.headers.get("x-hitpay-signature") || payload.hmac
+    const signatureHeader = request.headers.get("x-hitpay-signature")
+    const signature = signatureHeader || getString(["hmac"])
     if (!signature) {
       return NextResponse.json({ error: "Missing signature" }, { status: 401 })
     }
 
-    const isValid = verifyHitPayWebhook(body, signature)
+    const isValid = verifyHitPayWebhook(payload, signature)
 
     if (!isValid) {
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 })
     }
 
+    const referenceNumber = getString([
+      "reference_number",
+      "referenceNumber",
+    ])
+
+    if (!referenceNumber) {
+      return NextResponse.json(
+        { error: "Missing reference_number" },
+        { status: 400 }
+      )
+    }
+
     // Find booking by reference number
     const booking = await prisma.booking.findUnique({
-      where: { id: payload.reference_number },
+      where: { id: referenceNumber },
       include: {
         buyer: true,
         table: true,
@@ -34,21 +60,47 @@ export async function POST(request: NextRequest) {
     }
 
     // Update booking status
+    const rawStatus =
+      getString(["status", "payment_status", "paymentStatus"]) || ""
+    const normalizedStatus = rawStatus.toLowerCase()
     let status: "PENDING" | "PAID" | "FAILED" | "REFUNDED" = "PENDING"
-    if (payload.status === "completed") {
+    if (["completed", "succeeded", "success"].includes(normalizedStatus)) {
       status = "PAID"
-    } else if (payload.status === "failed") {
+    } else if (
+      ["failed", "canceled", "cancelled", "expired"].includes(
+        normalizedStatus
+      )
+    ) {
       status = "FAILED"
+    } else if (
+      ["refunded", "partial_refunded", "partial-refund"].includes(
+        normalizedStatus
+      )
+    ) {
+      status = "REFUNDED"
     }
 
     const alreadyPaid = booking.status === "PAID"
 
+    const paymentId =
+      getString([
+        "payment_id",
+        "paymentId",
+        "payment_request_id",
+        "paymentRequestId",
+      ]) || booking.hitpayPaymentId
+
+    const updateData: {
+      status: "PENDING" | "PAID" | "FAILED" | "REFUNDED"
+      hitpayPaymentId?: string
+    } = { status }
+    if (paymentId) {
+      updateData.hitpayPaymentId = paymentId
+    }
+
     await prisma.booking.update({
       where: { id: booking.id },
-      data: {
-        status,
-        hitpayPaymentId: payload.payment_id,
-      },
+      data: updateData,
     })
 
     // Send emails only on first transition to PAID

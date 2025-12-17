@@ -282,28 +282,58 @@ async function postPaymentRequest(
   return result
 }
 
+export function parseHitPayWebhookPayload(
+  body: string
+): Record<string, unknown> {
+  const trimmed = body.trim()
+  if (!trimmed) return {}
+
+  try {
+    return JSON.parse(trimmed) as Record<string, unknown>
+  } catch {
+    // HitPay can send form-encoded webhooks
+    return Object.fromEntries(new URLSearchParams(trimmed)) as Record<
+      string,
+      string
+    >
+  }
+}
+
 export function verifyHitPayWebhook(
-  payload: string,
-  signature: string
+  payload: Record<string, unknown>,
+  signature?: string
 ): boolean {
   try {
     if (!HITPAY_SALT) {
       throw new Error("HITPAY_SALT is not set")
     }
 
-    const data = JSON.parse(payload)
-    const hmac = data.hmac || signature
+    const payloadHmac =
+      typeof (payload as { hmac?: unknown }).hmac === "string"
+        ? (payload as { hmac: string }).hmac
+        : undefined
+    const providedSignature = signature || payloadHmac
 
-    // Remove hmac from payload for verification
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { hmac: _, ...dataWithoutHmac } = data
-    const payloadString = JSON.stringify(dataWithoutHmac)
+    if (!providedSignature) {
+      console.error("Webhook verification error: missing signature")
+      return false
+    }
 
+    // Build canonical query-string in alphabetical order (HitPay requirement)
+    const entries = Object.entries(payload).filter(
+      ([key, value]) => key !== "hmac" && value !== undefined && value !== null
+    )
+    const sortedEntries = entries.sort(([a], [b]) => a.localeCompare(b))
+    const params = new URLSearchParams()
+    for (const [key, value] of sortedEntries) {
+      params.append(key, String(value))
+    }
+    const payloadString = params.toString()
     const hash = crypto
       .createHmac("sha256", HITPAY_SALT)
       .update(payloadString)
       .digest("hex")
-    return hash === hmac
+    return hash === providedSignature
   } catch (error) {
     console.error("Webhook verification error:", error)
     return false

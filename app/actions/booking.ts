@@ -109,7 +109,7 @@ export async function createBooking(data: z.infer<typeof bookingSchema>) {
       }
     }
 
-    const redirectUrl = `${trimSlash(redirectBase)}/payment/success?booking=${booking.id}`
+    const redirectUrl = `${trimSlash(redirectBase)}/redirect?reference=${booking.id}`
     const webhookUrl = `${trimSlash(webhookBase)}/api/webhooks/hitpay`
 
     if (isLocalhost(redirectUrl) || isLocalhost(webhookUrl)) {
