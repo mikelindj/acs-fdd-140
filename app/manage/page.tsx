@@ -40,6 +40,7 @@ function ManagePageContent() {
   const [guests, setGuests] = useState<Guest[]>([])
   const [loading, setLoading] = useState(true)
   const [announced, setAnnounced] = useState(false)
+  const [reconciling, setReconciling] = useState(false)
 
   const fetchBooking = useCallback(async () => {
     try {
@@ -92,6 +93,48 @@ function ManagePageContent() {
     })
     setAnnounced(true)
   }, [paymentStatus, paymentId, toast, announced])
+
+  // If paymentStatus indicates success, reconcile booking status via API
+  useEffect(() => {
+    const reconcile = async () => {
+      if (!tableHash) return
+      if (!paymentStatus) return
+      const normalized = paymentStatus.toLowerCase()
+      const isSuccess = ["completed", "success", "succeeded", "paid"].includes(
+        normalized
+      )
+      if (!isSuccess) return
+      if (reconciling) return
+      setReconciling(true)
+      try {
+        const res = await fetch("/api/bookings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            tableHash,
+            paymentStatus: normalized,
+            paymentId: paymentId || undefined,
+          }),
+        })
+        const result = await res.json()
+        if (!res.ok || result.error) {
+          throw new Error(result.error || "Failed to update booking")
+        }
+        // Refresh booking to show updated status
+        await fetchBooking()
+      } catch (err) {
+        console.error("Payment reconciliation failed", err)
+        toast({
+          title: "Payment update failed",
+          description: "Please contact support if this persists.",
+          variant: "destructive",
+        })
+      } finally {
+        setReconciling(false)
+      }
+    }
+    reconcile()
+  }, [tableHash, paymentStatus, paymentId, fetchBooking, toast, reconciling])
 
   if (loading) {
     return (
