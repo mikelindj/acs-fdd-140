@@ -246,4 +246,3 @@ export default function ManagePage() {
     </Suspense>
   )
 }
-
