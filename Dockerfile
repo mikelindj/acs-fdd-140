@@ -1,4 +1,4 @@
-FROM node:18-alpine AS base
+FROM node:18-alpine3.18 AS base
 # Ensure Prisma engines have required OpenSSL libraries on Alpine
 RUN apk add --no-cache openssl1.1-compat openssl ca-certificates
 
