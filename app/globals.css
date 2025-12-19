@@ -5,24 +5,32 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222.2 47.4% 11.2%;
+    --foreground: 213 95% 15%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 47.4% 11.2%;
+    --card-foreground: 213 95% 15%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 47.4% 11.2%;
-    --primary: 217.2 91.2% 59.8%;
+    --popover-foreground: 213 95% 15%;
+
+    /* BRAND: Deep Blue (Base) */
+    --primary: 224 59% 22%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    /* BRAND: Vibrant Yellow */
+    --secondary: 41 100% 58%;
+    --secondary-foreground: 224 59% 22%%;
+
+    /* BRAND: ACS Red (Defined for utilities) */
+    --brand-red: 355 74% 47%;
+
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
     --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent-foreground: 213 95% 15%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 217.2 91.2% 59.8%;
+    --ring: 213 95% 25%;
     --radius: 0.5rem;
   }
 }
@@ -32,56 +40,26 @@
     @apply border-border;
   }
   body {
-    @apply bg-white text-slate-900 antialiased;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    @apply bg-background text-foreground;
   }
-  
-  /* Tailwind UI Documentation Typography */
-  h1 {
-    @apply text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl;
-  }
-  
-  h2 {
-    @apply text-3xl font-semibold tracking-tight text-slate-900;
-  }
-  
-  h3 {
-    @apply text-2xl font-semibold tracking-tight text-slate-900;
-  }
-  
-  h4 {
-    @apply text-xl font-semibold tracking-tight text-slate-900;
-  }
-  
-  p {
-    @apply text-base leading-7 text-slate-600;
-  }
-  
-  /* Code blocks styling */
-  code {
-    @apply rounded bg-slate-100 px-1.5 py-0.5 text-sm font-medium text-slate-800;
-  }
-  
-  pre {
-    @apply overflow-x-auto rounded-lg bg-slate-900 p-4 text-sm text-slate-100;
-  }
-  
-  pre code {
-    @apply bg-transparent p-0 text-slate-100;
-  }
-  
-  /* Links */
-  a {
-    @apply font-medium text-blue-600 hover:text-blue-500 transition-colors;
-  }
-  
-  /* Lists */
-  ul, ol {
-    @apply space-y-2 text-slate-600;
-  }
-  
-  li {
-    @apply text-base leading-7;
-  }
+  html {
+  scroll-behavior: smooth;
+}
 }
 
+/* Custom Utility for the "Premium Stroke" effect */
+@layer utilities {
+  .bg-acs-gradient {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--primary)) 0%,
+      hsl(var(--primary)) 60%,
+      hsl(var(--brand-red)) 80%,
+      hsl(var(--secondary)) 100%
+    );
+  }
+  
+  .text-shadow-sm {
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  }
+}

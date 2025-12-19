@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss"
+import { fontFamily } from "tailwindcss/defaultTheme"
 
 const config = {
   darkMode: ["class"],
@@ -18,6 +19,10 @@ const config = {
       },
     },
     extend: {
+      fontFamily: {
+        // Adds Poppins to the sans stack
+        sans: ["var(--font-poppins)", ...fontFamily.sans],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -25,17 +30,14 @@ const config = {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "hsl(217.2, 91.2%, 59.8%)", // Bright blue (Tailwind UI style)
-          foreground: "#ffffff",
+          DEFAULT: "hsl(224,59%, 22%)", // Your Deep Blue
+          foreground: "hsl(var(--primary-foreground))",
         },
         secondary: {
-          DEFAULT: "hsl(210, 40%, 96.1%)",
-          foreground: "hsl(222.2, 47.4%, 11.2%)",
+          DEFAULT: "hsl(41,100%, 58%)", // Your Yellow
+          foreground: "hsl(var(--secondary-foreground))",
         },
-        accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
-        },
+        "brand-red": "hsl(355, 74%, 47%)",
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
@@ -43,6 +45,10 @@ const config = {
         muted: {
           DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
         },
         popover: {
           DEFAULT: "hsl(var(--popover))",
@@ -58,24 +64,10 @@ const config = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
-      keyframes: {
-        "accordion-down": {
-          from: { height: "0" },
-          to: { height: "var(--radix-accordion-content-height)" },
-        },
-        "accordion-up": {
-          from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: "0" },
-        },
-      },
-      animation: {
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
-      },
+      // ... keep your keyframes/animations if you wish
     },
   },
   plugins: [require("tailwindcss-animate")],
 } satisfies Config
 
 export default config
-
