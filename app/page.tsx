@@ -1,39 +1,39 @@
-import Image from "next/image"
 import Link from "next/link"
-import { Calendar, MapPin, Users, ArrowRight } from "lucide-react"
+import { ArrowRight, Star, Calendar, MapPin } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { UnifrakturMaguntia } from "next/font/google"
+import Image from "next/image"
+
+// 1. Configure the Old English Font
+const oldFont = UnifrakturMaguntia({ 
+  weight: "400", 
+  subsets: ["latin"],
+  variable: "--font-old",
+})
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className={`min-h-screen flex flex-col bg-white font-sans selection:bg-brand-red selection:text-white ${oldFont.variable}`}>
       
       {/* --- HEADER --- */}
-      <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
-        <div className="container mx-auto px-4 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-             {/* ACS Logo Placeholder - Replace with local file if needed */}
-             <div className="relative h-12 w-12">
+      {/* FIX: Changed 'absolute' to 'relative'. 
+          This ensures the header takes up its own space so it doesn't overlap the Hero. 
+      */}
+      <header className="relative z-50 w-full bg-white border-b border-slate-100 shadow-sm">
+        <div className="container mx-auto px-4 h-32 md:h-40 flex items-center justify-between">
+          <div className="flex items-center">
+             {/* ACS 140 Logo (Big) */}
+             <div className="relative h-24 md:h-32 w-auto transition-transform hover:scale-105 duration-300">
                <img 
-                 src="https://www.acsjakarta.sch.id/site/uploads/logo/5ac44dad0d439-acs-png-logo-edit-1.png" 
-                 alt="ACS Logo" 
+                 src="/images/acs-140-logo.jpg" 
+                 alt="ACS 140 Years" 
                  className="object-contain w-full h-full"
                />
              </div>
-             <div className="flex flex-col">
-                <span className="font-bold text-lg leading-tight text-primary">ACS FOUNDERS&apos; DAY</span>
-                <span className="text-xs font-medium tracking-wider text-slate-500">140 YEARS OF EXCELLENCE</span>
-             </div>
           </div>
           
-          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
-            <Link href="#details" className="hover:text-primary transition-colors">Event Details</Link>
-            <Link href="#pricing" className="hover:text-primary transition-colors">Tables & Seats</Link>
-            <Link href="mailto:events@acs.edu.sg" className="hover:text-primary transition-colors">Contact</Link>
-            <Link 
-              href="/book" 
-              className="px-5 py-2.5 rounded-full bg-secondary text-secondary-foreground font-semibold hover:bg-secondary/90 transition-colors"
-            >
-              Book Now
-            </Link>
+          <nav className="flex items-center gap-6 text-sm font-medium text-slate-600">
+             {/* Navigation Items (Empty) */}
           </nav>
         </div>
       </header>
@@ -41,187 +41,199 @@ export default function HomePage() {
       <main className="flex-1">
         
         {/* --- HERO SECTION --- */}
-        <section className="relative bg-primary overflow-hidden">
-          {/* Decorative background element */}
-          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-[500px] h-[500px] rounded-full bg-white/5 blur-3xl pointer-events-none" />
+        {/* FIX: Removed 'pt-36'. We can use standard padding now that the header is relative. */}
+        <section className="relative w-full min-h-[85vh] bg-primary overflow-hidden flex items-center py-12 md:py-0">
           
-          <div className="container mx-auto px-4 py-20 md:py-32">
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
-              
-              {/* Text Content */}
-              <div className="text-white space-y-6 relative z-10">
-                <div className="inline-flex items-center rounded-md bg-secondary/20 px-3 py-1 text-sm font-bold text-secondary ring-1 ring-inset ring-secondary/50">
-                  Celebrate 140 Years
-                </div>
-                <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-[1.1]">
-                  Honoring the Past, <br />
-                  <span className="text-secondary">Building the Future.</span>
-                </h1>
-                <p className="text-lg md:text-xl text-slate-200 max-w-lg leading-relaxed">
-                  Join alumni, staff, and friends of ACS for a prestigious evening of celebration, networking, and nostalgia at our 140th Founders&apos; Day Dinner.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                  <Link 
-                    href="/book" 
-                    className="inline-flex items-center justify-center px-8 py-4 text-base font-bold rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/90 transition-all shadow-lg hover:shadow-xl"
-                  >
-                    Reserve Your Table <ArrowRight className="ml-2 h-5 w-5" />
-                  </Link>
-                  <Link 
-                    href="#details" 
-                    className="inline-flex items-center justify-center px-8 py-4 text-base font-medium rounded-lg border border-white/30 bg-white/10 text-white hover:bg-white/20 transition-all"
-                  >
-                    View Event Details
-                  </Link>
-                </div>
-              </div>
+          {/* Background Watermark (Giant 140) */}
+          <div className="absolute right-[-5%] top-1/2 -translate-y-1/2 font-old text-[25rem] md:text-[40rem] text-white opacity-[0.03] leading-none select-none z-0 pointer-events-none">
+            140
+          </div>
+          
+          {/* Decorative Top Strokes */}
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-secondary via-brand-red to-primary" />
 
-              {/* Dynamic Image/Graphic Area */}
-              <div className="relative">
-                <div className="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl border-4 border-white/10 bg-slate-800">
-                    {/* Placeholder for Event Image */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent z-10" />
-                    <img 
-                        src="https://www.acsjakarta.sch.id/site/uploads/images/63b4037b5e6f5-1-l.jpg" 
-                        alt="Dinner Venue" 
-                        className="object-cover w-full h-full opacity-90"
-                    />
-                    <div className="absolute bottom-6 left-6 z-20">
-                        <p className="text-white text-lg font-medium">Coming Together As One</p>
-                        <p className="text-slate-300 text-sm">The ACS Family</p>
-                    </div>
-                </div>
-                {/* Floating Badge */}
-                <div className="absolute -bottom-6 -left-6 bg-white p-6 rounded-xl shadow-xl hidden md:block">
-                    <div className="text-center">
-                        <p className="text-xs text-slate-500 uppercase font-bold tracking-wider">Date</p>
-                        <p className="text-2xl font-bold text-primary">01 MAR</p>
-                        <p className="text-sm font-medium text-slate-900">2026</p>
-                    </div>
-                </div>
-              </div>
+          <div className="container relative z-10 px-4 grid lg:grid-cols-2 gap-12 items-center">
+            
+            {/* Left Col: Text */}
+            <div className="space-y-8 text-center lg:text-left order-2 lg:order-1">
+               
+               <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-white leading-[1.1]">
+                 ACS Founder&apos;s <br/>
+                 <span className="relative inline-block">
+                    <span className="relative z-10">Day Dinner</span>
+                    {/* Yellow highlighter stroke behind text */}
+                    <span className="absolute bottom-2 left-0 w-full h-4 bg-secondary/90 -rotate-1 z-0 mix-blend-multiply" />
+                 </span>
+               </h1>
+               
+               <p className="text-slate-300 text-lg md:text-xl max-w-lg mx-auto lg:mx-0 font-light leading-relaxed">
+                 Join the entire ACS family for a prestigious evening of celebration, networking, and nostalgia.
+               </p>
 
+               <div className="flex flex-col sm:flex-row gap-4 pt-4 justify-center lg:justify-start">
+                  <Link href="#pricing">
+                    <Button className="h-14 px-8 bg-secondary text-primary hover:bg-white hover:scale-105 transition-all font-bold text-base rounded-lg shadow-[0_0_20px_rgba(255,198,41,0.2)]">
+                      Reserve Table
+                    </Button>
+                  </Link>
+               </div>
             </div>
+
+            {/* Right Col: ACS Crest Logo inside the Card */}
+            <div className="flex justify-center perspective-1000 order-1 lg:order-2">
+               <div className="relative bg-white/10 backdrop-blur-md border border-white/20 p-8 rounded-[2rem] max-w-sm w-full text-center shadow-2xl transform hover:rotate-y-6 transition-transform duration-500 ease-out">
+                  
+                  {/* The ACS Crest Logo */}
+                  <div className="mb-8 flex justify-center">
+                    <img 
+                       src="/images/acs-logo.png" 
+                       alt="ACS Crest" 
+                       className="h-40 object-contain drop-shadow-xl"
+                    />
+                  </div>
+
+                  {/* Divider */}
+                  <div className="h-px w-full bg-gradient-to-r from-transparent via-white/30 to-transparent my-6" />
+                  
+                  {/* Event Details */}
+                  <div className="space-y-4">
+                     <div className="flex items-center gap-4 bg-black/20 p-3 rounded-xl border border-white/5">
+                        <div className="p-2 bg-secondary rounded-lg text-primary shadow-lg">
+                           <Calendar className="w-5 h-5" />
+                        </div>
+                        <div className="text-left">
+                           <p className="text-xs text-slate-300 uppercase tracking-wider font-bold">Date</p>
+                           <p className="text-white font-semibold text-lg">1 March 2026</p>
+                        </div>
+                     </div>
+
+                     <div className="flex items-center gap-4 bg-black/20 p-3 rounded-xl border border-white/5">
+                        <div className="p-2 bg-brand-red rounded-lg text-white shadow-lg">
+                           <MapPin className="w-5 h-5" />
+                        </div>
+                        <div className="text-left">
+                           <p className="text-xs text-slate-300 uppercase tracking-wider font-bold">Venue</p>
+                           <p className="text-white font-semibold text-lg">Shangri-La Jakarta</p>
+                        </div>
+                     </div>
+                  </div>
+
+               </div>
+            </div>
+
           </div>
         </section>
 
-        {/* --- EVENT DETAILS --- */}
-        <section id="details" className="py-20 bg-slate-50">
-           <div className="container mx-auto px-4">
-              <div className="text-center max-w-2xl mx-auto mb-16">
-                 <h2 className="text-3xl font-bold text-primary mb-4">Event Information</h2>
-                 <p className="text-slate-600">Everything you need to know about the evening.</p>
-              </div>
-
-              <div className="grid md:grid-cols-3 gap-8">
-                 <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 text-center hover:border-secondary transition-colors group">
-                    <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-secondary/20 transition-colors">
-                       <Calendar className="w-7 h-7 text-primary group-hover:text-secondary-foreground" />
-                    </div>
-                    <h3 className="text-xl font-semibold mb-2">Date & Time</h3>
-                    <p className="text-slate-600">Saturday, 1st March 2026</p>
-                    <p className="text-slate-500 text-sm mt-1">6:00 PM Cocktail Reception</p>
-                 </div>
-                 
-                 <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 text-center hover:border-secondary transition-colors group">
-                    <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-secondary/20 transition-colors">
-                       <MapPin className="w-7 h-7 text-primary group-hover:text-secondary-foreground" />
-                    </div>
-                    <h3 className="text-xl font-semibold mb-2">The Venue</h3>
-                    <p className="text-slate-600">Grand Ballroom</p>
-                    <p className="text-slate-500 text-sm mt-1">Shangri-La Hotel, Jakarta</p>
-                 </div>
-
-                 <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 text-center hover:border-secondary transition-colors group">
-                    <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-secondary/20 transition-colors">
-                       <Users className="w-7 h-7 text-primary group-hover:text-secondary-foreground" />
-                    </div>
-                    <h3 className="text-xl font-semibold mb-2">Dress Code</h3>
-                    <p className="text-slate-600">Formal / Black Tie</p>
-                    <p className="text-slate-500 text-sm mt-1">School colors encouraged</p>
-                 </div>
-              </div>
-           </div>
-        </section>
-
-        {/* --- PRICING --- */}
-        <section id="pricing" className="py-20 bg-white">
-          <div className="container mx-auto px-4 max-w-5xl">
-            <div className="flex flex-col md:flex-row justify-between items-end mb-10 gap-4">
-               <div>
-                  <h2 className="text-3xl font-bold text-primary mb-2">Secure Your Seats</h2>
-                  <p className="text-slate-600">Choose from VIP, School, OBA, or Guest categories.</p>
-               </div>
+        {/* --- PRICING SECTION --- */}
+        <section id="pricing" className="py-24 bg-slate-50 relative">
+          <div className="container mx-auto px-4 max-w-5xl relative z-10">
+            <div className="text-center mb-16 space-y-4">
+               <h2 className="text-3xl md:text-5xl font-bold text-primary">Reserve Your Seat</h2>
+               <p className="text-slate-600 text-lg max-w-2xl mx-auto">
+                 Choose from VIP, School, OBA, or Guest categories. All tables accommodate 10-11 guests.
+               </p>
             </div>
             
             <div className="grid md:grid-cols-2 gap-8">
                {/* Full Table Card */}
-               <div className="p-8 rounded-3xl border-2 border-slate-100 bg-white hover:border-primary/20 hover:shadow-lg transition-all relative overflow-hidden">
-                  <div className="absolute top-0 right-0 bg-secondary text-secondary-foreground text-xs font-bold px-3 py-1 rounded-bl-xl">BEST VALUE</div>
-                  <h3 className="text-2xl font-bold text-slate-900">Full Table</h3>
-                  <div className="mt-4 flex items-baseline text-slate-900">
-                    <span className="text-5xl font-bold tracking-tight text-primary">$1,000</span>
-                    <span className="ml-2 text-sm font-semibold text-slate-500">/ table</span>
+               <div className="group relative p-10 rounded-[2rem] bg-white border border-slate-200 shadow-sm hover:shadow-2xl hover:border-brand-red/30 transition-all duration-300 overflow-hidden">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-brand-red to-secondary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
+                  
+                  <div className="flex justify-between items-start mb-6">
+                    <div>
+                      <h3 className="text-2xl font-bold text-slate-900">Full Table</h3>
+                      <p className="text-sm text-slate-500 font-medium mt-1">Best for groups & reunions</p>
+                    </div>
                   </div>
-                  <p className="mt-4 text-slate-600">Perfect for class reunions or corporate groups. Seats 10-11 guests comfortably.</p>
-                  <ul className="mt-8 space-y-3 text-sm text-slate-600">
-                    <li className="flex gap-3"><span className="text-secondary-foreground">✓</span> Priority seating location</li>
-                    <li className="flex gap-3"><span className="text-secondary-foreground">✓</span> 10-11 Guest tickets included</li>
-                    <li className="flex gap-3"><span className="text-secondary-foreground">✓</span> Company signage on table</li>
+                  
+                  <div className="flex items-baseline text-slate-900 mb-8">
+                    <span className="text-5xl font-bold tracking-tight">$1,000</span>
+                    <span className="ml-2 text-base font-medium text-slate-500">/ table</span>
+                  </div>
+
+                  <ul className="space-y-4 text-sm text-slate-600 mb-10">
+                    <li className="flex gap-3 items-center">
+                      <div className="h-5 w-5 rounded-full bg-secondary/20 flex items-center justify-center text-secondary-foreground text-xs font-bold">✓</div> 
+                      Priority seating location
+                    </li>
+                    <li className="flex gap-3 items-center">
+                      <div className="h-5 w-5 rounded-full bg-secondary/20 flex items-center justify-center text-secondary-foreground text-xs font-bold">✓</div> 
+                      10-11 Guest tickets included
+                    </li>
+                    <li className="flex gap-3 items-center">
+                       <div className="h-5 w-5 rounded-full bg-secondary/20 flex items-center justify-center text-secondary-foreground text-xs font-bold">✓</div> 
+                      Custom Table Signage
+                    </li>
                   </ul>
-                  <Link href="/book" className="mt-8 block w-full rounded-xl bg-primary px-3 py-4 text-center text-sm font-semibold text-white shadow-sm hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary transition-colors">
-                    Book Full Table
+                  
+                  <Link href="/book" className="block w-full">
+                    <Button className="w-full h-14 text-base font-bold bg-primary hover:bg-brand-red transition-colors rounded-xl shadow-lg hover:shadow-brand-red/25">
+                      Book Full Table
+                    </Button>
                   </Link>
                </div>
 
                {/* Individual Seat Card */}
-               <div className="p-8 rounded-3xl border-2 border-slate-100 bg-slate-50 hover:border-primary/20 transition-all">
-                  <h3 className="text-2xl font-bold text-slate-900">Individual Seat</h3>
-                  <div className="mt-4 flex items-baseline text-slate-900">
-                    <span className="text-5xl font-bold tracking-tight text-primary">$100</span>
-                    <span className="ml-2 text-sm font-semibold text-slate-500">/ person</span>
+               <div className="group relative p-10 rounded-[2rem] bg-white border border-slate-200 shadow-sm hover:shadow-2xl hover:border-secondary/50 transition-all duration-300">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-secondary to-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
+
+                  <div className="mb-6">
+                    <h3 className="text-2xl font-bold text-slate-900">Individual Seat</h3>
+                    <p className="text-sm text-slate-500 font-medium mt-1">For single guests</p>
                   </div>
-                  <p className="mt-4 text-slate-600">Join a table and meet fellow alumni and friends of the school.</p>
-                  <ul className="mt-8 space-y-3 text-sm text-slate-600">
-                    <li className="flex gap-3"><span className="text-secondary-foreground">✓</span> Open seating assignment</li>
-                    <li className="flex gap-3"><span className="text-secondary-foreground">✓</span> 1 Guest ticket included</li>
-                    <li className="flex gap-3"><span className="text-secondary-foreground">✓</span> Networking opportunities</li>
+                  
+                  <div className="flex items-baseline text-slate-900 mb-8">
+                    <span className="text-5xl font-bold tracking-tight">$100</span>
+                    <span className="ml-2 text-base font-medium text-slate-500">/ person</span>
+                  </div>
+
+                  <ul className="space-y-4 text-sm text-slate-600 mb-10">
+                    <li className="flex gap-3 items-center">
+                      <div className="h-5 w-5 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 text-xs font-bold">✓</div> 
+                      Open seating assignment
+                    </li>
+                    <li className="flex gap-3 items-center">
+                      <div className="h-5 w-5 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 text-xs font-bold">✓</div> 
+                      1 Guest ticket included
+                    </li>
+                    <li className="flex gap-3 items-center">
+                       <div className="h-5 w-5 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 text-xs font-bold">✓</div> 
+                      Networking opportunities
+                    </li>
                   </ul>
-                  <Link href="/book" className="mt-8 block w-full rounded-xl bg-white border-2 border-primary px-3 py-4 text-center text-sm font-semibold text-primary hover:bg-slate-50 transition-colors">
-                    Book Individual Seat
+                  
+                  <Link href="/book" className="block w-full">
+                    <Button variant="outline" className="w-full h-14 text-base font-bold border-2 border-slate-200 text-slate-600 hover:text-primary hover:border-primary hover:bg-primary/5 rounded-xl transition-all">
+                      Book Individual Seat
+                    </Button>
                   </Link>
                </div>
             </div>
 
           </div>
         </section>
+
       </main>
 
       {/* --- FOOTER --- */}
-      <footer className="bg-primary text-white py-12 border-t border-white/10">
-        <div className="container mx-auto px-4 text-center md:text-left">
-           <div className="grid md:grid-cols-4 gap-8 mb-8">
-              <div className="col-span-1 md:col-span-2">
-                 <h4 className="text-xl font-bold text-secondary mb-4">ACS Founders&apos; Day</h4>
-                 <p className="text-slate-300 text-sm max-w-sm">
-                   Celebrating 140 years of history, community, and excellence. The Best Is Yet To Be.
-                 </p>
-              </div>
-              <div>
-                 <h5 className="font-semibold mb-4">Contact</h5>
-                 <p className="text-slate-300 text-sm">events@acs.edu.sg</p>
-                 <p className="text-slate-300 text-sm">+62 21 8459 7175</p>
-              </div>
-              <div>
-                 <h5 className="font-semibold mb-4">Links</h5>
-                 <ul className="space-y-2 text-sm text-slate-300">
-                    <li><Link href="#" className="hover:text-secondary">Privacy Policy</Link></li>
-                    <li><Link href="#" className="hover:text-secondary">Terms of Service</Link></li>
-                 </ul>
-              </div>
+      <footer className="bg-white border-t border-slate-200 py-12">
+        <div className="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
+           <div className="flex items-center gap-3 opacity-80 grayscale hover:grayscale-0 transition-all duration-500">
+               <div className="relative h-10 w-10">
+                  <img 
+                    src="/images/acs-logo.png" 
+                    alt="ACS Logo" 
+                    className="object-contain w-full h-full"
+                  />
+               </div>
+               <span className="font-bold text-primary tracking-tight">ACS COMMUNITY</span>
            </div>
-           <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-slate-400">
-              <p>&copy; 2025 ACS Jakarta. All rights reserved.</p>
+           
+           <div className="text-center md:text-right">
+              <a href="mailto:events@acs.edu.sg" className="text-sm font-medium text-slate-500 hover:text-brand-red transition-colors">
+                events@acs.edu.sg
+              </a>
+              <p className="text-xs text-slate-400 mt-2">© 2026 ACS Founders&apos; Day Committee</p>
            </div>
         </div>
       </footer>

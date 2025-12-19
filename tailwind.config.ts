@@ -30,13 +30,14 @@ const config = {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "hsl(213, 95%, 25%)", // Your Deep Blue
+          DEFAULT: "hsl(224,59%, 22%)", // Your Deep Blue
           foreground: "hsl(var(--primary-foreground))",
         },
         secondary: {
-          DEFAULT: "hsl(47, 98%, 55%)", // Your Yellow
+          DEFAULT: "hsl(41,100%, 58%)", // Your Yellow
           foreground: "hsl(var(--secondary-foreground))",
         },
+        "brand-red": "hsl(355, 74%, 47%)",
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
