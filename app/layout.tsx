@@ -13,6 +13,11 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   title: "ACS Founders' Day Dinner - 140 Years",
   description: "Celebrating 140 Years of Excellence. Join us for the ACS Founders' Day Dinner.",
+  icons: {
+    icon: "/images/acs-logo.png", // Points to your existing logo
+    shortcut: "/images/acs-logo.png",
+    apple: "/images/acs-logo.png",
+  },
 }
 
 export default function RootLayout({

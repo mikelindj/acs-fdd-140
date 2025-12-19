@@ -3,6 +3,7 @@ import { ArrowRight, Star, Calendar, MapPin } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { UnifrakturMaguntia } from "next/font/google"
 import Image from "next/image"
+import { PricingCard } from "@/components/PricingCard";
 
 // 1. Configure the Old English Font
 const oldFont = UnifrakturMaguntia({ 
@@ -125,93 +126,54 @@ export default function HomePage() {
         </section>
 
         {/* --- PRICING SECTION --- */}
-        <section id="pricing" className="py-24 bg-slate-50 relative">
-          <div className="container mx-auto px-4 max-w-5xl relative z-10">
-            <div className="text-center mb-16 space-y-4">
-               <h2 className="text-3xl md:text-5xl font-bold text-primary">Reserve Your Seat</h2>
-               <p className="text-slate-600 text-lg max-w-2xl mx-auto">
-                 Choose from VIP, School, OBA, or Guest categories. All tables accommodate 10-11 guests.
-               </p>
-            </div>
-            
-            <div className="grid md:grid-cols-2 gap-8">
-               {/* Full Table Card */}
-               <div className="group relative p-10 rounded-[2rem] bg-white border border-slate-200 shadow-sm hover:shadow-2xl hover:border-brand-red/30 transition-all duration-300 overflow-hidden">
-                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-brand-red to-secondary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
-                  
-                  <div className="flex justify-between items-start mb-6">
-                    <div>
-                      <h3 className="text-2xl font-bold text-slate-900">Full Table</h3>
-                      <p className="text-sm text-slate-500 font-medium mt-1">Best for groups & reunions</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-baseline text-slate-900 mb-8">
-                    <span className="text-5xl font-bold tracking-tight">$1,000</span>
-                    <span className="ml-2 text-base font-medium text-slate-500">/ table</span>
-                  </div>
+<section id="pricing" className="py-24 bg-slate-50 relative">
+  <div className="container mx-auto px-4 max-w-5xl relative z-10">
+    <div className="text-center mb-16 space-y-4">
+       <h2 className="text-3xl md:text-5xl font-bold text-primary">Reserve Your Seat</h2>
+       <p className="text-slate-600 text-lg max-w-2xl mx-auto">
+         Choose from VIP, School, OBA, or Guest categories. All tables accommodate 10-11 guests.
+       </p>
+    </div>
+    
+    <div className="grid md:grid-cols-2 gap-8">
+       
+       {/* 2. USE THE COMPONENT FOR FULL TABLE */}
+       <PricingCard 
+         title="Full Table"
+         subtitle="Best for groups & reunions"
+         price="$1,000"
+         priceDetail="/ table"
+         features={[
+           "Priority seating location",
+           "10-11 Guest tickets included",
+           "Custom Table Signage"
+         ]}
+         href="/book"
+         isPopular={false}
+         buttonText="Book Full Table"
+         variant="default"
+       />
 
-                  <ul className="space-y-4 text-sm text-slate-600 mb-10">
-                    <li className="flex gap-3 items-center">
-                      <div className="h-5 w-5 rounded-full bg-secondary/20 flex items-center justify-center text-secondary-foreground text-xs font-bold">✓</div> 
-                      Priority seating location
-                    </li>
-                    <li className="flex gap-3 items-center">
-                      <div className="h-5 w-5 rounded-full bg-secondary/20 flex items-center justify-center text-secondary-foreground text-xs font-bold">✓</div> 
-                      10-11 Guest tickets included
-                    </li>
-                    <li className="flex gap-3 items-center">
-                       <div className="h-5 w-5 rounded-full bg-secondary/20 flex items-center justify-center text-secondary-foreground text-xs font-bold">✓</div> 
-                      Custom Table Signage
-                    </li>
-                  </ul>
-                  
-                  <Link href="/book" className="block w-full">
-                    <Button className="w-full h-14 text-base font-bold bg-primary hover:bg-brand-red transition-colors rounded-xl shadow-lg hover:shadow-brand-red/25">
-                      Book Full Table
-                    </Button>
-                  </Link>
-               </div>
+       {/* 3. USE THE COMPONENT FOR INDIVIDUAL SEAT */}
+       <PricingCard 
+         title="Individual Seat"
+         subtitle="For single guests"
+         price="$100"
+         priceDetail="/ person"
+         features={[
+           "Open seating assignment",
+           "1 Guest ticket included",
+           "Networking opportunities"
+         ]}
+         href="/book"
+         isPopular={false}
+         buttonText="Book Individual Seat"
+         variant="outline"
+       />
 
-               {/* Individual Seat Card */}
-               <div className="group relative p-10 rounded-[2rem] bg-white border border-slate-200 shadow-sm hover:shadow-2xl hover:border-secondary/50 transition-all duration-300">
-                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-secondary to-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
-
-                  <div className="mb-6">
-                    <h3 className="text-2xl font-bold text-slate-900">Individual Seat</h3>
-                    <p className="text-sm text-slate-500 font-medium mt-1">For single guests</p>
-                  </div>
-                  
-                  <div className="flex items-baseline text-slate-900 mb-8">
-                    <span className="text-5xl font-bold tracking-tight">$100</span>
-                    <span className="ml-2 text-base font-medium text-slate-500">/ person</span>
-                  </div>
-
-                  <ul className="space-y-4 text-sm text-slate-600 mb-10">
-                    <li className="flex gap-3 items-center">
-                      <div className="h-5 w-5 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 text-xs font-bold">✓</div> 
-                      Open seating assignment
-                    </li>
-                    <li className="flex gap-3 items-center">
-                      <div className="h-5 w-5 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 text-xs font-bold">✓</div> 
-                      1 Guest ticket included
-                    </li>
-                    <li className="flex gap-3 items-center">
-                       <div className="h-5 w-5 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 text-xs font-bold">✓</div> 
-                      Networking opportunities
-                    </li>
-                  </ul>
-                  
-                  <Link href="/book" className="block w-full">
-                    <Button variant="outline" className="w-full h-14 text-base font-bold border-2 border-slate-200 text-slate-600 hover:text-primary hover:border-primary hover:bg-primary/5 rounded-xl transition-all">
-                      Book Individual Seat
-                    </Button>
-                  </Link>
-               </div>
-            </div>
-
-          </div>
-        </section>
+    </div>
+  </div>
+</section>
 
       </main>
 
