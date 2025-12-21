@@ -3,6 +3,7 @@ import { ArrowRight, Star, Calendar, MapPin } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { UnifrakturMaguntia } from "next/font/google"
 import Image from "next/image"
+import { prisma } from "@/lib/prisma"
 
 // 1. Configure the Old English Font
 const oldFont = UnifrakturMaguntia({ 
@@ -11,7 +12,32 @@ const oldFont = UnifrakturMaguntia({
   variable: "--font-old",
 })
 
-export default function HomePage() {
+function formatPrice(price: number): string {
+  return `$${price.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+}
+
+export default async function HomePage() {
+  // Fetch pricing from inventory settings
+  let tablePrice = 1000
+  let seatPrice = 100
+  let tableMembersPrice: number | null = null
+  let seatMembersPrice: number | null = null
+
+  try {
+    const settings = await prisma.inventorySettings.findUnique({
+      where: { id: "inventory" },
+    })
+
+    if (settings) {
+      tablePrice = Number(settings.tablePrice)
+      seatPrice = Number(settings.seatPrice)
+      tableMembersPrice = settings.tableMembersPrice ? Number(settings.tableMembersPrice) : null
+      seatMembersPrice = settings.seatMembersPrice ? Number(settings.seatMembersPrice) : null
+    }
+  } catch (error) {
+    console.error("Error fetching pricing:", error)
+    // Use defaults if fetch fails
+  }
   return (
     <div className={`min-h-screen flex flex-col bg-white font-sans selection:bg-brand-red selection:text-white ${oldFont.variable}`}>
       
@@ -147,8 +173,13 @@ export default function HomePage() {
                   </div>
                   
                   <div className="flex items-baseline text-slate-900 mb-8">
-                    <span className="text-5xl font-bold tracking-tight">$1,000</span>
+                    <span className="text-5xl font-bold tracking-tight">{formatPrice(tablePrice)}</span>
                     <span className="ml-2 text-base font-medium text-slate-500">/ table</span>
+                    {tableMembersPrice && (
+                      <span className="ml-3 text-sm font-medium text-green-600">
+                        (Members: {formatPrice(tableMembersPrice)})
+                      </span>
+                    )}
                   </div>
 
                   <ul className="space-y-4 text-sm text-slate-600 mb-10">
@@ -183,8 +214,13 @@ export default function HomePage() {
                   </div>
                   
                   <div className="flex items-baseline text-slate-900 mb-8">
-                    <span className="text-5xl font-bold tracking-tight">$100</span>
+                    <span className="text-5xl font-bold tracking-tight">{formatPrice(seatPrice)}</span>
                     <span className="ml-2 text-base font-medium text-slate-500">/ person</span>
+                    {seatMembersPrice && (
+                      <span className="ml-3 text-sm font-medium text-green-600">
+                        (Members: {formatPrice(seatMembersPrice)})
+                      </span>
+                    )}
                   </div>
 
                   <ul className="space-y-4 text-sm text-slate-600 mb-10">
