@@ -30,8 +30,6 @@ export async function GET() {
     // VIP gets 20% markup
     const vipTablePrice = tablePrice * 1.2
     const vipSeatPrice = seatPrice * 1.2
-    const vipTablePromoPrice = tablePromoPrice ? tablePromoPrice * 1.2 : null
-    const vipSeatPromoPrice = seatPromoPrice ? seatPromoPrice * 1.2 : null
     const vipTableMembersPrice = tableMembersPrice ? tableMembersPrice * 1.2 : null
     const vipSeatMembersPrice = seatMembersPrice ? seatMembersPrice * 1.2 : null
 

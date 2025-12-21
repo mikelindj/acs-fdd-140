@@ -72,16 +72,19 @@ model Booking {
   hitpayPaymentId String?         @unique
   status          PaymentStatus   @default(PENDING)
   buyerId         String
+  voucherId       String?
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
   buyer           Guest           @relation("GuestBookings", fields: [buyerId], references: [id])
   inviteCodes     InviteCode[]    @relation("BookingInvites")
   table           Table?
   guests          Guest[]         @relation("BookingGuests")
+  voucher         Voucher?        @relation(fields: [voucherId], references: [id])
 
   @@index([buyerId])
   @@index([status])
   @@index([hitpayPaymentId])
+  @@index([voucherId])
   @@map("bookings")
 }
 
@@ -140,4 +143,47 @@ enum PaymentStatus {
   PAID
   FAILED
   REFUNDED
+}
+
+enum VoucherType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  FIXED_PRICE
+}
+
+model InventorySettings {
+  id                    String   @id @default("inventory")
+  totalTables            Int      @default(0)
+  maxElevenSeaterTables  Int      @default(0)
+  tablePrice             Decimal  @default(1000) @db.Decimal(10, 2)
+  seatPrice              Decimal  @default(100) @db.Decimal(10, 2)
+  tablePromoPrice        Decimal? @db.Decimal(10, 2)
+  seatPromoPrice         Decimal? @db.Decimal(10, 2)
+  tableMembersPrice      Decimal? @db.Decimal(10, 2)
+  seatMembersPrice       Decimal? @db.Decimal(10, 2)
+  updatedAt              DateTime @updatedAt
+
+  @@map("inventory_settings")
+}
+
+model Voucher {
+  id              String       @id @default(cuid())
+  code            String       @unique
+  name            String?
+  notes           String?
+  type            VoucherType
+  discountPercent Decimal?     @db.Decimal(5, 2)
+  discountAmount  Decimal?     @db.Decimal(10, 2)
+  fixedPrice      Decimal?     @db.Decimal(10, 2)
+  maxRedemptions  Int
+  currentRedemptions Int       @default(0)
+  isActive        Boolean      @default(true)
+  expiresAt       DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  bookings        Booking[]
+
+  @@index([code])
+  @@index([isActive])
+  @@map("vouchers")
 }

@@ -101,7 +101,7 @@ export default function InventoryPage() {
       } else {
         throw new Error("Failed to save")
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to save inventory settings",
@@ -140,7 +140,7 @@ export default function InventoryPage() {
       } else {
         throw new Error("Failed to create")
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to create voucher",
@@ -161,7 +161,7 @@ export default function InventoryPage() {
       if (res.ok) {
         fetchVouchers()
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to update voucher",
@@ -179,7 +179,7 @@ export default function InventoryPage() {
       if (res.ok) {
         fetchVouchers()
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to delete voucher",
@@ -577,14 +577,14 @@ export default function InventoryPage() {
                     <div className="flex gap-2">
                       <Button
                         variant="outline"
-                        size="sm"
+                        className="text-sm px-3 py-1.5"
                         onClick={() => toggleVoucher(voucher.id, voucher.isActive)}
                       >
                         {voucher.isActive ? "Deactivate" : "Activate"}
                       </Button>
                       <Button
                         variant="outline"
-                        size="sm"
+                        className="text-sm px-3 py-1.5"
                         onClick={() => deleteVoucher(voucher.id)}
                       >
                         Delete

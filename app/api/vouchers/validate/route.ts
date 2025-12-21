@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma"
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { code, type, category, quantity } = body
+    const { code } = body
 
     if (!code) {
       return NextResponse.json({ error: "Code is required" }, { status: 400 })

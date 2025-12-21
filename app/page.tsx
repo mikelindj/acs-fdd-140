@@ -1,8 +1,7 @@
 import Link from "next/link"
-import { ArrowRight, Star, Calendar, MapPin } from "lucide-react"
+import { Calendar, MapPin } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { UnifrakturMaguntia } from "next/font/google"
-import Image from "next/image"
 import { prisma } from "@/lib/prisma"
 
 // 1. Configure the Old English Font

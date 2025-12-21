@@ -4,7 +4,7 @@ import { calculateTotal } from "@/lib/pricing"
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { quantity, category, type, voucherCode, membershipValidated } = body
+    const { quantity, category, type } = body
 
     if (!quantity || !category || !type) {
       return NextResponse.json(
@@ -13,15 +13,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const pricing = await calculateTotal(
+    const total = calculateTotal(
       parseInt(quantity),
       category,
-      type,
-      voucherCode || null,
-      membershipValidated || false
+      type
     )
 
-    return NextResponse.json(pricing)
+    return NextResponse.json({ total })
   } catch (error) {
     console.error("Error calculating pricing:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
