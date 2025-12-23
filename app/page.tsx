@@ -29,7 +29,7 @@ export default async function HomePage() {
   const eventName = eventSettings.eventName || "ACS Founders' Day Dinner"
   // eventDate from Prisma is a Date object or null
   const eventDate = eventSettings.eventDate
-  const eventVenue = eventSettings.eventVenue
+  const eventVenue = eventSettings.eventVenue?.trim() || null // Handle empty strings
 
   try {
     const settings = await prisma.inventorySettings.findUnique({
@@ -146,7 +146,7 @@ export default async function HomePage() {
                         </div>
                      </div>
 
-                     {eventVenue && (
+                     {eventVenue && eventVenue.length > 0 && (
                      <div className="flex items-center gap-4 bg-black/20 p-3 rounded-xl border border-white/5">
                         <div className="p-2 bg-brand-red rounded-lg text-white shadow-lg">
                            <MapPin className="w-5 h-5" />
