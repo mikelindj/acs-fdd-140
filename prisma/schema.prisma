@@ -73,6 +73,7 @@ model Booking {
   status          PaymentStatus   @default(PENDING)
   buyerId         String
   voucherId       String?
+  wantsBatchSeating Boolean?      @default(false)
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
   buyer           Guest           @relation("GuestBookings", fields: [buyerId], references: [id])
@@ -186,4 +187,14 @@ model Voucher {
   @@index([code])
   @@index([isActive])
   @@map("vouchers")
+}
+
+model EventSettings {
+  id        String   @id @default("event")
+  eventName String?
+  eventDate DateTime?
+  eventVenue String?
+  updatedAt DateTime @updatedAt
+
+  @@map("event_settings")
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { PrismaClientInitializationError } from "@prisma/client/runtime/library"
 
 export async function GET() {
   try {
@@ -64,6 +65,44 @@ export async function GET() {
       },
     })
   } catch (error) {
+    // If database connection fails, return default pricing
+    if (error instanceof PrismaClientInitializationError) {
+      const tablePrice = 1000
+      const seatPrice = 100
+      const vipTablePrice = tablePrice * 1.2
+      const vipSeatPrice = seatPrice * 1.2
+
+      return NextResponse.json({
+        table: {
+          regular: {
+            nonMember: tablePrice,
+            member: null,
+          },
+          promo: {
+            nonMember: null,
+            member: null,
+          },
+          vip: {
+            nonMember: vipTablePrice,
+            member: null,
+          },
+        },
+        seat: {
+          regular: {
+            nonMember: seatPrice,
+            member: null,
+          },
+          promo: {
+            nonMember: null,
+            member: null,
+          },
+          vip: {
+            nonMember: vipSeatPrice,
+            member: null,
+          },
+        },
+      })
+    }
     console.error("Error fetching public pricing:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }

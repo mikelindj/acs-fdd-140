@@ -210,6 +210,9 @@ export default function InventoryPage() {
               <Link href="/admin/dashboard" className="text-sm font-medium text-slate-700 hover:text-slate-900">
                 Dashboard
               </Link>
+              <Link href="/admin/setup" className="text-sm font-medium text-slate-700 hover:text-slate-900">
+                Setup
+              </Link>
               <Link href="/admin/tables" className="text-sm font-medium text-slate-700 hover:text-slate-900">
                 Tables
               </Link>

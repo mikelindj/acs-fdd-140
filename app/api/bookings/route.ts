@@ -108,32 +108,23 @@ export async function POST(request: NextRequest) {
     if (!alreadyPaid) {
       const buyerEmail = updated.buyer?.email
       const buyerName = updated.buyer?.name ?? "Guest"
-      const tableHashForEmail = updated.table?.tableHash
-      const inviteCodes =
-        updated.inviteCodes?.map((c) => c.code).filter(Boolean) ?? []
+      // Note: tableHashForEmail and inviteCodes are reserved for future email functionality
+      // const tableHashForEmail = updated.table?.tableHash
+      // const inviteCodes =
+      //   updated.inviteCodes?.map((c) => c.code).filter(Boolean) ?? []
 
       try {
-        const [{ sendEmail }, { getMagicLinkEmail, getInviteEmail }] = await Promise.all([
+        const [{ sendEmail }, { getBookingConfirmationEmail }] = await Promise.all([
           import("@/lib/email"),
           import("@/lib/email-templates"),
         ])
 
-        if (tableHashForEmail && buyerEmail) {
+        if (buyerEmail) {
           await sendEmail({
             to: buyerEmail,
-            subject: "Manage Your Table - ACS Founders' Day Dinner",
-            html: getMagicLinkEmail(tableHashForEmail, buyerName),
+            subject: "Booking Confirmed - ACS Founders' Day Dinner",
+            html: await getBookingConfirmationEmail(buyerName),
           })
-        }
-
-        if (buyerEmail && inviteCodes.length > 0) {
-          for (const code of inviteCodes) {
-            await sendEmail({
-              to: buyerEmail,
-              subject: "Invite Your Guests - ACS Founders' Day Dinner",
-              html: getInviteEmail(code, buyerName, "Guest"),
-            })
-          }
         }
       } catch (emailError) {
         console.error("Booking paid email error:", emailError)

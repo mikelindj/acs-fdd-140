@@ -2,6 +2,7 @@ import type { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
+import { PrismaClientInitializationError } from "@prisma/client/runtime/library"
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -37,7 +38,10 @@ export const authOptions: NextAuthOptions = {
             name: admin.name,
           }
         } catch (error) {
-          console.error("Auth error:", error)
+          // Only log non-connection errors to avoid spam when DB is unavailable
+          if (!(error instanceof PrismaClientInitializationError)) {
+            console.error("Auth error:", error)
+          }
           return null
         }
       }

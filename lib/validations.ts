@@ -2,12 +2,26 @@ import { z } from 'zod'
 
 export const bookingSchema = z.object({
   type: z.enum(['TABLE', 'SEAT']),
+  tableCapacity: z.number().optional(), // 10 or 11, only used when type is TABLE
   category: z.enum(['VIP', 'SCHOOL', 'OBA', 'GUEST']),
   quantity: z.number().min(1).max(11),
   buyerName: z.string().min(1, 'Name is required'),
   buyerEmail: z.string().email('Valid email is required'),
   buyerMobile: z.string().optional(),
   membershipNo: z.string().optional(),
+  membershipValidated: z.boolean().optional(), // Whether membership was validated on frontend
+  wantsBatchSeating: z.boolean().optional(),
+  school: z.string().optional(),
+  gradYear: z.number().int().min(1900).max(new Date().getFullYear() + 10).optional(),
+}).refine((data) => {
+  // If wantsBatchSeating is true, school and gradYear are required
+  if (data.wantsBatchSeating) {
+    return !!data.school?.trim() && !!data.gradYear
+  }
+  return true
+}, {
+  message: "School and Year of Completion are required when requesting batch seating",
+  path: ["school"], // This will show the error on the school field
 })
 
 export const guestRegistrationSchema = z.object({
