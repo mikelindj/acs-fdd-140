@@ -32,18 +32,21 @@ export async function createBooking(data: z.infer<typeof bookingSchema>) {
     const transactionFee = totalAmount - subtotal
 
     // Create or reuse buyer guest (email is unique)
+    // UPDATE: Saving gradYear (Batch)
     const buyer = await prisma.guest.upsert({
       where: { email: validated.buyerEmail },
       update: {
         name: validated.buyerName,
         mobile: validated.buyerMobile,
         membershipNo: validated.membershipNo ?? undefined,
+        gradYear: validated.gradYear ?? undefined,
       },
       create: {
         name: validated.buyerName,
         email: validated.buyerEmail,
         mobile: validated.buyerMobile,
         membershipNo: validated.membershipNo,
+        gradYear: validated.gradYear,
       },
     })
 
@@ -65,11 +68,12 @@ export async function createBooking(data: z.infer<typeof bookingSchema>) {
     let tableHash: string | null = null
     if (validated.type === 'TABLE') {
       tableHash = generateTableHash()
-      // Create a table record (will be assigned later)
+      // Create a table record
+      // UPDATE: Using dynamic capacity (10 or 11)
       await prisma.table.create({
         data: {
           tableNumber: `TEMP-${booking.id.substring(0, 8)}`,
-          capacity: 11,
+          capacity: validated.capacity || 11, 
           status: 'RESERVED',
           tableHash,
           bookingId: booking.id,
@@ -79,7 +83,18 @@ export async function createBooking(data: z.infer<typeof bookingSchema>) {
 
     // Generate invite codes for guests
     const inviteCodes = []
-    for (let i = 0; i < validated.quantity; i++) {
+    // If it's a table, we generate invites equal to capacity (10 or 11), 
+    // OR just based on quantity if the logic dictates. 
+    // Usually for a table booking, quantity is 1 (table), but we need 'capacity' number of invites?
+    // The previous logic used 'validated.quantity' for invites loop.
+    // If Type=TABLE, quantity is usually 1. We probably want 'capacity' number of invites.
+    // If Type=SEAT, quantity is N. 
+    
+    const numberOfInvites = validated.type === 'TABLE' 
+      ? (validated.capacity || 11) 
+      : validated.quantity;
+
+    for (let i = 0; i < numberOfInvites; i++) {
       const code = generateInviteCode()
       await prisma.inviteCode.create({
         data: {
@@ -157,4 +172,3 @@ export async function createBooking(data: z.infer<typeof bookingSchema>) {
     return { error: "Failed to create booking" }
   }
 }
-

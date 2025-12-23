@@ -8,6 +8,9 @@ export const bookingSchema = z.object({
   buyerEmail: z.string().email('Valid email is required'),
   buyerMobile: z.string().optional(),
   membershipNo: z.string().optional(),
+  // NEW FIELDS
+  gradYear: z.coerce.number().int().min(1900).max(new Date().getFullYear() + 5).optional(), 
+  capacity: z.number().optional(), 
 })
 
 export const guestRegistrationSchema = z.object({
@@ -42,4 +45,3 @@ export type GuestRegistrationInput = z.infer<typeof guestRegistrationSchema>
 export type AdminLoginInput = z.infer<typeof adminLoginSchema>
 export type TableAssignmentInput = z.infer<typeof tableAssignmentSchema>
 export type BroadcastInput = z.infer<typeof broadcastSchema>
-
