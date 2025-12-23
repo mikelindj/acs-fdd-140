@@ -6,6 +6,10 @@ import { prisma } from "@/lib/prisma"
 import { getEventSettings } from "@/lib/event-settings"
 import { PrismaClientInitializationError } from "@prisma/client/runtime/library"
 
+// Force dynamic rendering to ensure fresh data on each request
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 // 1. Configure the Old English Font
 const oldFont = UnifrakturMaguntia({ 
   weight: "400", 
@@ -29,7 +33,18 @@ export default async function HomePage() {
   const eventName = eventSettings.eventName || "ACS Founders' Day Dinner"
   // eventDate from Prisma is a Date object or null
   const eventDate = eventSettings.eventDate
-  const eventVenue = eventSettings.eventVenue?.trim() || null // Handle empty strings
+  // Handle venue - trim whitespace but preserve the value
+  const eventVenue = eventSettings.eventVenue ? eventSettings.eventVenue.trim() : null
+  
+  // Debug logging (remove in production if needed)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Event Settings:', {
+      eventName: eventSettings.eventName,
+      eventDate: eventSettings.eventDate,
+      eventVenue: eventSettings.eventVenue,
+      processedVenue: eventVenue,
+    })
+  }
 
   try {
     const settings = await prisma.inventorySettings.findUnique({
