@@ -2,6 +2,8 @@ import Link from "next/link"
 import { Calendar, MapPin } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { UnifrakturMaguntia } from "next/font/google"
+import Image from "next/image"
+import { PricingCard } from "@/components/PricingCard";
 import { prisma } from "@/lib/prisma"
 import { getEventSettings } from "@/lib/event-settings"
 import { PrismaClientInitializationError } from "@prisma/client/runtime/library"
@@ -165,6 +167,50 @@ export default async function HomePage() {
         </section>
 
         {/* --- PRICING SECTION --- */}
+<section id="pricing" className="py-24 bg-slate-50 relative">
+  <div className="container mx-auto px-4 max-w-5xl relative z-10">
+    <div className="text-center mb-16 space-y-4">
+       <h2 className="text-3xl md:text-5xl font-bold text-primary">Reserve Your Seat</h2>
+       <p className="text-slate-600 text-lg max-w-2xl mx-auto">
+         Choose from VIP, School, OBA, or Guest categories. All tables accommodate 10-11 guests.
+       </p>
+    </div>
+    
+    <div className="grid md:grid-cols-2 gap-8">
+       
+       {/* 2. USE THE COMPONENT FOR FULL TABLE */}
+       <PricingCard 
+         title="Full Table"
+         subtitle="Best for groups & reunions"
+         price="$1,000"
+         priceDetail="/ table"
+         features={[
+           "Priority seating location",
+           "10-11 Guest tickets included",
+           "Custom Table Signage"
+         ]}
+         href="/book"
+         isPopular={false}
+         buttonText="Book Full Table"
+         variant="default"
+       />
+
+       {/* 3. USE THE COMPONENT FOR INDIVIDUAL SEAT */}
+       <PricingCard 
+         title="Individual Seat"
+         subtitle="For single guests"
+         price="$100"
+         priceDetail="/ person"
+         features={[
+           "Open seating assignment",
+           "1 Guest ticket included",
+           "Networking opportunities"
+         ]}
+         href="/book"
+         isPopular={false}
+         buttonText="Book Individual Seat"
+         variant="outline"
+       />
         <section id="pricing" className="py-24 bg-white bg-wavy-pattern relative">
           <div className="container max-w-6xl mx-auto px-4 relative z-10">
             <div className="text-center mb-16 space-y-4">
@@ -261,8 +307,9 @@ export default async function HomePage() {
                </div>
             </div>
 
-          </div>
-        </section>
+    </div>
+  </div>
+</section>
 
       </main>
 
