@@ -152,9 +152,11 @@ export async function createHitPayPayment(
 ): Promise<HitPayPaymentRequestResponse> {
   ensureConfig()
 
-  if (isLocalhostUrl(options.redirectUrl) || isLocalhostUrl(options.webhookUrl)) {
+  // Allow localhost override for development/testing with tunneling services
+  const allowLocalhost = process.env.HITPAY_ALLOW_LOCALHOST === "true"
+  if (!allowLocalhost && (isLocalhostUrl(options.redirectUrl) || isLocalhostUrl(options.webhookUrl))) {
     throw new Error(
-      "HitPay requires public HTTPS URLs for redirect and webhook; please set HITPAY_RETURN_URL / HITPAY_WEBHOOK_URL to a public domain."
+      "HitPay requires public HTTPS URLs for redirect and webhook; please set HITPAY_RETURN_URL / HITPAY_WEBHOOK_URL to a public domain. For localhost testing, use a tunneling service or set HITPAY_ALLOW_LOCALHOST=true."
     )
   }
 

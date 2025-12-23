@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Poppins } from "next/font/google"
 import "./globals.css"
 import { Toaster } from "@/components/ui/toaster"
+import { getEventSettings } from "@/lib/event-settings"
 
 // Configure Poppins
 const poppins = Poppins({ 
@@ -18,6 +19,17 @@ export const metadata: Metadata = {
     shortcut: "/images/acs-logo.png",
     apple: "/images/acs-logo.png",
   },
+export async function generateMetadata(): Promise<Metadata> {
+  const eventSettings = await getEventSettings()
+  const eventName = eventSettings.eventName || "ACS Founders' Day Dinner"
+  const description = eventSettings.eventVenue 
+    ? `Join us for ${eventName}${eventSettings.eventDate ? ` on ${new Date(eventSettings.eventDate).toLocaleDateString()}` : ""} at ${eventSettings.eventVenue}.`
+    : "Celebrating 140 Years of Excellence. Join us for the ACS Founders' Day Dinner."
+  
+  return {
+    title: eventName,
+    description,
+  }
 }
 
 export default function RootLayout({

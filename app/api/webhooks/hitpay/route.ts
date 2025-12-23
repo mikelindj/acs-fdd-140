@@ -103,37 +103,50 @@ export async function POST(request: NextRequest) {
       data: updateData,
     })
 
-    // Send emails only on first transition to PAID
-    if (status === "PAID" && !alreadyPaid) {
-      const buyerEmail = booking.buyer?.email
-      const buyerName = booking.buyer?.name ?? "Guest"
-      const tableHash = booking.table?.tableHash
-      const inviteCodes =
-        booking.inviteCodes?.map((c) => c.code).filter(Boolean) ?? []
+    // Send consolidated email only on first transition to PAID
+    if (status === "PAID" && !alreadyPaid && booking.buyer?.email) {
+      const buyerEmail = booking.buyer.email
+      const buyerName = booking.buyer.name ?? "Guest"
 
       try {
-        const [{ sendEmail }, { getMagicLinkEmail, getInviteEmail }] =
-          await Promise.all([
-            import("@/lib/email"),
-            import("@/lib/email-templates"),
-          ])
+        // Find ALL PAID bookings for this buyer to send a single consolidated email
+        const allPaidBookings = await prisma.booking.findMany({
+          where: {
+            buyerId: booking.buyerId,
+            status: "PAID",
+          },
+          include: {
+            table: true,
+          },
+          orderBy: {
+            createdAt: "asc",
+          },
+        })
 
-        if (tableHash && buyerEmail) {
+        if (allPaidBookings.length > 0) {
+          const [{ sendEmail }, { getPurchaseConfirmationEmail }] =
+            await Promise.all([
+              import("@/lib/email"),
+              import("@/lib/email-templates"),
+            ])
+
+          // Prepare booking data for email
+          const bookingData = allPaidBookings.map((b) => ({
+            id: b.id,
+            type: b.type,
+            quantity: b.quantity,
+            totalAmount: b.totalAmount.toString(),
+            tableHash: b.table?.tableHash || null,
+            tableNumber: b.table?.tableNumber || null,
+            tableCapacity: b.table?.capacity || null,
+          }))
+
+          // Send single consolidated email
           await sendEmail({
             to: buyerEmail,
-            subject: "Manage Your Table - ACS Founders' Day Dinner",
-            html: getMagicLinkEmail(tableHash, buyerName),
+            subject: "Thank You for Your Purchase - ACS Founders' Day Dinner",
+            html: await getPurchaseConfirmationEmail(buyerName, bookingData),
           })
-        }
-
-        if (buyerEmail && inviteCodes.length > 0) {
-          for (const code of inviteCodes) {
-            await sendEmail({
-              to: buyerEmail,
-              subject: "Invite Your Guests - ACS Founders' Day Dinner",
-              html: getInviteEmail(code, buyerName, "Guest"),
-            })
-          }
         }
       } catch (emailError) {
         console.error("HitPay webhook email error:", emailError)

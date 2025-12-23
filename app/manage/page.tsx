@@ -35,11 +35,13 @@ function ManagePageContent() {
   const tableHash = searchParams.get("table")
   const paymentStatus = searchParams.get("paymentStatus")
   const paymentId = searchParams.get("paymentId")
+  const multipleTables = searchParams.get("multipleTables")
   const { toast } = useToast()
   const [booking, setBooking] = useState<Booking | null>(null)
   const [guests, setGuests] = useState<Guest[]>([])
   const [loading, setLoading] = useState(true)
   const [announced, setAnnounced] = useState(false)
+  const [multipleTablesAnnounced, setMultipleTablesAnnounced] = useState(false)
   const [reconciling, setReconciling] = useState(false)
 
   const fetchBooking = useCallback(async () => {
@@ -82,17 +84,33 @@ function ManagePageContent() {
 
     toast({
       title: isSuccess
-        ? "Payment completed"
+        ? "Payment completed successfully!"
         : isFailure
         ? "Payment not completed"
         : "Payment update",
-      description: paymentId
+      description: isSuccess
+        ? "Thank you for your purchase. You can now start inviting guests to your table."
+        : paymentId
         ? `Reference: ${paymentId}`
         : "Payment status received.",
       variant: isFailure ? "destructive" : "default",
     })
     setAnnounced(true)
   }, [paymentStatus, paymentId, toast, announced])
+
+  // Show toast if user has multiple tables
+  useEffect(() => {
+    if (multipleTablesAnnounced) return
+    if (multipleTables !== "true") return
+    if (!paymentStatus || paymentStatus.toLowerCase() !== "completed") return
+
+    toast({
+      title: "You have multiple tables",
+      description: "Check your email for links to manage all your tables. You can start inviting guests to this table now.",
+      variant: "default",
+    })
+    setMultipleTablesAnnounced(true)
+  }, [multipleTables, paymentStatus, toast, multipleTablesAnnounced])
 
   // If paymentStatus indicates success, reconcile booking status via API
   useEffect(() => {

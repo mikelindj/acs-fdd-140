@@ -2,7 +2,6 @@
 
 import { prisma } from "@/lib/prisma"
 import { bookingSchema } from "@/lib/validations"
-import { calculateTotal } from "@/lib/pricing"
 import { generateTableHash, generateInviteCode } from "@/lib/crypto"
 import { createHitPayPayment } from "@/lib/hitpay"
 import { validateMembershipNumber } from "@/lib/membership"
@@ -20,16 +19,111 @@ export async function createBooking(data: z.infer<typeof bookingSchema>) {
       }
     }
 
-    // Calculate pricing
-    const totalAmount = calculateTotal(
-      validated.quantity,
-      validated.category,
-      validated.type
-    )
-    const subtotal = validated.type === 'TABLE' 
-      ? (validated.category === 'VIP' ? 1200 : 1000) * validated.quantity
-      : (validated.category === 'VIP' ? 120 : 100) * validated.quantity
-    const transactionFee = totalAmount - subtotal
+    // Fetch inventory settings for dynamic pricing
+    const inventorySettings = await prisma.inventorySettings.findUnique({
+      where: { id: "inventory" },
+    })
+
+    if (!inventorySettings) {
+      return { error: "Inventory settings not configured" }
+    }
+
+    // Check inventory availability before proceeding
+    const isTable = validated.type === 'TABLE'
+    const isElevenSeater = isTable && validated.tableCapacity === 11
+
+    if (isTable) {
+      // Count existing PAID table bookings
+      const existingTableBookings = await prisma.booking.findMany({
+        where: {
+          type: "TABLE",
+          status: "PAID",
+        },
+        include: {
+          table: true,
+        },
+      })
+
+      if (isElevenSeater) {
+        // Check 11-seater availability
+        const bookedElevenSeaters = existingTableBookings.filter(
+          (b) => b.table?.capacity === 11
+        ).length
+        const available = inventorySettings.maxElevenSeaterTables - bookedElevenSeaters
+
+        if (validated.quantity > available) {
+          return { 
+            error: `Only ${available} eleven-seater table${available !== 1 ? 's' : ''} available. You requested ${validated.quantity}.` 
+          }
+        }
+      } else {
+        // Check 10-seater availability
+        const bookedElevenSeaters = existingTableBookings.filter(
+          (b) => b.table?.capacity === 11
+        ).length
+        const bookedTenSeaters = existingTableBookings.filter(
+          (b) => b.table?.capacity === 10
+        ).length
+        const available = inventorySettings.totalTables - bookedElevenSeaters - bookedTenSeaters
+
+        if (validated.quantity > available) {
+          return { 
+            error: `Only ${available} ten-seater table${available !== 1 ? 's' : ''} available. You requested ${validated.quantity}.` 
+          }
+        }
+      }
+    } else {
+      // Check seat availability
+      const existingSeatBookings = await prisma.booking.findMany({
+        where: {
+          type: "SEAT",
+          status: "PAID",
+        },
+      })
+
+      const bookedSeats = existingSeatBookings.reduce((sum, booking) => sum + booking.quantity, 0)
+      const totalAvailableSeats = (inventorySettings.totalTables * 10) + inventorySettings.maxElevenSeaterTables
+      const available = totalAvailableSeats - bookedSeats
+
+      if (validated.quantity > available) {
+        return { 
+          error: `Only ${available} seat${available !== 1 ? 's' : ''} available. You requested ${validated.quantity}.` 
+        }
+      }
+    }
+
+    // Calculate pricing based on inventory settings
+    // isTable and isElevenSeater already declared above
+    const useMembersPrice = validated.membershipValidated && validated.membershipNo
+    
+    let tablePrice: number
+    let seatPrice: number
+    
+    if (useMembersPrice) {
+      // Use members price if validated
+      tablePrice = Number(inventorySettings.tableMembersPrice || inventorySettings.tablePrice)
+      seatPrice = Number(inventorySettings.seatMembersPrice || inventorySettings.seatPrice)
+    } else {
+      // Use promo price if available, otherwise base price
+      tablePrice = Number(inventorySettings.tablePromoPrice || inventorySettings.tablePrice)
+      seatPrice = Number(inventorySettings.seatPromoPrice || inventorySettings.seatPrice)
+    }
+
+    let subtotal: number
+    if (isElevenSeater) {
+      // 11-seater = 1 table (10-seater) + 1 seat
+      subtotal = (tablePrice + seatPrice) * validated.quantity
+    } else if (isTable) {
+      // 10-seater table
+      subtotal = tablePrice * validated.quantity
+    } else {
+      // Individual seat
+      subtotal = seatPrice * validated.quantity
+    }
+
+    // No transaction fee charged to customers
+    const transactionFee = 0
+    const totalAmount = Math.round(subtotal * 100) / 100
 
     // Create or reuse buyer guest (email is unique)
     // UPDATE: Saving gradYear (Batch)
@@ -39,6 +133,7 @@ export async function createBooking(data: z.infer<typeof bookingSchema>) {
         name: validated.buyerName,
         mobile: validated.buyerMobile,
         membershipNo: validated.membershipNo ?? undefined,
+        school: validated.school ?? undefined,
         gradYear: validated.gradYear ?? undefined,
       },
       create: {
@@ -46,6 +141,7 @@ export async function createBooking(data: z.infer<typeof bookingSchema>) {
         email: validated.buyerEmail,
         mobile: validated.buyerMobile,
         membershipNo: validated.membershipNo,
+        school: validated.school,
         gradYear: validated.gradYear,
       },
     })
@@ -61,6 +157,7 @@ export async function createBooking(data: z.infer<typeof bookingSchema>) {
         balanceDue: totalAmount,
         buyerId: buyer.id,
         status: 'PENDING',
+        wantsBatchSeating: validated.wantsBatchSeating ?? false,
       },
     })
 
@@ -74,6 +171,13 @@ export async function createBooking(data: z.infer<typeof bookingSchema>) {
         data: {
           tableNumber: `TEMP-${booking.id.substring(0, 8)}`,
           capacity: validated.capacity || 11, 
+      // Create a table record (will be assigned later)
+      // Use tableCapacity if provided, otherwise default to 11
+      const capacity = validated.tableCapacity || 11
+      await prisma.table.create({
+        data: {
+          tableNumber: `TEMP-${booking.id.substring(0, 8)}`,
+          capacity,
           status: 'RESERVED',
           tableHash,
           bookingId: booking.id,
@@ -106,10 +210,13 @@ export async function createBooking(data: z.infer<typeof bookingSchema>) {
       inviteCodes.push(code)
     }
 
+    // Helper function to normalize URLs
     const trimSlash = (value: string) => value.replace(/\/+$/, "")
     const isLocalhost = (value: string) =>
-      value.includes("localhost") || value.includes("127.0.0.1")
+      /localhost|127\.0\.0\.1|0\.0\.0\.0/i.test(value)
 
+    // Get base URLs from environment variables
+    // Priority: HITPAY_RETURN_URL > NEXT_PUBLIC_SITE_URL
     const redirectBase =
       process.env.HITPAY_RETURN_URL ?? process.env.NEXT_PUBLIC_SITE_URL
     const webhookBase =
@@ -124,17 +231,23 @@ export async function createBooking(data: z.infer<typeof bookingSchema>) {
       }
     }
 
-    const redirectUrl = `${trimSlash(redirectBase)}/redirect?reference=${booking.id}`
+    // Construct redirect URL - HitPay will append its own query parameters
+    // Use 'booking' parameter to avoid conflicts with HitPay's 'reference' parameter
+    const redirectUrl = `${trimSlash(redirectBase)}/redirect?booking=${booking.id}`
     const webhookUrl = `${trimSlash(webhookBase)}/api/webhooks/hitpay`
 
-    if (isLocalhost(redirectUrl) || isLocalhost(webhookUrl)) {
+    // Check for localhost URLs (HitPay requires public HTTPS URLs)
+    // Allow override via HITPAY_ALLOW_LOCALHOST for development/testing with tunneling services
+    const allowLocalhost = process.env.HITPAY_ALLOW_LOCALHOST === "true"
+    if (!allowLocalhost && (isLocalhost(redirectUrl) || isLocalhost(webhookUrl))) {
       console.error("HitPay requires public URLs for redirect/webhook", {
         redirectUrl,
         webhookUrl,
+        hint: "For localhost testing, use a tunneling service (e.g., ngrok) and set HITPAY_RETURN_URL to the tunnel URL, or set HITPAY_ALLOW_LOCALHOST=true",
       })
       return {
         error:
-          "Payment is not configured: HitPay needs public https URLs for redirect and webhook. Set HITPAY_RETURN_URL and HITPAY_WEBHOOK_URL to a public domain.",
+          "Payment is not configured: HitPay needs public https URLs for redirect and webhook. Set HITPAY_RETURN_URL and HITPAY_WEBHOOK_URL to a public domain. For localhost testing, use a tunneling service or set HITPAY_ALLOW_LOCALHOST=true.",
       }
     }
 
