@@ -11,14 +11,6 @@ const poppins = Poppins({
   variable: "--font-poppins",
 })
 
-export const metadata: Metadata = {
-  title: "ACS Founders' Day Dinner - 140 Years",
-  description: "Celebrating 140 Years of Excellence. Join us for the ACS Founders' Day Dinner.",
-  icons: {
-    icon: "/images/acs-logo.png", // Points to your existing logo
-    shortcut: "/images/acs-logo.png",
-    apple: "/images/acs-logo.png",
-  },
 export async function generateMetadata(): Promise<Metadata> {
   const eventSettings = await getEventSettings()
   const eventName = eventSettings.eventName || "ACS Founders' Day Dinner"
