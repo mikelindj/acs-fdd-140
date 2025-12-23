@@ -5,13 +5,12 @@ import { useSearchParams } from "next/navigation"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 
-interface InviteCode {
-  id: string
-  code: string
-}
-
 interface Table {
-  tableNumber?: string | null
+  id: string
+  tableNumber: string
+  tableHash: string
+  capacity: number
+  status: string
 }
 
 interface Booking {
@@ -19,15 +18,9 @@ interface Booking {
   type: string
   status: string
   totalAmount: string | number
+  quantity: number
+  createdAt: string
   table?: Table | null
-  inviteCodes?: InviteCode[]
-}
-
-interface Guest {
-  id: string
-  name: string
-  email?: string | null
-  tableId?: string | null
 }
 
 function ManagePageContent() {
@@ -38,7 +31,7 @@ function ManagePageContent() {
   const multipleTables = searchParams.get("multipleTables")
   const { toast } = useToast()
   const [booking, setBooking] = useState<Booking | null>(null)
-  const [guests, setGuests] = useState<Guest[]>([])
+  const [allBookings, setAllBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
   const [announced, setAnnounced] = useState(false)
   const [multipleTablesAnnounced, setMultipleTablesAnnounced] = useState(false)
@@ -50,7 +43,9 @@ function ManagePageContent() {
       const data = await res.json()
       if (data.booking) {
         setBooking(data.booking)
-        setGuests(data.guests || [])
+      }
+      if (data.allBookings) {
+        setAllBookings(data.allBookings)
       }
     } catch {
       toast({
@@ -89,7 +84,7 @@ function ManagePageContent() {
         ? "Payment not completed"
         : "Payment update",
       description: isSuccess
-        ? "Thank you for your purchase. You can now start inviting guests to your table."
+        ? "Thank you for your purchase. Your booking has been confirmed."
         : paymentId
         ? `Reference: ${paymentId}`
         : "Payment status received.",
@@ -106,7 +101,7 @@ function ManagePageContent() {
 
     toast({
       title: "You have multiple tables",
-      description: "Check your email for links to manage all your tables. You can start inviting guests to this table now.",
+      description: "Check your email for links to manage all your tables.",
       variant: "default",
     })
     setMultipleTablesAnnounced(true)
@@ -156,99 +151,281 @@ function ManagePageContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-slate-600">Loading...</div>
-      </div>
-    )
-  }
-
-  if (!booking) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <h1 className="text-2xl font-semibold text-slate-900 mb-4">Booking Not Found</h1>
-          <p className="text-slate-600">The table link is invalid or has expired.</p>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="min-h-screen bg-white py-12 px-4">
-      <div className="mx-auto max-w-4xl">
-        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-          <h1 className="text-3xl font-semibold tracking-tight text-slate-900 mb-6">
-            Manage Your Table
-          </h1>
-
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold text-slate-900 mb-4">Booking Details</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-slate-500">Type</Label>
-                <p className="mt-1 font-semibold text-slate-900">{booking.type}</p>
-              </div>
-              <div>
-                <Label className="text-slate-500">Status</Label>
-                <p className="mt-1 font-semibold text-slate-900">{booking.status}</p>
-              </div>
-              <div>
-                <Label className="text-slate-500">Total Amount</Label>
-                <p className="mt-1 font-semibold text-slate-900">S${booking.totalAmount}</p>
-              </div>
-              <div>
-                <Label className="text-slate-500">Table Number</Label>
-                <p className="mt-1 font-semibold text-slate-900">
-                  {booking.table?.tableNumber || "Not assigned"}
-                </p>
+      <div className="min-h-screen flex flex-col bg-slate-50">
+        {/* --- HEADER --- */}
+        <header className="relative z-50 w-full bg-white bg-wavy-pattern border-b border-slate-100 shadow-sm">
+          <div className="container max-w-6xl mx-auto px-4 h-32 md:h-40 flex items-center justify-between">
+            <div className="flex items-center">
+              {/* ACS 140 Logo (Big) */}
+              <div className="relative h-24 md:h-32 w-auto transition-transform hover:scale-105 duration-300">
+                <img 
+                  src="/images/acs-140-logo.jpg" 
+                  alt="ACS 140 Years" 
+                  className="object-contain w-full h-full"
+                />
               </div>
             </div>
+            
+            <nav className="flex items-center gap-6 text-sm font-medium text-slate-600">
+              {/* Navigation Items (Empty) */}
+            </nav>
           </div>
+        </header>
 
-          <div>
-            <h2 className="text-xl font-semibold text-slate-900 mb-4">Guests</h2>
-            {guests.length === 0 ? (
-              <p className="text-slate-600">No guests registered yet.</p>
-            ) : (
-              <div className="space-y-2">
-                {guests.map((guest) => (
-                  <div
-                    key={guest.id}
-                    className="rounded-lg border border-slate-200 bg-white p-4 flex justify-between items-center shadow-sm"
-                  >
-                    <div>
-                      <p className="font-semibold text-slate-900">{guest.name}</p>
-                      {guest.email && <p className="text-sm text-slate-500">{guest.email}</p>}
-                    </div>
-                    {guest.tableId && (
-                      <span className="inline-flex rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-800">
-                        Seated
-                      </span>
-                    )}
-                  </div>
-                ))}
+        <main className="flex-1 flex items-center justify-center py-12 px-4">
+          <div className="text-slate-600">Loading...</div>
+        </main>
+
+        {/* --- FOOTER --- */}
+        <footer className="bg-slate-900 border-t border-slate-700 py-12">
+          <div className="container max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div className="flex items-center gap-3">
+              <div className="relative h-10 w-10 opacity-90 hover:opacity-100 transition-opacity duration-500">
+                <img 
+                  src="/images/acs-logo.png" 
+                  alt="ACS Logo" 
+                  className="object-contain w-full h-full"
+                />
               </div>
-            )}
+              <span className="font-bold text-white tracking-tight">ACS OBA</span>
+            </div>
+            
+            <div className="text-center text-white md:text-right">
+              © 140th ACS OBA FOUNDERS DAY DINNER, 2026
+              <p className="text-xs text-slate-400 mt-2">This page designed and built by <a href="https://nofa.io" className="hover:text-white transition-colors">Michael Lin</a> and <a href="https://github.com/kennethch22" className="hover:text-white transition-colors">Kenneth Hendra</a></p>
+            </div>
           </div>
+        </footer>
+      </div>
+    )
+  }
 
-          <div className="mt-8">
-            <h2 className="text-xl font-semibold text-slate-900 mb-4">Invite Codes</h2>
-            <p className="text-slate-600 mb-4">
-              Share these codes with your guests to register:
-            </p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {booking.inviteCodes?.map((code: InviteCode) => (
+  if (!booking && allBookings.length === 0) {
+    return (
+      <div className="min-h-screen flex flex-col bg-slate-50">
+        {/* --- HEADER --- */}
+        <header className="relative z-50 w-full bg-white bg-wavy-pattern border-b border-slate-100 shadow-sm">
+          <div className="container max-w-6xl mx-auto px-4 h-32 md:h-40 flex items-center justify-between">
+            <div className="flex items-center">
+              {/* ACS 140 Logo (Big) */}
+              <div className="relative h-24 md:h-32 w-auto transition-transform hover:scale-105 duration-300">
+                <img 
+                  src="/images/acs-140-logo.jpg" 
+                  alt="ACS 140 Years" 
+                  className="object-contain w-full h-full"
+                />
+              </div>
+            </div>
+            
+            <nav className="flex items-center gap-6 text-sm font-medium text-slate-600">
+              {/* Navigation Items (Empty) */}
+            </nav>
+          </div>
+        </header>
+
+        <main className="flex-1 flex items-center justify-center py-12 px-4">
+          <div className="text-center">
+            <h1 className="text-2xl font-semibold text-slate-900 mb-4">Booking Not Found</h1>
+            <p className="text-slate-600">The table link is invalid or has expired.</p>
+          </div>
+        </main>
+
+        {/* --- FOOTER --- */}
+        <footer className="bg-slate-900 border-t border-slate-700 py-12">
+          <div className="container max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div className="flex items-center gap-3">
+              <div className="relative h-10 w-10 opacity-90 hover:opacity-100 transition-opacity duration-500">
+                <img 
+                  src="/images/acs-logo.png" 
+                  alt="ACS Logo" 
+                  className="object-contain w-full h-full"
+                />
+              </div>
+              <span className="font-bold text-white tracking-tight">ACS OBA</span>
+            </div>
+            
+            <div className="text-center text-white md:text-right">
+              © 140th ACS OBA FOUNDERS DAY DINNER, 2026
+              <p className="text-xs text-slate-400 mt-2">This page designed and built by <a href="https://nofa.io" className="hover:text-white transition-colors">Michael Lin</a> and <a href="https://github.com/kennethch22" className="hover:text-white transition-colors">Kenneth Hendra</a></p>
+            </div>
+          </div>
+        </footer>
+      </div>
+    )
+  }
+
+  // Use allBookings if available, otherwise fall back to single booking
+  const bookingsToDisplay = allBookings.length > 0 ? allBookings : booking ? [booking] : []
+
+  return (
+    <div className="min-h-screen flex flex-col bg-slate-50">
+      {/* --- HEADER --- */}
+      <header className="relative z-50 w-full bg-white bg-wavy-pattern border-b border-slate-100 shadow-sm">
+        <div className="container max-w-6xl mx-auto px-4 h-32 md:h-40 flex items-center justify-between">
+          <div className="flex items-center">
+             {/* ACS 140 Logo (Big) */}
+             <div className="relative h-24 md:h-32 w-auto transition-transform hover:scale-105 duration-300">
+               <img 
+                 src="/images/acs-140-logo.jpg" 
+                 alt="ACS 140 Years" 
+                 className="object-contain w-full h-full"
+               />
+             </div>
+          </div>
+          
+          <nav className="flex items-center gap-6 text-sm font-medium text-slate-600">
+             {/* Navigation Items (Empty) */}
+          </nav>
+        </div>
+      </header>
+
+      <main className="flex-1 py-12 px-4">
+        <div className="container max-w-6xl mx-auto">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-8 space-y-4">
+              <h1 className="text-3xl md:text-5xl font-bold text-primary">
+                {allBookings.length > 1 ? "Your Reservations" : "View Your Reservation"}
+              </h1>
+              <p className="text-slate-600 text-lg max-w-2xl mx-auto">
+                {allBookings.length > 1 
+                  ? `You have ${allBookings.length} table${allBookings.length > 1 ? 's' : ''} reserved`
+                  : "View your booking details"}
+              </p>
+            </div>
+            
+            <div className="space-y-4">
+              {bookingsToDisplay.map((bookingItem) => (
                 <div
-                  key={code.id}
-                  className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-center font-mono text-lg text-slate-900 shadow-sm"
+                  key={bookingItem.id}
+                  className="rounded-[2rem] border border-slate-200 bg-white bg-wavy-pattern p-6 md:p-8 shadow-lg"
                 >
-                  {code.code}
+                  <div className="flex flex-col md:flex-row gap-6">
+                    {/* Left side - Booking Details */}
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-slate-900 mb-4">Booking Details</h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-slate-500">Type</Label>
+                          <p className="mt-1 font-semibold text-slate-900">{bookingItem.type}</p>
+                        </div>
+                        <div>
+                          <Label className="text-slate-500">Quantity</Label>
+                          <p className="mt-1 font-semibold text-slate-900">{bookingItem.quantity}</p>
+                        </div>
+                        <div>
+                          <Label className="text-slate-500">Status</Label>
+                          <p className="mt-1 font-semibold text-slate-900">
+                            <span
+                              className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
+                                bookingItem.status === "PAID"
+                                  ? "bg-green-100 text-green-800"
+                                  : bookingItem.status === "PENDING"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : "bg-slate-100 text-slate-800"
+                              }`}
+                            >
+                              {bookingItem.status}
+                            </span>
+                          </p>
+                        </div>
+                        <div>
+                          <Label className="text-slate-500">Total Amount</Label>
+                          <p className="mt-1 font-semibold text-slate-900">S${bookingItem.totalAmount}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right side - Table Assignment */}
+                    <div className="md:w-80 flex-shrink-0">
+                      <h3 className="text-lg font-semibold text-slate-900 mb-4">
+                        Table Assignment{bookingItem.quantity > 1 ? ` (${bookingItem.quantity} tables)` : ''}
+                      </h3>
+                      <div className="space-y-3">
+                        {Array.from({ length: bookingItem.quantity }).map((_, index) => {
+                          // For now, show the assigned table for the first slot, and "not assigned" for others
+                          // In the future, this could be enhanced to show multiple tables if the schema supports it
+                          const isAssigned = index === 0 && bookingItem.table
+                          return (
+                            <div
+                              key={index}
+                              className="rounded-lg border border-slate-200 bg-slate-50 p-4"
+                            >
+                              {isAssigned ? (
+                                <div className="space-y-2">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <Label className="text-slate-500 text-xs">Table {index + 1}</Label>
+                                    <span
+                                      className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
+                                        bookingItem.table!.status === "FULL"
+                                          ? "bg-green-100 text-green-800"
+                                          : bookingItem.table!.status === "RESERVED"
+                                          ? "bg-yellow-100 text-yellow-800"
+                                          : "bg-slate-100 text-slate-800"
+                                      }`}
+                                    >
+                                      {bookingItem.table!.status}
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <Label className="text-slate-500 text-xs">Table Number</Label>
+                                    <p className="mt-1 font-bold text-lg text-slate-900">
+                                      {bookingItem.table!.tableNumber}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <Label className="text-slate-500 text-xs">Capacity</Label>
+                                    <p className="mt-1 font-semibold text-slate-900">
+                                      {bookingItem.table!.capacity} seats
+                                    </p>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div>
+                                  <div className="flex items-center justify-between mb-2">
+                                    <Label className="text-slate-500 text-xs">Table {index + 1}</Label>
+                                    <span className="inline-flex rounded-full px-2 py-1 text-xs font-semibold bg-slate-100 text-slate-800">
+                                      PENDING
+                                    </span>
+                                  </div>
+                                  <p className="text-slate-600 text-sm mt-2">Table not yet assigned</p>
+                                  <p className="text-slate-500 text-xs mt-1">
+                                    Will be assigned by admin team.
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         </div>
-      </div>
+      </main>
+
+      {/* --- FOOTER --- */}
+      <footer className="bg-slate-900 border-t border-slate-700 py-12">
+        <div className="container max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
+           <div className="flex items-center gap-3">
+               <div className="relative h-10 w-10 opacity-90 hover:opacity-100 transition-opacity duration-500">
+                  <img 
+                    src="/images/acs-logo.png" 
+                    alt="ACS Logo" 
+                    className="object-contain w-full h-full"
+                  />
+               </div>
+               <span className="font-bold text-white tracking-tight">ACS OBA</span>
+           </div>
+           
+           <div className="text-center text-white md:text-right">
+              © 140th ACS OBA FOUNDERS DAY DINNER, 2026
+              <p className="text-xs text-slate-400 mt-2">This page designed and built by <a href="https://nofa.io" className="hover:text-white transition-colors">Michael Lin</a> and <a href="https://github.com/kennethch22" className="hover:text-white transition-colors">Kenneth Hendra</a></p>
+           </div>
+        </div>
+      </footer>
     </div>
   )
 }
@@ -256,8 +433,51 @@ function ManagePageContent() {
 export default function ManagePage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-slate-600">Loading...</div>
+      <div className="min-h-screen flex flex-col bg-slate-50">
+        {/* --- HEADER --- */}
+        <header className="relative z-50 w-full bg-white bg-wavy-pattern border-b border-slate-100 shadow-sm">
+          <div className="container max-w-6xl mx-auto px-4 h-32 md:h-40 flex items-center justify-between">
+            <div className="flex items-center">
+              {/* ACS 140 Logo (Big) */}
+              <div className="relative h-24 md:h-32 w-auto transition-transform hover:scale-105 duration-300">
+                <img 
+                  src="/images/acs-140-logo.jpg" 
+                  alt="ACS 140 Years" 
+                  className="object-contain w-full h-full"
+                />
+              </div>
+            </div>
+            
+            <nav className="flex items-center gap-6 text-sm font-medium text-slate-600">
+              {/* Navigation Items (Empty) */}
+            </nav>
+          </div>
+        </header>
+
+        <main className="flex-1 flex items-center justify-center py-12 px-4">
+          <div className="text-slate-600">Loading...</div>
+        </main>
+
+        {/* --- FOOTER --- */}
+        <footer className="bg-slate-900 border-t border-slate-700 py-12">
+          <div className="container max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div className="flex items-center gap-3">
+              <div className="relative h-10 w-10 opacity-90 hover:opacity-100 transition-opacity duration-500">
+                <img 
+                  src="/images/acs-logo.png" 
+                  alt="ACS Logo" 
+                  className="object-contain w-full h-full"
+                />
+              </div>
+              <span className="font-bold text-white tracking-tight">ACS OBA</span>
+            </div>
+            
+            <div className="text-center text-white md:text-right">
+              © 140th ACS OBA FOUNDERS DAY DINNER, 2026
+              <p className="text-xs text-slate-400 mt-2">This page designed and built by <a href="https://nofa.io" className="hover:text-white transition-colors">Michael Lin</a> and <a href="https://github.com/kennethch22" className="hover:text-white transition-colors">Kenneth Hendra</a></p>
+            </div>
+          </div>
+        </footer>
       </div>
     }>
       <ManagePageContent />

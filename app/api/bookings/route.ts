@@ -29,9 +29,42 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Booking not found" }, { status: 404 })
     }
 
+    // Fetch all bookings for this buyer (for multiple table support)
+    const buyerId = table.booking.buyerId
+    const allBookings = await prisma.booking.findMany({
+      where: {
+        buyerId,
+        type: "TABLE", // Only show table bookings
+      },
+      include: {
+        table: true,
+        buyer: true,
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    })
+
     return NextResponse.json({
       booking: table.booking,
       guests: table.booking.guests,
+      allBookings: allBookings.map((b) => ({
+        id: b.id,
+        type: b.type,
+        status: b.status,
+        totalAmount: b.totalAmount.toString(),
+        quantity: b.quantity,
+        createdAt: b.createdAt.toISOString(),
+        table: b.table
+          ? {
+              id: b.table.id,
+              tableNumber: b.table.tableNumber,
+              tableHash: b.table.tableHash,
+              capacity: b.table.capacity,
+              status: b.table.status,
+            }
+          : null,
+      })),
     })
   } catch (error) {
     console.error("Error fetching booking:", error)
