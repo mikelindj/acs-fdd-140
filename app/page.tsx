@@ -27,6 +27,7 @@ export default async function HomePage() {
   // Fetch event settings
   const eventSettings = await getEventSettings()
   const eventName = eventSettings.eventName || "ACS Founders' Day Dinner"
+  // eventDate from Prisma is a Date object or null
   const eventDate = eventSettings.eventDate
   const eventVenue = eventSettings.eventVenue
 
@@ -135,7 +136,7 @@ export default async function HomePage() {
                         <div className="text-left">
                            <p className="text-xs text-slate-300 uppercase tracking-wider font-bold">Date</p>
                            <p className="text-white font-semibold text-lg">
-                             {eventDate ? new Date(eventDate).toLocaleDateString('en-US', { 
+                             {eventDate ? eventDate.toLocaleDateString('en-US', { 
                                weekday: 'long', 
                                year: 'numeric', 
                                month: 'long', 
