@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback, Suspense } from "react"
+import { useState, useEffect, useCallback, useRef, Suspense } from "react"
 import Image from "next/image"
 import { useSearchParams } from "next/navigation"
 import { Label } from "@/components/ui/label"
@@ -37,6 +37,7 @@ function ManagePageContent() {
   const [announced, setAnnounced] = useState(false)
   const [multipleTablesAnnounced, setMultipleTablesAnnounced] = useState(false)
   const [reconciling, setReconciling] = useState(false)
+  const hasReconciled = useRef(false)
 
   const fetchBooking = useCallback(async () => {
     try {
@@ -118,8 +119,10 @@ function ManagePageContent() {
         normalized
       )
       if (!isSuccess) return
-      if (reconciling) return
+      if (reconciling || hasReconciled.current) return
+      
       setReconciling(true)
+      hasReconciled.current = true
       try {
         const res = await fetch("/api/bookings", {
           method: "POST",
@@ -138,6 +141,7 @@ function ManagePageContent() {
         await fetchBooking()
       } catch (err) {
         console.error("Payment reconciliation failed", err)
+        hasReconciled.current = false // Reset on error so it can retry
         toast({
           title: "Payment update failed",
           description: "Please contact support if this persists.",
@@ -148,7 +152,8 @@ function ManagePageContent() {
       }
     }
     reconcile()
-  }, [tableHash, paymentStatus, paymentId, fetchBooking, toast, reconciling])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tableHash, paymentStatus, paymentId])
 
   if (loading) {
     return (

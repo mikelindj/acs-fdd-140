@@ -68,11 +68,6 @@ interface BookingDetails {
       email?: string | null
     }>
   } | null
-  inviteCodes?: Array<{
-    id: string
-    code: string
-    claimedAt?: string | Date | null
-  }>
   guests?: Array<{
     id: string
     name: string
@@ -522,30 +517,6 @@ export function BookingsTable({ bookings }: BookingsTableProps) {
                         </div>
                       </div>
                     )}
-                  </div>
-                </div>
-              )}
-
-              {/* Invite Codes */}
-              {bookingDetails.inviteCodes && bookingDetails.inviteCodes.length > 0 && (
-                <div className="space-y-2">
-                  <h3 className="text-sm font-semibold text-slate-700">Invite Codes</h3>
-                  <div className="bg-slate-50 rounded-lg p-4">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                      {bookingDetails.inviteCodes.map((invite) => (
-                        <div
-                          key={invite.id}
-                          className="flex items-center justify-between bg-white rounded px-3 py-2 border border-slate-200"
-                        >
-                          <span className="text-sm font-mono text-slate-900">{invite.code}</span>
-                          {invite.claimedAt ? (
-                            <span className="text-xs text-green-600">Claimed</span>
-                          ) : (
-                            <span className="text-xs text-slate-400">Pending</span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
                   </div>
                 </div>
               )}
