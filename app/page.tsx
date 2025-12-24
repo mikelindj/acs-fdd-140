@@ -65,13 +65,22 @@ export default async function HomePage() {
     }
     // Use defaults if fetch fails
   }
+
+  // Calculate 11-Seater Prices
+  const price11 = tablePrice + seatPrice
+  
+  // Calculate member price for 11-seater if either member price exists
+  let price11Members: number | null = null
+  if (tableMembersPrice !== null || seatMembersPrice !== null) {
+      const tPrice = tableMembersPrice !== null ? tableMembersPrice : tablePrice
+      const sPrice = seatMembersPrice !== null ? seatMembersPrice : seatPrice
+      price11Members = tPrice + sPrice
+  }
+
   return (
     <div className={`min-h-screen flex flex-col bg-white bg-wavy-pattern font-sans selection:bg-brand-red selection:text-white ${oldFont.variable}`}>
       
       {/* --- HEADER --- */}
-      {/* FIX: Changed 'absolute' to 'relative'. 
-          This ensures the header takes up its own space so it doesn't overlap the Hero. 
-      */}
       <header className="relative z-50 w-full bg-white bg-wavy-pattern border-b border-slate-100 shadow-sm">
         <div className="container max-w-6xl mx-auto px-4 h-32 md:h-40 flex items-center justify-between">
           <div className="flex items-center">
@@ -97,7 +106,6 @@ export default async function HomePage() {
       <main className="flex-1">
         
         {/* --- HERO SECTION --- */}
-        {/* FIX: Removed 'pt-36'. We can use standard padding now that the header is relative. */}
         <section className="relative w-full min-h-[85vh] bg-primary overflow-hidden flex items-center py-12 md:py-16">
           
           {/* Background Watermark (Giant 140) */}
@@ -192,30 +200,32 @@ export default async function HomePage() {
             <div className="text-center mb-16 space-y-4">
                <h2 className="text-3xl md:text-5xl font-bold text-primary">Reserve Your Seat</h2>
                <p className="text-slate-600 text-lg max-w-2xl mx-auto">
-                 Choose from tables, or individual seats or
-                 jumbo tables of up to eleven pax!.
+                 Choose from 11-seater tables, 10-seater tables, or individual seats.
                </p>
             </div>
             
-            <div className="grid md:grid-cols-2 gap-8">
-               {/* Full Table Card */}
-               <div className="group relative p-10 rounded-[2rem] bg-white bg-wavy-pattern border border-slate-200 shadow-sm hover:shadow-2xl hover:border-brand-red/30 transition-all duration-300 overflow-hidden">
+            <div className="grid lg:grid-cols-3 md:grid-cols-2 gap-8">
+               
+               {/* 1. 11-Seater Table Card */}
+               <div className="group relative p-8 rounded-[2rem] bg-white bg-wavy-pattern border border-slate-200 shadow-sm hover:shadow-2xl hover:border-brand-red/30 transition-all duration-300 overflow-hidden">
                   <div className="absolute -top-10 left-0 w-[calc(100%+5rem)] -ml-10 h-1.5 bg-gradient-to-r from-primary via-brand-red to-secondary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 z-10" />
                   
                   <div className="flex justify-between items-start mb-6">
                     <div>
-                      <h3 className="text-2xl font-bold text-slate-900">Full Table</h3>
-                      <p className="text-sm text-slate-500 font-medium mt-1">Best for groups & reunions</p>
+                      <h3 className="text-2xl font-bold text-slate-900">11-Seater Table</h3>
+                      <p className="text-sm text-slate-500 font-medium mt-1">Best for larger groups</p>
                     </div>
                   </div>
                   
-                  <div className="flex items-baseline text-slate-900 mb-8">
-                    <span className="text-5xl font-bold tracking-tight">{formatPrice(tablePrice)}</span>
-                    <span className="ml-2 text-base font-medium text-slate-500">/ table</span>
-                    {tableMembersPrice && (
-                      <span className="ml-3 text-sm font-medium text-green-600">
-                        (Members: {formatPrice(tableMembersPrice)})
-                      </span>
+                  <div className="flex flex-col text-slate-900 mb-8">
+                    <div className="flex items-baseline">
+                        <span className="text-4xl font-bold tracking-tight">{formatPrice(price11)}</span>
+                        <span className="ml-2 text-sm font-medium text-slate-500">/ table</span>
+                    </div>
+                    {price11Members !== null && (
+                      <div className="text-sm font-medium text-green-600 mt-1">
+                        (Members: {formatPrice(price11Members)})
+                      </div>
                     )}
                   </div>
 
@@ -226,7 +236,7 @@ export default async function HomePage() {
                     </li>
                     <li className="flex gap-3 items-center">
                       <div className="h-5 w-5 rounded-full bg-secondary/20 flex items-center justify-center text-secondary-foreground text-xs font-bold">✓</div> 
-                      10-11 Guest tickets included
+                      11 Guest tickets included
                     </li>
                     <li className="flex gap-3 items-center">
                        <div className="h-5 w-5 rounded-full bg-secondary/20 flex items-center justify-center text-secondary-foreground text-xs font-bold">✓</div> 
@@ -236,13 +246,58 @@ export default async function HomePage() {
                   
                   <Link href="/book" className="block w-full">
                     <Button className="w-full h-14 text-base font-bold bg-primary hover:bg-brand-red transition-colors rounded-xl shadow-lg hover:shadow-brand-red/25">
-                      Book Full Table
+                      Book 11-Seater
                     </Button>
                   </Link>
                </div>
 
-               {/* Individual Seat Card */}
-               <div className="group relative p-10 rounded-[2rem] bg-white bg-wavy-pattern border border-slate-200 shadow-sm hover:shadow-2xl hover:border-secondary/50 transition-all duration-300 overflow-hidden">
+               {/* 2. 10-Seater Table Card */}
+               <div className="group relative p-8 rounded-[2rem] bg-white bg-wavy-pattern border border-slate-200 shadow-sm hover:shadow-2xl hover:border-brand-red/30 transition-all duration-300 overflow-hidden">
+                  <div className="absolute -top-10 left-0 w-[calc(100%+5rem)] -ml-10 h-1.5 bg-gradient-to-r from-primary via-brand-red to-secondary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 z-10" />
+                  
+                  <div className="flex justify-between items-start mb-6">
+                    <div>
+                      <h3 className="text-2xl font-bold text-slate-900">10-Seater Table</h3>
+                      <p className="text-sm text-slate-500 font-medium mt-1">Standard full table</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col text-slate-900 mb-8">
+                    <div className="flex items-baseline">
+                        <span className="text-4xl font-bold tracking-tight">{formatPrice(tablePrice)}</span>
+                        <span className="ml-2 text-sm font-medium text-slate-500">/ table</span>
+                    </div>
+                    {tableMembersPrice && (
+                      <div className="text-sm font-medium text-green-600 mt-1">
+                        (Members: {formatPrice(tableMembersPrice)})
+                      </div>
+                    )}
+                  </div>
+
+                  <ul className="space-y-4 text-sm text-slate-600 mb-10">
+                    <li className="flex gap-3 items-center">
+                      <div className="h-5 w-5 rounded-full bg-secondary/20 flex items-center justify-center text-secondary-foreground text-xs font-bold">✓</div> 
+                      Priority seating location
+                    </li>
+                    <li className="flex gap-3 items-center">
+                      <div className="h-5 w-5 rounded-full bg-secondary/20 flex items-center justify-center text-secondary-foreground text-xs font-bold">✓</div> 
+                      10 Guest tickets included
+                    </li>
+                    <li className="flex gap-3 items-center">
+                       <div className="h-5 w-5 rounded-full bg-secondary/20 flex items-center justify-center text-secondary-foreground text-xs font-bold">✓</div> 
+                      Custom Table Signage
+                    </li>
+                  </ul>
+                  
+                  <Link href="/book" className="block w-full">
+                    <Button className="w-full h-14 text-base font-bold bg-primary hover:bg-brand-red transition-colors rounded-xl shadow-lg hover:shadow-brand-red/25">
+                      Book 10-Seater
+                    </Button>
+                  </Link>
+               </div>
+
+               {/* 3. Individual Seat Card */}
+               <div className="group relative p-8 rounded-[2rem] bg-white bg-wavy-pattern border border-slate-200 shadow-sm hover:shadow-2xl hover:border-secondary/50 transition-all duration-300 overflow-hidden">
                   <div className="absolute -top-10 left-0 w-[calc(100%+5rem)] -ml-10 h-1.5 bg-gradient-to-r from-secondary to-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 z-10" />
 
                   <div className="mb-6">
@@ -250,13 +305,15 @@ export default async function HomePage() {
                     <p className="text-sm text-slate-500 font-medium mt-1">For single guests</p>
                   </div>
                   
-                  <div className="flex items-baseline text-slate-900 mb-8">
-                    <span className="text-5xl font-bold tracking-tight">{formatPrice(seatPrice)}</span>
-                    <span className="ml-2 text-base font-medium text-slate-500">/ person</span>
+                  <div className="flex flex-col text-slate-900 mb-8">
+                    <div className="flex items-baseline">
+                        <span className="text-4xl font-bold tracking-tight">{formatPrice(seatPrice)}</span>
+                        <span className="ml-2 text-sm font-medium text-slate-500">/ person</span>
+                    </div>
                     {seatMembersPrice && (
-                      <span className="ml-3 text-sm font-medium text-green-600">
+                      <div className="text-sm font-medium text-green-600 mt-1">
                         (Members: {formatPrice(seatMembersPrice)})
-                      </span>
+                      </div>
                     )}
                   </div>
 
