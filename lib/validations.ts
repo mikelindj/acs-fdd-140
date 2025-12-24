@@ -4,7 +4,7 @@ export const bookingSchema = z.object({
   type: z.enum(['TABLE', 'SEAT']),
   tableCapacity: z.number().optional(), // 10 or 11, only used when type is TABLE
   category: z.enum(['VIP', 'SCHOOL', 'OBA', 'GUEST']),
-  quantity: z.number().min(1).max(11),
+  quantity: z.number().min(1),
   buyerName: z.string().min(1, 'Name is required'),
   buyerEmail: z.string().email('Valid email is required'),
   buyerMobile: z.string().optional(),

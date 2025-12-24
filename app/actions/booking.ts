@@ -268,3 +268,139 @@ export async function createBooking(data: z.infer<typeof bookingSchema>) {
   }
 }
 
+export async function getBookingDetails(bookingId: string) {
+  try {
+    const booking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: {
+        buyer: true,
+        table: {
+          include: {
+            guests: true,
+          },
+        },
+        inviteCodes: {
+          include: {
+            guest: true,
+          },
+        },
+        guests: true,
+        voucher: true,
+      },
+    })
+
+    if (!booking) {
+      return { error: "Booking not found" }
+    }
+
+    return { success: true, booking }
+  } catch (error) {
+    console.error("Error fetching booking details:", error)
+    if (error instanceof Error) {
+      return { error: error.message }
+    }
+    return { error: "Failed to fetch booking details" }
+  }
+}
+
+export async function deletePendingBooking(bookingId: string) {
+  try {
+    // First check if booking exists and is PENDING
+    const booking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: {
+        table: true,
+        inviteCodes: true,
+      },
+    })
+
+    if (!booking) {
+      return { error: "Booking not found" }
+    }
+
+    if (booking.status !== "PENDING") {
+      return { error: "Only PENDING bookings can be deleted" }
+    }
+
+    // Delete the booking (cascade will handle related records)
+    // But we need to manually delete table and invite codes first
+    if (booking.table) {
+      await prisma.table.delete({
+        where: { id: booking.table.id },
+      })
+    }
+
+    await prisma.inviteCode.deleteMany({
+      where: { bookingId: booking.id },
+    })
+
+    await prisma.booking.delete({
+      where: { id: bookingId },
+    })
+
+    return { success: true }
+  } catch (error) {
+    console.error("Error deleting booking:", error)
+    if (error instanceof Error) {
+      return { error: error.message }
+    }
+    return { error: "Failed to delete booking" }
+  }
+}
+
+export async function bulkDeletePendingBookings(bookingIds: string[]) {
+  try {
+    if (!bookingIds || bookingIds.length === 0) {
+      return { error: "No bookings selected" }
+    }
+
+    // Fetch all bookings to verify they are PENDING
+    const bookings = await prisma.booking.findMany({
+      where: {
+        id: { in: bookingIds },
+      },
+      include: {
+        table: true,
+        inviteCodes: true,
+      },
+    })
+
+    // Check if all bookings are PENDING
+    const nonPendingBookings = bookings.filter((b) => b.status !== "PENDING")
+    if (nonPendingBookings.length > 0) {
+      return {
+        error: `Cannot delete: ${nonPendingBookings.length} booking(s) are not PENDING`,
+      }
+    }
+
+    // Check if all requested bookings were found
+    if (bookings.length !== bookingIds.length) {
+      return { error: "Some bookings were not found" }
+    }
+
+    // Delete all related records
+    const tablesToDelete = bookings.filter((b) => b.table).map((b) => b.table!.id)
+    if (tablesToDelete.length > 0) {
+      await prisma.table.deleteMany({
+        where: { id: { in: tablesToDelete } },
+      })
+    }
+
+    await prisma.inviteCode.deleteMany({
+      where: { bookingId: { in: bookingIds } },
+    })
+
+    await prisma.booking.deleteMany({
+      where: { id: { in: bookingIds } },
+    })
+
+    return { success: true, deletedCount: bookingIds.length }
+  } catch (error) {
+    console.error("Error bulk deleting bookings:", error)
+    if (error instanceof Error) {
+      return { error: error.message }
+    }
+    return { error: "Failed to delete bookings" }
+  }
+}
+

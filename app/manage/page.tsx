@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, Suspense } from "react"
+import Image from "next/image"
 import { useSearchParams } from "next/navigation"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
@@ -158,10 +159,13 @@ function ManagePageContent() {
             <div className="flex items-center">
               {/* ACS 140 Logo (Big) */}
               <div className="relative h-24 md:h-32 w-auto transition-transform hover:scale-105 duration-300">
-                <img 
+                <Image 
                   src="/images/acs-140-logo.jpg" 
                   alt="ACS 140 Years" 
+                  width={200}
+                  height={128}
                   className="object-contain w-full h-full"
+                  priority
                 />
               </div>
             </div>
@@ -181,9 +185,11 @@ function ManagePageContent() {
           <div className="container max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-3">
               <div className="relative h-10 w-10 opacity-90 hover:opacity-100 transition-opacity duration-500">
-                <img 
+                <Image 
                   src="/images/acs-logo.png" 
                   alt="ACS Logo" 
+                  width={40}
+                  height={40}
                   className="object-contain w-full h-full"
                 />
               </div>
@@ -210,10 +216,13 @@ function ManagePageContent() {
             <div className="flex items-center">
               {/* ACS 140 Logo (Big) */}
               <div className="relative h-24 md:h-32 w-auto transition-transform hover:scale-105 duration-300">
-                <img 
+                <Image 
                   src="/images/acs-140-logo.jpg" 
                   alt="ACS 140 Years" 
+                  width={200}
+                  height={128}
                   className="object-contain w-full h-full"
+                  priority
                 />
               </div>
             </div>
@@ -236,9 +245,11 @@ function ManagePageContent() {
           <div className="container max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-3">
               <div className="relative h-10 w-10 opacity-90 hover:opacity-100 transition-opacity duration-500">
-                <img 
+                <Image 
                   src="/images/acs-logo.png" 
                   alt="ACS Logo" 
+                  width={40}
+                  height={40}
                   className="object-contain w-full h-full"
                 />
               </div>
@@ -267,10 +278,13 @@ function ManagePageContent() {
           <div className="flex items-center">
              {/* ACS 140 Logo (Big) */}
              <div className="relative h-24 md:h-32 w-auto transition-transform hover:scale-105 duration-300">
-               <img 
+               <Image 
                  src="/images/acs-140-logo.jpg" 
                  alt="ACS 140 Years" 
+                 width={200}
+                 height={128}
                  className="object-contain w-full h-full"
+                 priority
                />
              </div>
           </div>
@@ -413,9 +427,11 @@ function ManagePageContent() {
         <div className="container max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
            <div className="flex items-center gap-3">
                <div className="relative h-10 w-10 opacity-90 hover:opacity-100 transition-opacity duration-500">
-                  <img 
+                  <Image 
                     src="/images/acs-logo.png" 
                     alt="ACS Logo" 
+                    width={40}
+                    height={40}
                     className="object-contain w-full h-full"
                   />
                </div>
@@ -443,10 +459,13 @@ export default function ManagePage() {
             <div className="flex items-center">
               {/* ACS 140 Logo (Big) */}
               <div className="relative h-24 md:h-32 w-auto transition-transform hover:scale-105 duration-300">
-                <img 
+                <Image 
                   src="/images/acs-140-logo.jpg" 
                   alt="ACS 140 Years" 
+                  width={200}
+                  height={128}
                   className="object-contain w-full h-full"
+                  priority
                 />
               </div>
             </div>
@@ -466,9 +485,11 @@ export default function ManagePage() {
           <div className="container max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-3">
               <div className="relative h-10 w-10 opacity-90 hover:opacity-100 transition-opacity duration-500">
-                <img 
+                <Image 
                   src="/images/acs-logo.png" 
                   alt="ACS Logo" 
+                  width={40}
+                  height={40}
                   className="object-contain w-full h-full"
                 />
               </div>

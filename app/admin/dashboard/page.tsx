@@ -1,6 +1,7 @@
 import { getCurrentAdmin } from "@/lib/auth-helpers"
 import { prisma } from "@/lib/prisma"
 import Link from "next/link"
+import { BookingsTable } from "./BookingsTable"
 
 export default async function AdminDashboardPage() {
   await getCurrentAdmin()
@@ -85,59 +86,13 @@ async function RecentBookings() {
     },
   })
 
-  return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-slate-200">
-        <thead>
-          <tr>
-            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Buyer
-            </th>
-            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Type
-            </th>
-            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Amount
-            </th>
-            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Status
-            </th>
-            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Date
-            </th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-200 bg-white">
-          {bookings.map((booking) => (
-            <tr key={booking.id} className="hover:bg-slate-50">
-              <td className="whitespace-nowrap px-4 py-4 text-sm font-medium text-slate-900">
-                {booking.buyer.name}
-              </td>
-              <td className="whitespace-nowrap px-4 py-4 text-sm text-slate-600">
-                {booking.type}
-              </td>
-              <td className="whitespace-nowrap px-4 py-4 text-sm text-slate-900">
-                S${booking.totalAmount.toString()}
-              </td>
-              <td className="whitespace-nowrap px-4 py-4 text-sm">
-                <span
-                  className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
-                    booking.status === "PAID"
-                      ? "bg-green-100 text-green-800"
-                      : "bg-yellow-100 text-yellow-800"
-                  }`}
-                >
-                  {booking.status}
-                </span>
-              </td>
-              <td className="whitespace-nowrap px-4 py-4 text-sm text-slate-500">
-                {new Date(booking.createdAt).toLocaleDateString()}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
+  // Convert Decimal to number for compatibility
+  const formattedBookings = bookings.map((booking) => ({
+    ...booking,
+    totalAmount: Number(booking.totalAmount),
+    createdAt: booking.createdAt.toISOString(),
+  }))
+
+  return <BookingsTable bookings={formattedBookings} />
 }
 

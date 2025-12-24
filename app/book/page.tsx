@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
+import Image from "next/image"
 import { createBooking } from "@/app/actions/booking"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -284,10 +285,13 @@ export default function BookPage() {
           <div className="flex items-center">
              {/* ACS 140 Logo (Big) */}
              <div className="relative h-24 md:h-32 w-auto transition-transform hover:scale-105 duration-300">
-               <img 
+               <Image 
                  src="/images/acs-140-logo.jpg" 
                  alt="ACS 140 Years" 
+                 width={200}
+                 height={128}
                  className="object-contain w-full h-full"
+                 priority
                />
              </div>
           </div>
@@ -589,9 +593,11 @@ export default function BookPage() {
         <div className="container max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
            <div className="flex items-center gap-3">
                <div className="relative h-10 w-10 opacity-90 hover:opacity-100 transition-opacity duration-500">
-                  <img 
+                  <Image 
                     src="/images/acs-logo.png" 
                     alt="ACS Logo" 
+                    width={40}
+                    height={40}
                     className="object-contain w-full h-full"
                   />
                </div>
