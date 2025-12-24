@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Dynamic import for xlsx - it exports utilities directly
     const XLSX = await import("xlsx")
@@ -89,15 +89,15 @@ export async function GET(request: NextRequest) {
     XLSX.utils.book_append_sheet(workbook, ordersSheet, "Orders and Income")
 
     // Generate Excel file buffer
-    const excelBuffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" }) as Buffer
+    const excelBuffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" })
 
     // Get event name for filename
     const eventName = eventSettings?.eventName || "Event"
     const sanitizedEventName = eventName.replace(/[^a-z0-9]/gi, "_").toLowerCase()
     const filename = `${sanitizedEventName}_export_${new Date().toISOString().split("T")[0]}.xlsx`
 
-    // Return Excel file
-    return new NextResponse(excelBuffer, {
+    // Return Excel file - convert Buffer to Uint8Array for NextResponse
+    return new NextResponse(new Uint8Array(excelBuffer), {
       headers: {
         "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "Content-Disposition": `attachment; filename="${filename}"`,

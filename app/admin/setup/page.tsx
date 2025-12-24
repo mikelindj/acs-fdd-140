@@ -110,7 +110,7 @@ export default function SetupPage() {
         title: "Success",
         description: "Data exported successfully",
       })
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to export data",
@@ -164,10 +164,11 @@ export default function SetupPage() {
       // Refresh the page to show reset state
       router.refresh()
       fetchSettings()
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to reset event"
       toast({
         title: "Error",
-        description: error.message || "Failed to reset event",
+        description: errorMessage,
         variant: "destructive",
       })
     } finally {
