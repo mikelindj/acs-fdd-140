@@ -26,7 +26,7 @@ export function Footer({
          </div>
          
          <div className="text-center text-white md:text-right">
-            © {new Date().getFullYear()} {eventName}
+            © The ACS Old Boys’ Association (ACSOBA)
             <p className="text-[0.5rem] text-slate-400 mt-2">This page designed and built by ACSOBA Volunteers: <a href="https://nofa.io" className="hover:text-white transition-colors">Michael Lin</a> and <a href="https://github.com/kennethch22" className="hover:text-white transition-colors">Kenneth Hendra</a></p>
          </div>
       </div>

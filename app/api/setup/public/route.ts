@@ -22,9 +22,9 @@ export async function GET() {
       eventName: settings.eventName,
       eventDate: settings.eventDate,
       eventVenue: settings.eventVenue,
-      logoImageUrl: settings.logoImageUrl,
-      footerLogoImageUrl: settings.footerLogoImageUrl,
-      siteIconUrl: settings.siteIconUrl,
+      logoImageUrl: (settings as any).logoImageUrl ?? null,
+      footerLogoImageUrl: (settings as any).footerLogoImageUrl ?? null,
+      siteIconUrl: (settings as any).siteIconUrl ?? null,
     })
   } catch (error) {
     console.error("Error fetching public event settings:", error)
