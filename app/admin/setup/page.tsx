@@ -9,12 +9,17 @@ import Link from "next/link"
 import Image from "next/image"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { useRouter } from "next/navigation"
+import { Logo } from "@/components/Logo"
+import { Footer } from "@/components/Footer"
 
 interface EventSettings {
   id: string
   eventName: string | null
   eventDate: string | null
   eventVenue: string | null
+  logoImageUrl: string | null
+  footerLogoImageUrl: string | null
+  siteIconUrl: string | null
 }
 
 export default function SetupPage() {
@@ -31,7 +36,13 @@ export default function SetupPage() {
     eventName: null,
     eventDate: null,
     eventVenue: null,
+    logoImageUrl: null,
+    footerLogoImageUrl: null,
+    siteIconUrl: null,
   })
+  const [uploadingLogo, setUploadingLogo] = useState(false)
+  const [uploadingFooterLogo, setUploadingFooterLogo] = useState(false)
+  const [uploadingIcon, setUploadingIcon] = useState(false)
 
   const fetchSettings = useCallback(async () => {
     try {
@@ -121,6 +132,89 @@ export default function SetupPage() {
     }
   }
 
+  const handleImageUpload = async (file: File, type: "logo" | "footerLogo" | "siteIcon") => {
+    if (!file) return
+
+    // Validate file type
+    const validImageTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"]
+    if (!validImageTypes.includes(file.type)) {
+      toast({
+        title: "Error",
+        description: "Invalid file type. Only images are allowed.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024
+    if (file.size > maxSize) {
+      toast({
+        title: "Error",
+        description: "File size exceeds 5MB limit",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (type === "logo") {
+      setUploadingLogo(true)
+    } else if (type === "footerLogo") {
+      setUploadingFooterLogo(true)
+    } else {
+      setUploadingIcon(true)
+    }
+
+    try {
+      const formData = new FormData()
+      formData.append("file", file)
+      formData.append("type", type)
+
+      const res = await fetch("/api/admin/upload-image", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || "Failed to upload image")
+      }
+
+      const data = await res.json()
+      
+      // Update settings with new URL
+      setSettings(prev => ({
+        ...prev,
+        ...(type === "logo" 
+          ? { logoImageUrl: data.url } 
+          : type === "footerLogo"
+          ? { footerLogoImageUrl: data.url }
+          : { siteIconUrl: data.url }
+        ),
+      }))
+
+      toast({
+        title: "Success",
+        description: `${type === "logo" ? "Logo" : type === "footerLogo" ? "Footer Logo" : "Icon"} uploaded successfully`,
+      })
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to upload image"
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      })
+    } finally {
+      if (type === "logo") {
+        setUploadingLogo(false)
+      } else if (type === "footerLogo") {
+        setUploadingFooterLogo(false)
+      } else {
+        setUploadingIcon(false)
+      }
+    }
+  }
+
   const handleReset = async () => {
     if (!settings.eventName) {
       toast({
@@ -183,19 +277,11 @@ export default function SetupPage() {
         <header className="relative z-50 w-full bg-white bg-wavy-pattern border-b border-slate-100 shadow-sm">
           <div className="container max-w-6xl mx-auto px-4 h-32 md:h-40 flex items-center justify-between">
             <div className="flex items-center">
-               {/* ACS 140 Logo (Big) */}
-               <Link href="/">
-                 <div className="relative h-24 md:h-32 w-auto transition-transform hover:scale-105 duration-300">
-                   <Image 
-                     src="/images/acs-140-logo.jpg" 
-                     alt="ACS 140 Years" 
-                     width={200}
-                     height={128}
-                     className="object-contain w-full h-full"
-                     priority
-                   />
-                 </div>
-               </Link>
+               {/* Event Logo */}
+               <Logo 
+                 logoUrl={settings.logoImageUrl} 
+                 alt={settings.eventName || "Event Logo"}
+               />
             </div>
             
             <nav className="flex items-center gap-2 text-sm font-medium text-slate-600">
@@ -259,19 +345,11 @@ export default function SetupPage() {
       <header className="relative z-50 w-full bg-white bg-wavy-pattern border-b border-slate-100 shadow-sm">
         <div className="container max-w-6xl mx-auto px-4 h-32 md:h-40 flex items-center justify-between">
           <div className="flex items-center">
-             {/* ACS 140 Logo (Big) */}
-             <Link href="/">
-               <div className="relative h-24 md:h-32 w-auto transition-transform hover:scale-105 duration-300">
-                 <Image 
-                   src="/images/acs-140-logo.jpg" 
-                   alt="ACS 140 Years" 
-                   width={200}
-                   height={128}
-                   className="object-contain w-full h-full"
-                   priority
-                 />
-               </div>
-             </Link>
+             {/* Event Logo */}
+             <Logo 
+               logoUrl={settings.logoImageUrl} 
+               alt={settings.eventName || "Event Logo"}
+             />
           </div>
           
           <nav className="flex items-center gap-2 text-sm font-medium text-slate-600">
@@ -375,6 +453,132 @@ export default function SetupPage() {
           </Button>
         </div>
 
+        {/* Logo Upload */}
+        <div className="mt-6 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+          <h3 className="text-xl font-semibold text-slate-900 mb-4">Logo Image</h3>
+          <p className="text-sm text-slate-600 mb-4">
+            Upload a logo image to be used in the header across all pages. Recommended size: 200x128px or similar aspect ratio.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-6 items-start">
+            {settings.logoImageUrl && (
+              <div className="flex-shrink-0">
+                <div className="relative h-24 md:h-32 w-auto border border-slate-200 rounded-lg p-2 bg-slate-50">
+                  <Image 
+                    src={settings.logoImageUrl} 
+                    alt="Current Logo" 
+                    width={200}
+                    height={128}
+                    className="object-contain w-full h-full"
+                  />
+                </div>
+              </div>
+            )}
+            <div className="flex-1">
+              <Label htmlFor="logoUpload">Upload Logo</Label>
+              <Input
+                id="logoUpload"
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (file) {
+                    handleImageUpload(file, "logo")
+                  }
+                }}
+                disabled={uploadingLogo}
+                className="mt-2"
+              />
+              {uploadingLogo && (
+                <p className="text-sm text-slate-500 mt-2">Uploading...</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Footer Logo Upload */}
+        <div className="mt-6 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+          <h3 className="text-xl font-semibold text-slate-900 mb-4">Footer Logo Image</h3>
+          <p className="text-sm text-slate-600 mb-4">
+            Upload a logo image to be used in the footer across all pages. Recommended size: 40x40px or similar square aspect ratio.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-6 items-start">
+            {settings.footerLogoImageUrl && (
+              <div className="flex-shrink-0">
+                <div className="relative h-16 w-16 border border-slate-200 rounded-lg p-2 bg-slate-50">
+                  <Image 
+                    src={settings.footerLogoImageUrl} 
+                    alt="Current Footer Logo" 
+                    width={40}
+                    height={40}
+                    className="object-contain w-full h-full"
+                  />
+                </div>
+              </div>
+            )}
+            <div className="flex-1">
+              <Label htmlFor="footerLogoUpload">Upload Footer Logo</Label>
+              <Input
+                id="footerLogoUpload"
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (file) {
+                    handleImageUpload(file, "footerLogo")
+                  }
+                }}
+                disabled={uploadingFooterLogo}
+                className="mt-2"
+              />
+              {uploadingFooterLogo && (
+                <p className="text-sm text-slate-500 mt-2">Uploading...</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Site Icon Upload */}
+        <div className="mt-6 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+          <h3 className="text-xl font-semibold text-slate-900 mb-4">Site Icon (Favicon)</h3>
+          <p className="text-sm text-slate-600 mb-4">
+            Upload a site icon (favicon) to be used in browser tabs and bookmarks. Recommended size: 32x32px or 64x64px, square aspect ratio.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-6 items-start">
+            {settings.siteIconUrl && (
+              <div className="flex-shrink-0">
+                <div className="relative h-16 w-16 border border-slate-200 rounded-lg p-2 bg-slate-50">
+                  <Image 
+                    src={settings.siteIconUrl} 
+                    alt="Current Icon" 
+                    width={64}
+                    height={64}
+                    className="object-contain w-full h-full"
+                  />
+                </div>
+              </div>
+            )}
+            <div className="flex-1">
+              <Label htmlFor="iconUpload">Upload Site Icon</Label>
+              <Input
+                id="iconUpload"
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (file) {
+                    handleImageUpload(file, "siteIcon")
+                  }
+                }}
+                disabled={uploadingIcon}
+                className="mt-2"
+              />
+              {uploadingIcon && (
+                <p className="text-sm text-slate-500 mt-2">Uploading...</p>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* Export and Reset Section */}
         <div className="mt-6 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
           <h3 className="text-xl font-semibold text-slate-900 mb-4">Event Management</h3>
@@ -470,27 +674,10 @@ export default function SetupPage() {
       </main>
 
       {/* --- FOOTER --- */}
-      <footer className="bg-slate-900 border-t border-slate-700 py-12">
-        <div className="container max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
-           <div className="flex items-center gap-3">
-               <div className="relative h-10 w-10 opacity-90 hover:opacity-100 transition-opacity duration-500">
-                  <Image 
-                    src="/images/acs-logo.png" 
-                    alt="ACS Logo" 
-                    width={40}
-                    height={40}
-                    className="object-contain w-full h-full"
-                  />
-               </div>
-               <span className="font-bold text-white tracking-tight">ACS OBA</span>
-           </div>
-           
-           <div className="text-center text-white md:text-right">
-              © 140th ACS OBA FOUNDERS DAY DINNER, 2026
-              <p className="text-[0.5rem] text-slate-400 mt-2">This page designed and built by ACSOBA Volunteers: <a href="https://nofa.io" className="hover:text-white transition-colors">Michael Lin</a> and <a href="https://github.com/kennethch22" className="hover:text-white transition-colors">Kenneth Hendra</a></p>
-           </div>
-        </div>
-      </footer>
+      <Footer 
+        eventName={settings.eventName || "140th ACS OBA FOUNDERS DAY DINNER"} 
+        footerLogoImageUrl={settings.footerLogoImageUrl}
+      />
     </div>
   )
 }

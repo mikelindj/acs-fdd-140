@@ -1,14 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
-import Image from "next/image"
 import { sendBroadcast } from "@/app/actions/broadcast"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 import dynamic from "next/dynamic"
+import { Logo } from "@/components/Logo"
+import { Footer } from "@/components/Footer"
 
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false })
 import "react-quill/dist/quill.snow.css"
@@ -21,6 +22,34 @@ export default function BroadcastPage() {
     content: "",
     recipients: "all" as "all" | "buyers" | "guests" | "unseated",
   })
+  const [eventSettings, setEventSettings] = useState<{
+    eventName: string | null
+    logoImageUrl: string | null
+    footerLogoImageUrl: string | null
+  }>({
+    eventName: null,
+    logoImageUrl: null,
+    footerLogoImageUrl: null,
+  })
+
+  useEffect(() => {
+    const fetchEventSettings = async () => {
+      try {
+        const res = await fetch("/api/setup/public")
+        if (res.ok) {
+          const data = await res.json()
+          setEventSettings({
+            eventName: data.eventName || null,
+            logoImageUrl: data.logoImageUrl || null,
+            footerLogoImageUrl: data.footerLogoImageUrl || null,
+          })
+        }
+      } catch (error) {
+        console.error("Error fetching event settings:", error)
+      }
+    }
+    fetchEventSettings()
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -58,19 +87,11 @@ export default function BroadcastPage() {
       <header className="relative z-50 w-full bg-white bg-wavy-pattern border-b border-slate-100 shadow-sm">
         <div className="container max-w-6xl mx-auto px-4 h-32 md:h-40 flex items-center justify-between">
           <div className="flex items-center">
-             {/* ACS 140 Logo (Big) */}
-             <Link href="/">
-               <div className="relative h-24 md:h-32 w-auto transition-transform hover:scale-105 duration-300">
-                 <Image 
-                   src="/images/acs-140-logo.jpg" 
-                   alt="ACS 140 Years" 
-                   width={200}
-                   height={128}
-                   className="object-contain w-full h-full"
-                   priority
-                 />
-               </div>
-             </Link>
+             {/* Event Logo */}
+             <Logo 
+               logoUrl={eventSettings.logoImageUrl} 
+               alt={eventSettings.eventName || "Event Logo"}
+             />
           </div>
           
           <nav className="flex items-center gap-2 text-sm font-medium text-slate-600">
@@ -160,27 +181,10 @@ export default function BroadcastPage() {
       </main>
 
       {/* --- FOOTER --- */}
-      <footer className="bg-slate-900 border-t border-slate-700 py-12">
-        <div className="container max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
-           <div className="flex items-center gap-3">
-               <div className="relative h-10 w-10 opacity-90 hover:opacity-100 transition-opacity duration-500">
-                  <Image 
-                    src="/images/acs-logo.png" 
-                    alt="ACS Logo" 
-                    width={40}
-                    height={40}
-                    className="object-contain w-full h-full"
-                  />
-               </div>
-               <span className="font-bold text-white tracking-tight">ACS OBA</span>
-           </div>
-           
-           <div className="text-center text-white md:text-right">
-              © 140th ACS OBA FOUNDERS DAY DINNER, 2026
-              <p className="text-[0.5rem] text-slate-400 mt-2">This page designed and built by ACSOBA Volunteers: <a href="https://nofa.io" className="hover:text-white transition-colors">Michael Lin</a> and <a href="https://github.com/kennethch22" className="hover:text-white transition-colors">Kenneth Hendra</a></p>
-           </div>
-        </div>
-      </footer>
+      <Footer 
+        eventName={eventSettings.eventName || "140th ACS OBA FOUNDERS DAY DINNER"} 
+        footerLogoImageUrl={eventSettings.footerLogoImageUrl}
+      />
     </div>
   )
 }

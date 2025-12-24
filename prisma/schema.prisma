@@ -190,11 +190,14 @@ model Voucher {
 }
 
 model EventSettings {
-  id        String   @id @default("event")
-  eventName String?
-  eventDate DateTime?
-  eventVenue String?
-  updatedAt DateTime @updatedAt
+  id              String   @id @default("event")
+  eventName       String?
+  eventDate       DateTime?
+  eventVenue      String?
+  logoImageUrl    String?
+  footerLogoImageUrl String?
+  siteIconUrl     String?
+  updatedAt       DateTime @updatedAt
 
   @@map("event_settings")
 }

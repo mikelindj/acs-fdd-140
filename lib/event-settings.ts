@@ -17,6 +17,9 @@ export async function getEventSettings() {
       eventName: null,
       eventDate: null,
       eventVenue: null,
+      logoImageUrl: null,
+      footerLogoImageUrl: null,
+      siteIconUrl: null,
     }
   } catch (error) {
     // Only log non-connection errors to avoid spam when DB is unavailable

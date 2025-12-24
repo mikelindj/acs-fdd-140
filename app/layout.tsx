@@ -18,12 +18,14 @@ export async function generateMetadata(): Promise<Metadata> {
     ? `Join us for ${eventName}${eventSettings.eventDate ? ` on ${new Date(eventSettings.eventDate).toLocaleDateString()}` : ""} at ${eventSettings.eventVenue}.`
     : "Celebrating 140 Years of Excellence. Join us for the ACS Founders' Day Dinner."
   
+  const siteIcon = eventSettings.siteIconUrl || "/images/acs-140-siteicon.png"
+  
   return {
     title: eventName,
     description,
     icons: {
-      icon: "/images/acs-140-siteicon.png",
-      shortcut: "/images/acs-140-siteicon.png",
+      icon: siteIcon,
+      shortcut: siteIcon,
     },
   }
 }

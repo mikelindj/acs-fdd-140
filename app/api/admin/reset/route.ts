@@ -77,6 +77,9 @@ export async function POST(request: NextRequest) {
           eventName: null,
           eventDate: null,
           eventVenue: null,
+          logoImageUrl: null,
+          footerLogoImageUrl: null,
+          siteIconUrl: null,
         },
       })
 
