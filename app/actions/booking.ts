@@ -185,32 +185,210 @@ export async function createBooking(data: z.infer<typeof bookingSchema>) {
       },
     })
 
-    // Create booking - if free, mark as PAID immediately
-    const booking = await prisma.booking.create({
-      data: {
-        type: validated.type,
-        category: validated.category,
-        quantity: validated.quantity,
-        totalAmount,
-        transactionFee,
-        balanceDue: isFreeBooking ? 0 : totalAmount,
+    // Check for recent duplicate bookings (within last 60 seconds) to prevent double-submission
+    // This helps prevent race conditions from rapid form submissions
+    // Match by buyer, type, quantity, and similar total amount
+    const recentBookings = await prisma.booking.findMany({
+      where: {
         buyerId: buyer.id,
-        status: isFreeBooking ? 'PAID' : 'PENDING',
-        wantsBatchSeating: validated.wantsBatchSeating ?? false,
-        voucherId: voucherId,
+        type: validated.type,
+        quantity: validated.quantity,
+        createdAt: {
+          gte: new Date(Date.now() - 60000), // Last 60 seconds
+        },
+      },
+      include: {
+        table: {
+          select: {
+            tableHash: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
       },
     })
 
-    // Increment voucher redemption count if voucher was used
-    if (voucherId) {
-      await prisma.voucher.update({
-        where: { id: voucherId },
-        data: {
-          currentRedemptions: {
-            increment: 1,
+    // Find duplicate by comparing total amount (with tolerance for rounding)
+    const recentDuplicate = recentBookings.find((b) => {
+      const bookingAmount = Number(b.totalAmount)
+      return Math.abs(bookingAmount - totalAmount) < 0.01 // Within 1 cent tolerance
+    })
+
+    if (recentDuplicate) {
+      console.log(`[Duplicate Prevention] Duplicate booking detected for buyer ${buyer.id}, returning existing booking ${recentDuplicate.id} (status: ${recentDuplicate.status})`)
+      // Return the existing booking instead of creating a new one
+      const existingTableHash = recentDuplicate.table?.tableHash || null
+
+      const redirectBase = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+      const trimSlash = (value: string) => value.replace(/\/+$/, "")
+      
+      if (isFreeBooking || recentDuplicate.status === "PAID") {
+        // If free or already paid, redirect appropriately
+        if (recentDuplicate.type === "SEAT") {
+          return {
+            success: true,
+            bookingId: recentDuplicate.id,
+            paymentUrl: `${trimSlash(redirectBase)}/payment/success?booking=${recentDuplicate.id}&status=completed`,
+            tableHash: null,
+            isFree: isFreeBooking || recentDuplicate.status === "PAID",
+          }
+        } else {
+          return {
+            success: true,
+            bookingId: recentDuplicate.id,
+            paymentUrl: `${trimSlash(redirectBase)}/manage?table=${existingTableHash}&paymentStatus=completed`,
+            tableHash: existingTableHash,
+            isFree: isFreeBooking || recentDuplicate.status === "PAID",
+          }
+        }
+      } else {
+        // If pending, redirect to payment
+        const hitpayRedirectBase = process.env.HITPAY_RETURN_URL ?? process.env.NEXT_PUBLIC_SITE_URL
+        if (hitpayRedirectBase && recentDuplicate.hitpayPaymentId) {
+          // Try to get payment URL from HitPay if possible
+          return {
+            success: true,
+            bookingId: recentDuplicate.id,
+            paymentUrl: `${trimSlash(hitpayRedirectBase)}/redirect?booking=${recentDuplicate.id}`,
+            tableHash: existingTableHash,
+          }
+        }
+        // If no payment ID yet, return error to prevent duplicate
+        return {
+          error: "A booking is already being processed. Please wait a moment and check your email.",
+        }
+      }
+    }
+
+    // Use a transaction to ensure atomicity and prevent race conditions
+    const booking = await prisma.$transaction(async (tx) => {
+      // Double-check for duplicates within the transaction to prevent race conditions
+      const duplicateCheck = await tx.booking.findFirst({
+        where: {
+          buyerId: buyer.id,
+          type: validated.type,
+          quantity: validated.quantity,
+          createdAt: {
+            gte: new Date(Date.now() - 60000), // Last 60 seconds
           },
         },
+        orderBy: {
+          createdAt: "desc",
+        },
       })
+
+      if (duplicateCheck) {
+        const duplicateAmount = Number(duplicateCheck.totalAmount)
+        if (Math.abs(duplicateAmount - totalAmount) < 0.01) {
+          throw new Error("DUPLICATE_BOOKING")
+        }
+      }
+
+      // Create booking - if free, mark as PAID immediately
+      const newBooking = await tx.booking.create({
+        data: {
+          type: validated.type,
+          category: validated.category,
+          quantity: validated.quantity,
+          totalAmount,
+          transactionFee,
+          balanceDue: isFreeBooking ? 0 : totalAmount,
+          buyerId: buyer.id,
+          status: isFreeBooking ? 'PAID' : 'PENDING',
+          wantsBatchSeating: validated.wantsBatchSeating ?? false,
+          voucherId: voucherId,
+        },
+      })
+
+      // Increment voucher redemption count if voucher was used
+      if (voucherId) {
+        await tx.voucher.update({
+          where: { id: voucherId },
+          data: {
+            currentRedemptions: {
+              increment: 1,
+            },
+          },
+        })
+      }
+
+      return newBooking
+    }).catch((error) => {
+      if (error.message === "DUPLICATE_BOOKING") {
+        // Return null to indicate duplicate was detected
+        return null
+      }
+      throw error
+    })
+
+    // If duplicate was detected in transaction, return existing booking
+    if (!booking) {
+      // Fetch the duplicate booking that was found
+      const duplicate = await prisma.booking.findFirst({
+        where: {
+          buyerId: buyer.id,
+          type: validated.type,
+          quantity: validated.quantity,
+          createdAt: {
+            gte: new Date(Date.now() - 60000),
+          },
+        },
+        include: {
+          table: {
+            select: {
+              tableHash: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      })
+
+      if (duplicate) {
+        const duplicateAmount = Number(duplicate.totalAmount)
+        if (Math.abs(duplicateAmount - totalAmount) < 0.01) {
+          console.log(`[Transaction] Duplicate booking prevented for buyer ${buyer.id}, returning existing booking ${duplicate.id}`)
+          const existingTableHash = duplicate.table?.tableHash || null
+          const redirectBase = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+          const trimSlash = (value: string) => value.replace(/\/+$/, "")
+          
+          if (isFreeBooking || duplicate.status === "PAID") {
+            if (duplicate.type === "SEAT") {
+              return {
+                success: true,
+                bookingId: duplicate.id,
+                paymentUrl: `${trimSlash(redirectBase)}/payment/success?booking=${duplicate.id}&status=completed`,
+                tableHash: null,
+                isFree: isFreeBooking || duplicate.status === "PAID",
+              }
+            } else {
+              return {
+                success: true,
+                bookingId: duplicate.id,
+                paymentUrl: `${trimSlash(redirectBase)}/manage?table=${existingTableHash}&paymentStatus=completed`,
+                tableHash: existingTableHash,
+                isFree: isFreeBooking || duplicate.status === "PAID",
+              }
+            }
+          } else {
+            const hitpayRedirectBase = process.env.HITPAY_RETURN_URL ?? process.env.NEXT_PUBLIC_SITE_URL
+            if (hitpayRedirectBase && duplicate.hitpayPaymentId) {
+              return {
+                success: true,
+                bookingId: duplicate.id,
+                paymentUrl: `${trimSlash(hitpayRedirectBase)}/redirect?booking=${duplicate.id}`,
+                tableHash: existingTableHash,
+              }
+            }
+            return {
+              error: "A booking is already being processed. Please wait a moment and check your email.",
+            }
+          }
+        }
+      }
+      return { error: "Duplicate booking detected. Please try again." }
     }
 
     // Generate table hash if it's a table booking

@@ -301,6 +301,11 @@ export default function BookPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    // Prevent double submission
+    if (loading) {
+      return
+    }
+    
     // Validate school and gradYear if wantsBatchSeating is true
     if (formData.wantsBatchSeating) {
       if (!formData.school?.trim()) {
