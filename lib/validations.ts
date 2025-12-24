@@ -10,6 +10,7 @@ export const bookingSchema = z.object({
   buyerMobile: z.string().optional(),
   membershipNo: z.string().optional(),
   membershipValidated: z.boolean().optional(), // Whether membership was validated on frontend
+  voucherCode: z.string().optional(), // Voucher code to apply discount
   wantsBatchSeating: z.boolean().optional(),
   school: z.string().optional(),
   gradYear: z.number().int().min(1900).max(new Date().getFullYear() + 10).optional(),

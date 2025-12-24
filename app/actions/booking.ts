@@ -121,9 +121,48 @@ export async function createBooking(data: z.infer<typeof bookingSchema>) {
       subtotal = seatPrice * validated.quantity
     }
 
+    // Validate and apply voucher if provided
+    let voucherId: string | undefined = undefined
+    if (validated.voucherCode) {
+      const voucher = await prisma.voucher.findUnique({
+        where: { code: validated.voucherCode.toUpperCase().trim() },
+      })
+
+      if (!voucher) {
+        return { error: "Invalid voucher code" }
+      }
+
+      if (!voucher.isActive) {
+        return { error: "Voucher is not active" }
+      }
+
+      if (voucher.currentRedemptions >= voucher.maxRedemptions) {
+        return { error: "Voucher has reached maximum redemptions" }
+      }
+
+      if (voucher.expiresAt && new Date() > voucher.expiresAt) {
+        return { error: "Voucher has expired" }
+      }
+
+      voucherId = voucher.id
+
+      // Apply voucher discount to subtotal
+      if (voucher.type === "PERCENTAGE" && voucher.discountPercent) {
+        const discount = (subtotal * voucher.discountPercent) / 100
+        subtotal = Math.max(0, subtotal - discount)
+      } else if (voucher.type === "FIXED_AMOUNT" && voucher.discountAmount) {
+        subtotal = Math.max(0, subtotal - Number(voucher.discountAmount))
+      } else if (voucher.type === "FIXED_PRICE" && voucher.fixedPrice) {
+        subtotal = Number(voucher.fixedPrice) * validated.quantity
+      }
+    }
+
     // No transaction fee charged to customers
     const transactionFee = 0
     const totalAmount = Math.round(subtotal * 100) / 100
+
+    // If total amount is 0 (e.g., voucher covers full amount), handle as free booking
+    const isFreeBooking = totalAmount === 0
 
     // Create or reuse buyer guest (email is unique)
     const buyer = await prisma.guest.upsert({
@@ -145,7 +184,7 @@ export async function createBooking(data: z.infer<typeof bookingSchema>) {
       },
     })
 
-    // Create booking
+    // Create booking - if free, mark as PAID immediately
     const booking = await prisma.booking.create({
       data: {
         type: validated.type,
@@ -153,12 +192,25 @@ export async function createBooking(data: z.infer<typeof bookingSchema>) {
         quantity: validated.quantity,
         totalAmount,
         transactionFee,
-        balanceDue: totalAmount,
+        balanceDue: isFreeBooking ? 0 : totalAmount,
         buyerId: buyer.id,
-        status: 'PENDING',
+        status: isFreeBooking ? 'PAID' : 'PENDING',
         wantsBatchSeating: validated.wantsBatchSeating ?? false,
+        voucherId: voucherId,
       },
     })
+
+    // Increment voucher redemption count if voucher was used
+    if (voucherId) {
+      await prisma.voucher.update({
+        where: { id: voucherId },
+        data: {
+          currentRedemptions: {
+            increment: 1,
+          },
+        },
+      })
+    }
 
     // Generate table hash if it's a table booking
     let tableHash: string | null = null
@@ -192,6 +244,68 @@ export async function createBooking(data: z.infer<typeof bookingSchema>) {
       inviteCodes.push(code)
     }
 
+    // If booking is free (totalAmount === 0), skip payment and send confirmation email
+    if (isFreeBooking) {
+      // Send confirmation email for free booking
+      try {
+        const [{ sendEmail }, { getPurchaseConfirmationEmail }] = await Promise.all([
+          import("@/lib/email"),
+          import("@/lib/email-templates"),
+        ])
+
+        const buyerEmail = validated.buyerEmail
+        const buyerName = validated.buyerName
+
+        // Prepare booking data for email
+        const bookingData = [{
+          id: booking.id,
+          type: booking.type,
+          quantity: booking.quantity,
+          totalAmount: booking.totalAmount.toString(),
+          tableHash: tableHash || null,
+          tableNumber: null,
+          tableCapacity: validated.tableCapacity || null,
+        }]
+
+        // Send confirmation email
+        console.log(`Sending confirmation email for free booking ${booking.id} to ${buyerEmail}`)
+        await sendEmail({
+          to: buyerEmail,
+          subject: "Thank You for Your Purchase - ACS Founders' Day Dinner",
+          html: await getPurchaseConfirmationEmail(buyerName, bookingData),
+        })
+        console.log(`Confirmation email sent successfully for free booking ${booking.id}`)
+      } catch (emailError) {
+        console.error("Error sending confirmation email for free booking:", emailError)
+        // Don't fail the booking if email fails
+      }
+
+      // Return appropriate redirect URL based on booking type
+      const redirectBase = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+      const trimSlash = (value: string) => value.replace(/\/+$/, "")
+      
+      if (booking.type === "SEAT") {
+        // For seat bookings, redirect to success page
+        return {
+          success: true,
+          bookingId: booking.id,
+          paymentUrl: `${trimSlash(redirectBase)}/payment/success?booking=${booking.id}&status=completed`,
+          tableHash: null,
+          isFree: true,
+        }
+      } else {
+        // For table bookings, redirect to manage page
+        return {
+          success: true,
+          bookingId: booking.id,
+          paymentUrl: `${trimSlash(redirectBase)}/manage?table=${tableHash}&paymentStatus=completed`,
+          tableHash,
+          isFree: true,
+        }
+      }
+    }
+
+    // For paid bookings, proceed with HitPay payment
     // Helper function to normalize URLs
     const trimSlash = (value: string) => value.replace(/\/+$/, "")
     const isLocalhost = (value: string) =>

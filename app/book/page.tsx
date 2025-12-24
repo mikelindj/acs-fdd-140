@@ -23,6 +23,16 @@ export default function BookPage() {
   const [loading, setLoading] = useState(false)
   const [validatingMembership, setValidatingMembership] = useState(false)
   const [membershipValidated, setMembershipValidated] = useState(false)
+  const [validatingVoucher, setValidatingVoucher] = useState(false)
+  const [voucherValidated, setVoucherValidated] = useState(false)
+  const [voucherData, setVoucherData] = useState<{
+    id: string
+    code: string
+    type: string
+    discountPercent: number | null
+    discountAmount: number | null
+    fixedPrice: number | null
+  } | null>(null)
   const [inventorySettings, setInventorySettings] = useState<InventorySettings | null>(null)
   const [inventoryAvailable, setInventoryAvailable] = useState<{
     available: boolean
@@ -37,6 +47,7 @@ export default function BookPage() {
     buyerEmail: "",
     buyerMobile: "",
     membershipNo: "",
+    voucherCode: "",
     wantsBatchSeating: false,
     school: "",
     gradYear: undefined as number | undefined,
@@ -130,6 +141,7 @@ export default function BookPage() {
         tableDiscount: 0,
         seatPrice: 0,
         seatDiscount: 0,
+        voucherDiscount: 0,
         total: 0,
       }
     }
@@ -175,14 +187,31 @@ export default function BookPage() {
       total = seatPrice * formData.quantity
     }
 
+    // Apply voucher discount if validated
+    let voucherDiscount = 0
+    let finalTotal = total
+    if (voucherValidated && voucherData) {
+      if (voucherData.type === "PERCENTAGE" && voucherData.discountPercent) {
+        voucherDiscount = (total * voucherData.discountPercent) / 100
+        finalTotal = Math.max(0, total - voucherDiscount)
+      } else if (voucherData.type === "FIXED_AMOUNT" && voucherData.discountAmount) {
+        voucherDiscount = Number(voucherData.discountAmount)
+        finalTotal = Math.max(0, total - voucherDiscount)
+      } else if (voucherData.type === "FIXED_PRICE" && voucherData.fixedPrice) {
+        finalTotal = Number(voucherData.fixedPrice) * formData.quantity
+        voucherDiscount = total - finalTotal
+      }
+    }
+
     return {
       tablePrice: isTable ? tablePrice * formData.quantity : 0,
       tableDiscount: isTable ? tableDiscount * formData.quantity : 0,
       seatPrice: (isElevenSeater || !isTable) ? seatPrice * formData.quantity : 0,
       seatDiscount: (isElevenSeater || !isTable) ? seatDiscount * formData.quantity : 0,
-      total: Math.round(total * 100) / 100,
+      voucherDiscount: voucherDiscount,
+      total: Math.round(finalTotal * 100) / 100,
     }
-  }, [inventorySettings, formData.type, formData.tableCapacity, formData.quantity, membershipValidated, formData.membershipNo])
+  }, [inventorySettings, formData.type, formData.tableCapacity, formData.quantity, membershipValidated, formData.membershipNo, voucherValidated, voucherData])
 
   const priceBreakdown = calculatePriceBreakdown()
   const total = priceBreakdown.total
@@ -215,6 +244,53 @@ export default function BookPage() {
       })
     } finally {
       setValidatingMembership(false)
+    }
+  }
+
+  const handleValidateVoucher = async () => {
+    if (!formData.voucherCode.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a voucher code",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setValidatingVoucher(true)
+    try {
+      const res = await fetch("/api/vouchers/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: formData.voucherCode.trim() }),
+      })
+      const data = await res.json()
+      if (res.ok && data.valid) {
+        setVoucherValidated(true)
+        setVoucherData(data.voucher)
+        toast({
+          title: "Success",
+          description: "Voucher code applied",
+        })
+      } else {
+        setVoucherValidated(false)
+        setVoucherData(null)
+        toast({
+          title: "Error",
+          description: data.error || "Invalid voucher code",
+          variant: "destructive",
+        })
+      }
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to validate voucher",
+        variant: "destructive",
+      })
+      setVoucherValidated(false)
+      setVoucherData(null)
+    } finally {
+      setValidatingVoucher(false)
     }
   }
 
@@ -252,6 +328,7 @@ export default function BookPage() {
         category: defaultCategory,
         tableCapacity: formData.type === "TABLE" ? formData.tableCapacity : undefined,
         membershipValidated: membershipValidated && !!formData.membershipNo,
+        voucherCode: voucherValidated && voucherData ? formData.voucherCode.trim() : undefined,
         wantsBatchSeating: formData.wantsBatchSeating,
         school: formData.wantsBatchSeating ? formData.school : undefined,
         gradYear: formData.wantsBatchSeating ? formData.gradYear : undefined,
@@ -264,6 +341,13 @@ export default function BookPage() {
           variant: "destructive",
         })
       } else if (result.paymentUrl) {
+        // If it's a free booking, show success message before redirecting
+        if (result.isFree) {
+          toast({
+            title: "Booking Confirmed!",
+            description: "Your booking has been confirmed. You will receive a confirmation email shortly.",
+          })
+        }
         window.location.href = result.paymentUrl
       }
     } catch {
@@ -528,6 +612,40 @@ export default function BookPage() {
               )}
             </div>
 
+            <div>
+              <Label htmlFor="voucherCode">Voucher Code (Optional)</Label>
+              <div className="mt-2 flex gap-2">
+                <Input
+                  id="voucherCode"
+                  value={formData.voucherCode}
+                  onChange={(e) => {
+                    setFormData({ ...formData, voucherCode: e.target.value.toUpperCase() })
+                    // Reset validation if voucher code changes
+                    if (voucherValidated) {
+                      setVoucherValidated(false)
+                      setVoucherData(null)
+                    }
+                  }}
+                  className="flex-1"
+                  placeholder="Enter voucher code"
+                />
+                <Button
+                  type="button"
+                  onClick={handleValidateVoucher}
+                  disabled={validatingVoucher || !formData.voucherCode.trim()}
+                  variant={voucherValidated ? "default" : "outline"}
+                  className={voucherValidated ? "bg-secondary text-primary hover:bg-secondary/90 font-semibold" : "border-2 border-slate-200 hover:border-primary hover:text-primary hover:bg-primary/5"}
+                >
+                  {validatingVoucher ? "Validating..." : voucherValidated ? "✓ Applied" : "Apply"}
+                </Button>
+              </div>
+              {voucherValidated && voucherData && (
+                <p className="mt-2 text-sm text-green-600 font-semibold flex items-center gap-1">
+                  <span className="text-green-600">✓</span> Voucher code applied
+                </p>
+              )}
+            </div>
+
             <div className="rounded-xl border-2 border-slate-200 bg-gradient-to-br from-slate-50 to-white p-6 shadow-sm">
               <div className="space-y-3 mb-4">
                 {formData.type === "TABLE" && (
@@ -564,6 +682,12 @@ export default function BookPage() {
                       </div>
                     )}
                   </>
+                )}
+                {priceBreakdown.voucherDiscount > 0 && (
+                  <div className="flex justify-between text-sm font-medium text-green-600">
+                    <span>Voucher Discount</span>
+                    <span>-S${priceBreakdown.voucherDiscount.toFixed(2)}</span>
+                  </div>
                 )}
               </div>
               <div className="border-t-2 border-slate-300 pt-4 mt-4">
