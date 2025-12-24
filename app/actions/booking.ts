@@ -148,7 +148,8 @@ export async function createBooking(data: z.infer<typeof bookingSchema>) {
 
       // Apply voucher discount to subtotal
       if (voucher.type === "PERCENTAGE" && voucher.discountPercent) {
-        const discount = (subtotal * voucher.discountPercent) / 100
+        const discountPercent = Number(voucher.discountPercent)
+        const discount = (subtotal * discountPercent) / 100
         subtotal = Math.max(0, subtotal - discount)
       } else if (voucher.type === "FIXED_AMOUNT" && voucher.discountAmount) {
         subtotal = Math.max(0, subtotal - Number(voucher.discountAmount))
@@ -449,6 +450,18 @@ export async function getBookingDetails(bookingId: string) {
         createdAt: booking.buyer.createdAt.toISOString(),
         updatedAt: booking.buyer.updatedAt.toISOString(),
       },
+      // Format voucher Decimal and Date fields if exists
+      voucher: booking.voucher
+        ? {
+            ...booking.voucher,
+            discountPercent: booking.voucher.discountPercent ? Number(booking.voucher.discountPercent) : null,
+            discountAmount: booking.voucher.discountAmount ? Number(booking.voucher.discountAmount) : null,
+            fixedPrice: booking.voucher.fixedPrice ? Number(booking.voucher.fixedPrice) : null,
+            expiresAt: booking.voucher.expiresAt ? booking.voucher.expiresAt.toISOString() : null,
+            createdAt: booking.voucher.createdAt.toISOString(),
+            updatedAt: booking.voucher.updatedAt.toISOString(),
+          }
+        : null,
     }
 
     return { success: true, booking: formattedBooking }

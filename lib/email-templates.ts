@@ -2,8 +2,6 @@ export async function getBookingConfirmationEmail(buyerName: string): Promise<st
   const { getEventSettings } = await import("@/lib/event-settings")
   const eventSettings = await getEventSettings()
   const eventName = eventSettings.eventName || "ACS Founders' Day Dinner"
-  const eventDate = eventSettings.eventDate ? new Date(eventSettings.eventDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : null
-  const eventVenue = eventSettings.eventVenue || null
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://140.acsoba.org"
   const logoUrl = `${baseUrl}/images/acs-140-logo.jpg`
   const footerLogoUrl = `${baseUrl}/images/acs-logo.png`
@@ -89,8 +87,6 @@ export async function getInviteEmail(inviteCode: string, buyerName: string, gues
   const { getEventSettings } = await import("@/lib/event-settings")
   const eventSettings = await getEventSettings()
   const eventName = eventSettings.eventName || "ACS Founders' Day Dinner"
-  const eventDate = eventSettings.eventDate ? new Date(eventSettings.eventDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : null
-  const eventVenue = eventSettings.eventVenue || null
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://140.acsoba.org"
   const logoUrl = `${baseUrl}/images/acs-140-logo.jpg`
   const footerLogoUrl = `${baseUrl}/images/acs-logo.png`
@@ -199,8 +195,6 @@ export async function getPurchaseConfirmationEmail(
   const { getEventSettings } = await import("@/lib/event-settings")
   const eventSettings = await getEventSettings()
   const eventName = eventSettings.eventName || "ACS Founders' Day Dinner"
-  const eventDate = eventSettings.eventDate ? new Date(eventSettings.eventDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : null
-  const eventVenue = eventSettings.eventVenue || null
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://140.acsoba.org"
   const logoUrl = `${baseUrl}/images/acs-140-logo.jpg`
   const footerLogoUrl = `${baseUrl}/images/acs-logo.png`
@@ -339,11 +333,6 @@ export async function getPurchaseConfirmationEmail(
 }
 
 export async function getBroadcastEmail(subject: string, content: string): Promise<string> {
-  const { getEventSettings } = await import("@/lib/event-settings")
-  const eventSettings = await getEventSettings()
-  const eventName = eventSettings.eventName || "ACS Founders' Day Dinner"
-  const eventDate = eventSettings.eventDate ? new Date(eventSettings.eventDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : null
-  const eventVenue = eventSettings.eventVenue || null
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://140.acsoba.org"
   const logoUrl = `${baseUrl}/images/acs-140-logo.jpg`
   const footerLogoUrl = `${baseUrl}/images/acs-logo.png`
