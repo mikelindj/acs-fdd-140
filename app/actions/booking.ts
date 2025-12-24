@@ -293,7 +293,51 @@ export async function getBookingDetails(bookingId: string) {
       return { error: "Booking not found" }
     }
 
-    return { success: true, booking }
+    // Convert Decimal fields to numbers for client component compatibility
+    const formattedBooking = {
+      ...booking,
+      totalAmount: Number(booking.totalAmount),
+      transactionFee: booking.transactionFee ? Number(booking.transactionFee) : null,
+      balanceDue: Number(booking.balanceDue),
+      createdAt: booking.createdAt.toISOString(),
+      updatedAt: booking.updatedAt.toISOString(),
+      // Format inviteCodes dates
+      inviteCodes: booking.inviteCodes.map((invite) => ({
+        ...invite,
+        claimedAt: invite.claimedAt ? invite.claimedAt.toISOString() : null,
+        expiresAt: invite.expiresAt ? invite.expiresAt.toISOString() : null,
+        createdAt: invite.createdAt.toISOString(),
+        updatedAt: invite.updatedAt.toISOString(),
+      })),
+      // Format table dates if exists
+      table: booking.table
+        ? {
+            ...booking.table,
+            createdAt: booking.table.createdAt.toISOString(),
+            updatedAt: booking.table.updatedAt.toISOString(),
+            // Format guests dates if exists
+            guests: booking.table.guests.map((guest) => ({
+              ...guest,
+              createdAt: guest.createdAt.toISOString(),
+              updatedAt: guest.updatedAt.toISOString(),
+            })),
+          }
+        : null,
+      // Format guests dates
+      guests: booking.guests.map((guest) => ({
+        ...guest,
+        createdAt: guest.createdAt.toISOString(),
+        updatedAt: guest.updatedAt.toISOString(),
+      })),
+      // Format buyer dates
+      buyer: {
+        ...booking.buyer,
+        createdAt: booking.buyer.createdAt.toISOString(),
+        updatedAt: booking.buyer.updatedAt.toISOString(),
+      },
+    }
+
+    return { success: true, booking: formattedBooking }
   } catch (error) {
     console.error("Error fetching booking details:", error)
     if (error instanceof Error) {

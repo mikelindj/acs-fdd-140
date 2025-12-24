@@ -103,53 +103,57 @@ export async function POST(request: NextRequest) {
       data: updateData,
     })
 
-    // Send consolidated email only on first transition to PAID
+    // Send email only for the current booking on first transition to PAID
     if (status === "PAID" && !alreadyPaid && booking.buyer?.email) {
       const buyerEmail = booking.buyer.email
       const buyerName = booking.buyer.name ?? "Guest"
 
       try {
-        // Find ALL PAID bookings for this buyer to send a single consolidated email
-        const allPaidBookings = await prisma.booking.findMany({
-          where: {
-            buyerId: booking.buyerId,
-            status: "PAID",
-          },
-          include: {
-            table: true,
-          },
-          orderBy: {
-            createdAt: "asc",
-          },
+        const [{ sendEmail }, { getPurchaseConfirmationEmail }] =
+          await Promise.all([
+            import("@/lib/email"),
+            import("@/lib/email-templates"),
+          ])
+
+        // Prepare booking data for email - only include the current booking
+        const bookingData = [{
+          id: booking.id,
+          type: booking.type,
+          quantity: booking.quantity,
+          totalAmount: booking.totalAmount.toString(),
+          tableHash: booking.table?.tableHash || null,
+          tableNumber: booking.table?.tableNumber || null,
+          tableCapacity: booking.table?.capacity || null,
+        }]
+
+        // Send email for this transaction only
+        console.log(`Sending confirmation email to ${buyerEmail} for booking ${booking.id} (${booking.type}, qty: ${booking.quantity})`)
+        await sendEmail({
+          to: buyerEmail,
+          subject: "Thank You for Your Purchase - ACS Founders' Day Dinner",
+          html: await getPurchaseConfirmationEmail(buyerName, bookingData),
         })
-
-        if (allPaidBookings.length > 0) {
-          const [{ sendEmail }, { getPurchaseConfirmationEmail }] =
-            await Promise.all([
-              import("@/lib/email"),
-              import("@/lib/email-templates"),
-            ])
-
-          // Prepare booking data for email
-          const bookingData = allPaidBookings.map((b) => ({
-            id: b.id,
-            type: b.type,
-            quantity: b.quantity,
-            totalAmount: b.totalAmount.toString(),
-            tableHash: b.table?.tableHash || null,
-            tableNumber: b.table?.tableNumber || null,
-            tableCapacity: b.table?.capacity || null,
-          }))
-
-          // Send single consolidated email
-          await sendEmail({
-            to: buyerEmail,
-            subject: "Thank You for Your Purchase - ACS Founders' Day Dinner",
-            html: await getPurchaseConfirmationEmail(buyerName, bookingData),
-          })
-        }
+        console.log(`Confirmation email sent successfully to ${buyerEmail} for booking ${booking.id}`)
       } catch (emailError) {
         console.error("HitPay webhook email error:", emailError)
+        // Log more details about the error
+        if (emailError instanceof Error) {
+          console.error("Email error details:", {
+            message: emailError.message,
+            stack: emailError.stack,
+            buyerEmail,
+            bookingId: booking.id,
+          })
+        }
+      }
+    } else {
+      // Log why email wasn't sent
+      if (status !== "PAID") {
+        console.log(`Email not sent: status is ${status}, not PAID`)
+      } else if (alreadyPaid) {
+        console.log(`Email not sent: booking ${booking.id} was already PAID`)
+      } else if (!booking.buyer?.email) {
+        console.log(`Email not sent: buyer has no email for booking ${booking.id}`)
       }
     }
 

@@ -90,6 +90,8 @@ async function RecentBookings() {
   const formattedBookings = bookings.map((booking) => ({
     ...booking,
     totalAmount: Number(booking.totalAmount),
+    transactionFee: booking.transactionFee ? Number(booking.transactionFee) : null,
+    balanceDue: Number(booking.balanceDue),
     createdAt: booking.createdAt.toISOString(),
   }))
 

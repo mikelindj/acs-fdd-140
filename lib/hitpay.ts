@@ -6,8 +6,6 @@ const HITPAY_ENV =
   process.env.HITPAY_ENV ??
   (process.env.NODE_ENV === "production" ? "production" : "sandbox")
 const HITPAY_API_VERSION = process.env.HITPAY_API_VERSION ?? "v1"
-const HITPAY_DEFAULT_PURPOSE =
-  process.env.HITPAY_DEFAULT_PURPOSE ?? "ACS Founders Day Dinner Booking"
 const HITPAY_BASE_URL_RAW =
   process.env.HITPAY_BASE_URL ??
   (HITPAY_ENV === "production"
@@ -45,6 +43,14 @@ function normalizeBaseUrl(base: string) {
     ? trimmed
     : `https://${trimmed.replace(/^\/+/, "")}`
   return withProtocol.replace(/\/+$/, "")
+}
+
+function generatePurpose(buyerName?: string): string {
+  const basePurpose = "140FDD"
+  if (buyerName && buyerName.trim()) {
+    return `${basePurpose} ${buyerName.trim()}`
+  }
+  return basePurpose
 }
 
 function fingerprint(secret?: string) {
@@ -166,7 +172,7 @@ export async function createHitPayPayment(
     email: options.email,
     name: options.name,
     phone: options.phone,
-    purpose: options.purpose ?? HITPAY_DEFAULT_PURPOSE,
+    purpose: options.purpose ?? generatePurpose(options.name),
     redirect_url: options.redirectUrl,
     webhook: options.webhookUrl,
     reference_number: options.referenceNumber,

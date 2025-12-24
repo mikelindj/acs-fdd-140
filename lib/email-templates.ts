@@ -147,7 +147,10 @@ export async function getPurchaseConfirmationEmail(
       </div>
     </div>
 
-    <p>Table assignments will be arranged by our team based on the batch information you provided. You will receive further details closer to the event date.</p>
+    ${bookings.some(b => b.type === "TABLE") 
+      ? `<p>Table assignments will be arranged by our team based on the batch information you provided. You will receive further details closer to the event date.</p>`
+      : `<p>Your seat assignment will be arranged by our team. You will receive further details closer to the event date.</p>`
+    }
 
     <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
     <p style="font-size: 12px; color: #666;">If you have any questions, please contact our support team.</p>
