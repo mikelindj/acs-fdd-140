@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
+import Link from "next/link"
 import { createBooking } from "@/app/actions/booking"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -283,13 +284,15 @@ export default function BookPage() {
         <div className="container max-w-6xl mx-auto px-4 h-32 md:h-40 flex items-center justify-between">
           <div className="flex items-center">
              {/* ACS 140 Logo (Big) */}
-             <div className="relative h-24 md:h-32 w-auto transition-transform hover:scale-105 duration-300">
-               <img 
-                 src="/images/acs-140-logo.jpg" 
-                 alt="ACS 140 Years" 
-                 className="object-contain w-full h-full"
-               />
-             </div>
+             <Link href="/">
+               <div className="relative h-24 md:h-32 w-auto transition-transform hover:scale-105 duration-300">
+                 <img 
+                   src="/images/acs-140-logo.jpg" 
+                   alt="ACS 140 Years" 
+                   className="object-contain w-full h-full"
+                 />
+               </div>
+             </Link>
           </div>
           
           <nav className="flex items-center gap-6 text-sm font-medium text-slate-600">
@@ -608,4 +611,3 @@ export default function BookPage() {
     </div>
   )
 }
-
