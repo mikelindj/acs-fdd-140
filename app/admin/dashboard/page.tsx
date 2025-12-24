@@ -1,6 +1,7 @@
 import { getCurrentAdmin } from "@/lib/auth-helpers"
 import { prisma } from "@/lib/prisma"
 import Link from "next/link"
+import Image from "next/image"
 import { BookingsTable } from "./BookingsTable"
 
 export default async function AdminDashboardPage() {
