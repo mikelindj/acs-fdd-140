@@ -21,6 +21,10 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: eventName,
     description,
+    icons: {
+      icon: "/images/acs-140-siteicon.png",
+      shortcut: "/images/acs-140-siteicon.png",
+    },
   }
 }
 

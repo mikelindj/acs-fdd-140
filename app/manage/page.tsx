@@ -192,7 +192,8 @@ function ManagePageContent() {
             
             <div className="text-center text-white md:text-right">
               © 140th ACS OBA FOUNDERS DAY DINNER, 2026
-              <p className="text-xs text-slate-400 mt-2">This page designed and built by <a href="https://nofa.io" className="hover:text-white transition-colors">Michael Lin</a> and <a href="https://github.com/kennethch22" className="hover:text-white transition-colors">Kenneth Hendra</a></p>
+<p className="text-[0.5rem] text-slate-400 mt-2">This page designed and built by ACSOBA Volunteers: <a href="https://nofa.io" className="hover:text-white transition-colors">Michael Lin</a> and <a href="https://github.com/kennethch22" className="hover:text-white transition-colors">Kenneth Hendra</a></p>
+
             </div>
           </div>
         </footer>
@@ -246,7 +247,8 @@ function ManagePageContent() {
             
             <div className="text-center text-white md:text-right">
               © 140th ACS OBA FOUNDERS DAY DINNER, 2026
-              <p className="text-xs text-slate-400 mt-2">This page designed and built by <a href="https://nofa.io" className="hover:text-white transition-colors">Michael Lin</a> and <a href="https://github.com/kennethch22" className="hover:text-white transition-colors">Kenneth Hendra</a></p>
+<p className="text-[0.5rem] text-slate-400 mt-2">This page designed and built by ACSOBA Volunteers: <a href="https://nofa.io" className="hover:text-white transition-colors">Michael Lin</a> and <a href="https://github.com/kennethch22" className="hover:text-white transition-colors">Kenneth Hendra</a></p>
+
             </div>
           </div>
         </footer>
@@ -422,7 +424,8 @@ function ManagePageContent() {
            
            <div className="text-center text-white md:text-right">
               © 140th ACS OBA FOUNDERS DAY DINNER, 2026
-              <p className="text-xs text-slate-400 mt-2">This page designed and built by <a href="https://nofa.io" className="hover:text-white transition-colors">Michael Lin</a> and <a href="https://github.com/kennethch22" className="hover:text-white transition-colors">Kenneth Hendra</a></p>
+<p className="text-[0.5rem] text-slate-400 mt-2">This page designed and built by ACSOBA Volunteers: <a href="https://nofa.io" className="hover:text-white transition-colors">Michael Lin</a> and <a href="https://github.com/kennethch22" className="hover:text-white transition-colors">Kenneth Hendra</a></p>
+
            </div>
         </div>
       </footer>
@@ -474,7 +477,8 @@ export default function ManagePage() {
             
             <div className="text-center text-white md:text-right">
               © 140th ACS OBA FOUNDERS DAY DINNER, 2026
-              <p className="text-xs text-slate-400 mt-2">This page designed and built by <a href="https://nofa.io" className="hover:text-white transition-colors">Michael Lin</a> and <a href="https://github.com/kennethch22" className="hover:text-white transition-colors">Kenneth Hendra</a></p>
+<p className="text-[0.5rem] text-slate-400 mt-2">This page designed and built by ACSOBA Volunteers: <a href="https://nofa.io" className="hover:text-white transition-colors">Michael Lin</a> and <a href="https://github.com/kennethch22" className="hover:text-white transition-colors">Kenneth Hendra</a></p>
+
             </div>
           </div>
         </footer>
