@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { sendBroadcast } from "@/app/actions/broadcast"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -52,35 +53,50 @@ export default function BroadcastPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <nav className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <h1 className="text-xl font-semibold text-slate-900">ACS FDD Admin</h1>
-            <div className="flex items-center space-x-6">
-              <Link href="/admin/dashboard" className="text-sm font-medium text-slate-700 hover:text-slate-900">
-                Dashboard
-              </Link>
-              <Link href="/admin/setup" className="text-sm font-medium text-slate-700 hover:text-slate-900">
-                Setup
-              </Link>
-              <Link href="/admin/tables" className="text-sm font-medium text-slate-700 hover:text-slate-900">
-                Tables
-              </Link>
-              <Link href="/admin/inventory" className="text-sm font-medium text-slate-700 hover:text-slate-900">
-                Inventory
-              </Link>
-              <Link href="/admin/broadcast" className="text-sm font-medium text-slate-700 hover:text-slate-900">
-                Broadcast
-              </Link>
-              <Link href="/api/auth/signout" className="text-sm font-medium text-slate-700 hover:text-slate-900">
-                Logout
-              </Link>
-            </div>
+    <div className="min-h-screen flex flex-col bg-slate-50">
+      {/* --- HEADER --- */}
+      <header className="relative z-50 w-full bg-white bg-wavy-pattern border-b border-slate-100 shadow-sm">
+        <div className="container max-w-6xl mx-auto px-4 h-32 md:h-40 flex items-center justify-between">
+          <div className="flex items-center">
+             {/* ACS 140 Logo (Big) */}
+             <Link href="/">
+               <div className="relative h-24 md:h-32 w-auto transition-transform hover:scale-105 duration-300">
+                 <Image 
+                   src="/images/acs-140-logo.jpg" 
+                   alt="ACS 140 Years" 
+                   width={200}
+                   height={128}
+                   className="object-contain w-full h-full"
+                   priority
+                 />
+               </div>
+             </Link>
           </div>
+          
+          <nav className="flex items-center gap-2 text-sm font-medium text-slate-600">
+             <Link href="/admin/dashboard" className="px-3 py-2 rounded-lg hover:bg-primary/10 hover:text-primary transition-all duration-200">
+               Dashboard
+             </Link>
+             <Link href="/admin/setup" className="px-3 py-2 rounded-lg hover:bg-primary/10 hover:text-primary transition-all duration-200">
+               Setup
+             </Link>
+             <Link href="/admin/tables" className="px-3 py-2 rounded-lg hover:bg-primary/10 hover:text-primary transition-all duration-200">
+               Tables
+             </Link>
+             <Link href="/admin/inventory" className="px-3 py-2 rounded-lg hover:bg-primary/10 hover:text-primary transition-all duration-200">
+               Inventory
+             </Link>
+             <Link href="/admin/broadcast" className="px-3 py-2 rounded-lg hover:bg-primary/10 hover:text-primary transition-all duration-200">
+               Broadcast
+             </Link>
+             <Link href="/api/auth/signout" className="px-3 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-900 transition-all duration-200">
+               Logout
+             </Link>
+          </nav>
         </div>
-      </nav>
+      </header>
 
+      <main className="flex-1">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         <h2 className="text-3xl font-semibold tracking-tight text-slate-900 mb-8">Send Broadcast</h2>
 
@@ -141,6 +157,30 @@ export default function BroadcastPage() {
           </form>
         </div>
       </div>
+      </main>
+
+      {/* --- FOOTER --- */}
+      <footer className="bg-slate-900 border-t border-slate-700 py-12">
+        <div className="container max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
+           <div className="flex items-center gap-3">
+               <div className="relative h-10 w-10 opacity-90 hover:opacity-100 transition-opacity duration-500">
+                  <Image 
+                    src="/images/acs-logo.png" 
+                    alt="ACS Logo" 
+                    width={40}
+                    height={40}
+                    className="object-contain w-full h-full"
+                  />
+               </div>
+               <span className="font-bold text-white tracking-tight">ACS OBA</span>
+           </div>
+           
+           <div className="text-center text-white md:text-right">
+              © 140th ACS OBA FOUNDERS DAY DINNER, 2026
+              <p className="text-[0.5rem] text-slate-400 mt-2">This page designed and built by ACSOBA Volunteers: <a href="https://nofa.io" className="hover:text-white transition-colors">Michael Lin</a> and <a href="https://github.com/kennethch22" className="hover:text-white transition-colors">Kenneth Hendra</a></p>
+           </div>
+        </div>
+      </footer>
     </div>
   )
 }
