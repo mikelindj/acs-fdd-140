@@ -258,20 +258,33 @@ export default function BookPage() {
 
     setValidatingMembership(true)
     try {
-      // For now, auto-approve any membership number (validation logic will be added later)
-      // In the future, this will call an API to validate
-      await new Promise((resolve) => setTimeout(resolve, 500)) // Simulate API call
-      setMembershipValidated(true)
-      toast({
-        title: "Success",
-        description: "Members price applied",
+      const res = await fetch("/api/membership/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ membershipNo: formData.membershipNo.trim() }),
       })
+      const data = await res.json()
+      if (res.ok && data.valid) {
+        setMembershipValidated(true)
+        toast({
+          title: "Success",
+          description: "Members price applied",
+        })
+      } else {
+        setMembershipValidated(false)
+        toast({
+          title: "Error",
+          description: data.error || "Invalid membership number",
+          variant: "destructive",
+        })
+      }
     } catch {
       toast({
         title: "Error",
         description: "Failed to validate membership",
         variant: "destructive",
       })
+      setMembershipValidated(false)
     } finally {
       setValidatingMembership(false)
     }

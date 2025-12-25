@@ -55,5 +55,11 @@ jobs:
             HITPAY_WEBHOOK_SECRET=${{ secrets.HITPAY_WEBHOOK_SECRET }}
             HITPAY_RETURN_URL=https://acs-fdd140-361501297750.asia-southeast1.run.app
             HITPAY_WEBHOOK_URL=https://acs-fdd140-361501297750.asia-southeast1.run.app
-            NEXT_PUBLIC_SITE_URL=https://acs-fdd140-361501297750.asia-southeast1.run.app            
+            NEXT_PUBLIC_SITE_URL=https://acs-fdd140-361501297750.asia-southeast1.run.app
+            MEMBERSHIP_DB_HOST=${{ secrets.MEMBERSHIP_DB_HOST }}
+            MEMBERSHIP_DB_USER=${{ secrets.MEMBERSHIP_DB_USER }}
+            MEMBERSHIP_DB_PASSWORD=${{ secrets.MEMBERSHIP_DB_PASSWORD }}
+            MEMBERSHIP_DB_NAME=${{ secrets.MEMBERSHIP_DB_NAME }}
+            MEMBERSHIP_DB_PORT=${{ secrets.MEMBERSHIP_DB_PORT }}
+            MEMBERSHIP_DB_SSL=${{ secrets.MEMBERSHIP_DB_SSL }}            
           flags: '--allow-unauthenticated --service-account=361501297750-compute@developer.gserviceaccount.com'

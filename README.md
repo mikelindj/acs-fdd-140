@@ -104,8 +104,15 @@ GMAIL_FROM_EMAIL="your-email@gmail.com"
 # Site
 NEXT_PUBLIC_SITE_URL="http://localhost:3000"
 
-# Membership Database (optional - leave commented if not using)
-# MEMBERSHIP_DB_URL="postgresql://your_username@localhost:5432/membership_db?schema=public"
+# Membership Database (MySQL) - Required for membership validation
+MEMBERSHIP_DB_HOST="139.99.92.94"
+MEMBERSHIP_DB_USER="acsoba593068_fdduser"
+MEMBERSHIP_DB_PASSWORD="your-membership-db-password"
+MEMBERSHIP_DB_NAME="acsoba593068_membership"
+MEMBERSHIP_DB_PORT="3306"
+# Optional: Enable SSL/TLS for database connection
+# MEMBERSHIP_DB_SSL="true"
+# MEMBERSHIP_DB_SSL_REJECT_UNAUTHORIZED="true"
 ```
 
 **Generate a secure NEXTAUTH_SECRET:**
