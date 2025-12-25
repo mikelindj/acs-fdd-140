@@ -1,6 +1,13 @@
 import mysql from 'mysql2/promise';
 
-const DB_CONFIG = {
+const DB_CONFIG: {
+  host: string;
+  user: string;
+  password: string;
+  database?: string;
+  port: number;
+  connectTimeout: number;
+} = {
   host: '139.99.92.94',
   user: 'acsoba593068_fdduser',
   password: 'fuKT{YG}_H^W',
@@ -18,7 +25,7 @@ async function testDatabaseConnection() {
     console.log('🔌 Attempting to connect to MySQL database...');
     console.log(`   Host: ${DB_CONFIG.host}`);
     console.log(`   User: ${DB_CONFIG.user}`);
-    console.log(`   Database: ${DB_CONFIG.database}`);
+    console.log(`   Database: ${DB_CONFIG.database || '(not specified)'}`);
     console.log(`   Port: ${DB_CONFIG.port}`);
     console.log('');
 

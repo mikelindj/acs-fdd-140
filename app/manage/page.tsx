@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, useRef, Suspense } from "react"
 import Image from "next/image"
-import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"

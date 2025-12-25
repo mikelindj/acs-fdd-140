@@ -32,7 +32,7 @@ function getMySQLConfig(): mysql.PoolOptions {
     // Enable SSL/TLS for secure connections
     ssl: process.env.MEMBERSHIP_DB_SSL === 'true' ? {
       rejectUnauthorized: process.env.MEMBERSHIP_DB_SSL_REJECT_UNAUTHORIZED !== 'false'
-    } : false,
+    } : undefined,
     // Additional security settings
     enableKeepAlive: true,
     keepAliveInitialDelay: 0,
@@ -61,12 +61,8 @@ function getPool(): mysql.Pool {
     try {
       const config = getMySQLConfig()
       pool = mysql.createPool(config)
-      
-      // Handle pool errors
-      pool.on('error', (err) => {
-        console.error('MySQL pool error:', err)
-        // Don't throw - let individual queries handle errors
-      })
+      // Note: Promise-based Pool doesn't support event listeners
+      // Errors are handled in individual query calls
     } catch (error) {
       console.error('Failed to create MySQL connection pool:', error)
       throw error

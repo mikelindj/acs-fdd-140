@@ -27,7 +27,7 @@ async function getMembershipNumberFromBody(request: NextRequest): Promise<string
     }
     
     return membershipNo
-  } catch (error) {
+  } catch {
     // Invalid JSON or other parsing errors
     return null
   }
