@@ -74,6 +74,9 @@ model Booking {
   buyerId         String
   voucherId       String?
   wantsBatchSeating Boolean?      @default(false)
+  school          String?
+  gradYear        Int?
+  cuisine         String?         // Chinese, Chinese-Vegetarian, or Halal
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
   buyer           Guest           @relation("GuestBookings", fields: [buyerId], references: [id])

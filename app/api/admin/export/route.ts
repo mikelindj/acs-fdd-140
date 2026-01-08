@@ -3,6 +3,40 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
+// Calculate cuisine breakdown for Excel export
+function calculateCuisineBreakdown(cuisineJson: string | null | undefined, type: string, quantity: number, tableCapacity: number | null): Record<string, number> {
+  const result: Record<string, number> = {}
+
+  if (!cuisineJson) return result
+
+  try {
+    const cuisines: string[] = JSON.parse(cuisineJson)
+    if (!Array.isArray(cuisines) || cuisines.length === 0) return result
+
+    // Count occurrences of each cuisine
+    const cuisineCounts: Record<string, number> = {}
+    cuisines.forEach(cuisine => {
+      cuisineCounts[cuisine] = (cuisineCounts[cuisine] || 0) + 1
+    })
+
+    // Convert to guest counts based on booking type
+    Object.entries(cuisineCounts).forEach(([cuisine, count]) => {
+      if (type === "TABLE" && tableCapacity) {
+        // For tables, multiply by table capacity (usually 10)
+        result[cuisine] = count * tableCapacity
+      } else {
+        // For individual seats, use the count directly
+        result[cuisine] = count
+      }
+    })
+
+    return result
+  } catch (error) {
+    console.warn('Error parsing cuisine JSON in export:', cuisineJson)
+    return result
+  }
+}
+
 export async function GET() {
   try {
     // Dynamic import for xlsx - it exports utilities directly
@@ -47,12 +81,15 @@ export async function GET() {
       const tableCapacity = booking.table?.capacity || null
       const tableNumber = booking.table?.tableNumber || "N/A"
       const voucherCode = booking.voucher?.code || "N/A"
-      
+
       // Calculate guests count
       let guestsCount = booking.quantity
       if (booking.type === "TABLE" && tableCapacity) {
         guestsCount = booking.quantity * tableCapacity
       }
+
+      // Calculate cuisine breakdown
+      const cuisineBreakdown = calculateCuisineBreakdown(booking.cuisine, booking.type, booking.quantity, tableCapacity)
 
       return {
         "Booking ID": booking.id,
@@ -74,6 +111,15 @@ export async function GET() {
         "Payment ID": booking.hitpayPaymentId || "N/A",
         "Wants Batch Seating": booking.wantsBatchSeating ? "Yes" : "No",
         "Guests Count": booking.guests.length,
+        // Grouping columns
+        "School": booking.gradYear ? booking.school || "" : "",
+        "Year": booking.gradYear || "",
+        "PSG-School": !booking.gradYear ? booking.school || "" : "",
+        "Staff-School": !booking.gradYear ? booking.school || "" : "",
+        // Cuisine columns
+        "Chinese": cuisineBreakdown.Chinese || 0,
+        "Chinese-Vegetarian": cuisineBreakdown["Chinese-Vegetarian"] || 0,
+        "Halal": cuisineBreakdown.Halal || 0,
       }
     })
 

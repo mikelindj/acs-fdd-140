@@ -48,6 +48,7 @@ interface BookingDetails {
   updatedAt: string | Date
   hitpayPaymentId?: string | null
   wantsBatchSeating?: boolean
+  cuisine?: string | null
   buyer: {
     name: string
     email: string
@@ -86,6 +87,43 @@ export function BookingsTable({ bookings }: BookingsTableProps) {
   const [bulkDeleting, setBulkDeleting] = useState(false)
   const { toast } = useToast()
   const router = useRouter()
+
+  // Format cuisine display for the admin dashboard
+  const formatCuisineDisplay = (cuisineJson: string, type: string) => {
+    try {
+      const cuisines: string[] = JSON.parse(cuisineJson)
+      if (!Array.isArray(cuisines) || cuisines.length === 0) return "Not specified"
+
+      // Count occurrences of each cuisine
+      const cuisineCounts: Record<string, number> = {}
+      cuisines.forEach(cuisine => {
+        cuisineCounts[cuisine] = (cuisineCounts[cuisine] || 0) + 1
+      })
+
+      // Format the breakdown
+      const breakdownParts = Object.entries(cuisineCounts).map(([cuisine, count]) => {
+        const itemType = type === "TABLE" ? "Table" : "Seat"
+        if (count === 1) {
+          return `1 ${cuisine} ${itemType.toLowerCase()}`
+        } else {
+          return `${count} ${cuisine} ${itemType.toLowerCase()}s`
+        }
+      })
+
+      // Join with commas and "and" for the last item
+      if (breakdownParts.length === 1) {
+        return breakdownParts[0]
+      } else if (breakdownParts.length === 2) {
+        return `${breakdownParts[0]} and ${breakdownParts[1]}`
+      } else {
+        const lastPart = breakdownParts.pop()
+        return `${breakdownParts.join(", ")}, and ${lastPart}`
+      }
+    } catch (error) {
+      console.warn('Error parsing cuisine JSON in admin dashboard:', cuisineJson)
+      return "Not specified"
+    }
+  }
 
   // Get only PENDING bookings for selection
   const pendingBookings = bookings.filter((b) => b.status === "PENDING")
@@ -376,6 +414,12 @@ export function BookingsTable({ bookings }: BookingsTableProps) {
                     <div className="flex justify-between">
                       <span className="text-sm text-slate-600">Category:</span>
                       <span className="text-sm font-medium text-slate-900">{bookingDetails.category}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-slate-600">Cuisine:</span>
+                      <span className="text-sm font-medium text-slate-900">
+                        {bookingDetails.cuisine ? formatCuisineDisplay(bookingDetails.cuisine, bookingDetails.type) : "Not specified"}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-slate-600">Status:</span>

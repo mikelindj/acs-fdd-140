@@ -22,8 +22,6 @@ interface InventorySettings {
 export default function BookPage() {
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
-  const [validatingMembership, setValidatingMembership] = useState(false)
-  const [membershipValidated, setMembershipValidated] = useState(false)
   const [validatingVoucher, setValidatingVoucher] = useState(false)
   const [voucherValidated, setVoucherValidated] = useState(false)
   const [voucherData, setVoucherData] = useState<{
@@ -51,16 +49,21 @@ export default function BookPage() {
   } | null>(null)
   const [formData, setFormData] = useState({
     type: "TABLE" as "TABLE" | "SEAT",
-    tableCapacity: 10 as 10 | 11,
+    tableCapacity: 10 as 10,
     quantity: 1,
     buyerName: "",
     buyerEmail: "",
     buyerMobile: "",
     membershipNo: "",
     voucherCode: "",
-    wantsBatchSeating: false,
+    wantsBatchSeating: true, // Always true now since we always show batch info
+    batchType: "SCHOOL_YEAR" as "SCHOOL_YEAR" | "PSG" | "SCHOOL_STAFF", // Track whether user selects School+Year, PSG, or School Staff
     school: "",
     gradYear: undefined as number | undefined,
+    psgSchool: "", // For PSG dropdown selection
+    schoolStaffSchool: "", // For School Staff dropdown selection
+    cuisines: [] as string[], // Array of cuisine selections, one per table/seat
+    tableDiscountApplied: false, // Whether the table bundle discount has been manually applied
   })
 
   // Fetch event settings on mount
@@ -163,58 +166,113 @@ export default function BookPage() {
     checkAvailability()
   }, [formData.type, formData.tableCapacity, formData.quantity])
 
+  // Initialize and sync cuisines array when quantity changes
+  useEffect(() => {
+    const currentLength = formData.cuisines.length
+    if (formData.quantity !== currentLength) {
+      const newCuisines = [...formData.cuisines]
+      if (formData.quantity > currentLength) {
+        // Add empty strings for new items
+        while (newCuisines.length < formData.quantity) {
+          newCuisines.push("")
+        }
+      } else {
+        // Trim array if quantity decreased
+        newCuisines.splice(formData.quantity)
+      }
+      setFormData(prev => ({ ...prev, cuisines: newCuisines, tableDiscountApplied: false }))
+    }
+  }, [formData.quantity])
+
+  // Reset table discount when membership changes
+  useEffect(() => {
+    setFormData(prev => ({ ...prev, tableDiscountApplied: false }))
+  }, [formData.membershipNo])
+
+  // Reset table discount when cuisines change
+  useEffect(() => {
+    setFormData(prev => ({ ...prev, tableDiscountApplied: false }))
+  }, [formData.cuisines])
+
+  // Initialize cuisines array on mount
+  useEffect(() => {
+    if (formData.cuisines.length === 0 && formData.quantity > 0) {
+      setFormData(prev => ({ 
+        ...prev, 
+        cuisines: Array(formData.quantity).fill("") 
+      }))
+    }
+  }, []) // Only run on mount
+
+
   // Calculate price breakdown based on inventory settings
   const calculatePriceBreakdown = useCallback(() => {
-    if (!inventorySettings) {
+    if (!inventorySettings || !formData) {
       return {
         tablePrice: 0,
         tableDiscount: 0,
         seatPrice: 0,
         seatDiscount: 0,
+        displaySeatPrice: 0,
+        displayTablePrice: 0,
+        tableBundleDiscount: 0,
         voucherDiscount: 0,
         total: 0,
       }
     }
 
     const isTable = formData.type === "TABLE"
-    const isElevenSeater = isTable && formData.tableCapacity === 11
-    
     // Base prices (non-discounted)
-    const baseTablePrice = Number(inventorySettings.tablePrice)
-    const baseSeatPrice = Number(inventorySettings.seatPrice)
-    
-    // Get actual prices (with membership or promo discounts)
+    const baseTablePrice = Number(inventorySettings.tablePrice || 0)
+    const baseSeatPrice = Number(inventorySettings.seatPrice || 0)
+
+    // Check if membership is entered
+    const hasMembership = formData.membershipNo && typeof formData.membershipNo === 'string' && formData.membershipNo.trim()
+
+    // Always show full rates for display purposes
+    const displayTablePrice = Number(inventorySettings.tablePrice)
+    const displaySeatPrice = Number(inventorySettings.seatPrice)
+
+    // Get actual prices (with membership or promo discounts) for calculation
     let tablePrice: number
     let seatPrice: number
     let tableDiscount = 0
     let seatDiscount = 0
 
-    if (membershipValidated && formData.membershipNo) {
-      // Use members price if validated
+    if (hasMembership) {
+      // Use members price if membership number is entered
       tablePrice = Number(inventorySettings.tableMembersPrice || inventorySettings.tablePrice)
       seatPrice = Number(inventorySettings.seatMembersPrice || inventorySettings.seatPrice)
       // Calculate discount from base price (only if lower than base)
       tableDiscount = Math.max(0, baseTablePrice - tablePrice)
       seatDiscount = Math.max(0, baseSeatPrice - seatPrice)
     } else {
-      // Use promo price if available, otherwise base price
-      tablePrice = Number(inventorySettings.tablePromoPrice || inventorySettings.tablePrice)
-      seatPrice = Number(inventorySettings.seatPromoPrice || inventorySettings.seatPrice)
-      // Calculate discount from base price (only if promo is lower than base)
-      tableDiscount = Math.max(0, baseTablePrice - tablePrice)
-      seatDiscount = Math.max(0, baseSeatPrice - seatPrice)
+      // Use regular prices (no member discount)
+      tablePrice = Number(inventorySettings.tablePrice)
+      seatPrice = Number(inventorySettings.seatPrice)
+      // No discounts without membership
+      tableDiscount = 0
+      seatDiscount = 0
     }
 
     let total = 0
-    if (isElevenSeater) {
-      // 11-seater = 1 table (10-seater) + 1 seat
-      total = (tablePrice + seatPrice) * formData.quantity
-    } else if (isTable) {
+    let tableBundleDiscount = 0
+
+    if (isTable) {
       // 10-seater table
       total = tablePrice * formData.quantity
     } else {
       // Individual seat
-      total = seatPrice * formData.quantity
+      const regularSeatTotal = seatPrice * formData.quantity
+
+      // Check for table bundle discount (manually applied)
+      if (formData.tableDiscountApplied) {
+        // Apply fixed table bundle price of $2100 for 10 seats
+        total = 2100
+        tableBundleDiscount = regularSeatTotal - 2100
+      } else {
+        total = regularSeatTotal
+      }
     }
 
     // Apply voucher discount if validated
@@ -236,59 +294,18 @@ export default function BookPage() {
     return {
       tablePrice: isTable ? tablePrice * formData.quantity : 0,
       tableDiscount: isTable ? tableDiscount * formData.quantity : 0,
-      seatPrice: (isElevenSeater || !isTable) ? seatPrice * formData.quantity : 0,
-      seatDiscount: (isElevenSeater || !isTable) ? seatDiscount * formData.quantity : 0,
+      seatPrice: !isTable ? seatPrice * formData.quantity : 0,
+      seatDiscount: !isTable ? seatDiscount * formData.quantity : 0,
+      displaySeatPrice: !isTable ? displaySeatPrice * formData.quantity : 0, // Full rate for display
+      displayTablePrice: isTable ? displayTablePrice * formData.quantity : 0, // Full rate for display
+      tableBundleDiscount: tableBundleDiscount,
       voucherDiscount: voucherDiscount,
       total: Math.round(finalTotal * 100) / 100,
     }
-  }, [inventorySettings, formData.type, formData.tableCapacity, formData.quantity, membershipValidated, formData.membershipNo, voucherValidated, voucherData])
+  }, [inventorySettings, formData.type, formData.tableCapacity, formData.quantity, formData.membershipNo, voucherValidated, voucherData, formData.tableDiscountApplied, formData.cuisines])
 
   const priceBreakdown = calculatePriceBreakdown()
   const total = priceBreakdown.total
-
-  const handleValidateMembership = async () => {
-    if (!formData.membershipNo.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a membership number",
-        variant: "destructive",
-      })
-      return
-    }
-
-    setValidatingMembership(true)
-    try {
-      const res = await fetch("/api/membership/validate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ membershipNo: formData.membershipNo.trim() }),
-      })
-      const data = await res.json()
-      if (res.ok && data.valid) {
-        setMembershipValidated(true)
-        toast({
-          title: "Success",
-          description: "Members price applied",
-        })
-      } else {
-        setMembershipValidated(false)
-        toast({
-          title: "Error",
-          description: data.error || "Invalid membership number",
-          variant: "destructive",
-        })
-      }
-    } catch {
-      toast({
-        title: "Error",
-        description: "Failed to validate membership",
-        variant: "destructive",
-      })
-      setMembershipValidated(false)
-    } finally {
-      setValidatingMembership(false)
-    }
-  }
 
   const handleValidateVoucher = async () => {
     if (!formData.voucherCode.trim()) {
@@ -348,12 +365,35 @@ export default function BookPage() {
       return
     }
     
-    // Validate school and gradYear if wantsBatchSeating is true
-    if (formData.wantsBatchSeating) {
+    // Validate cuisines - ensure all are selected
+    if (formData.cuisines.length !== formData.quantity) {
+      toast({
+        title: "Error",
+        description: `Please select cuisine preferences for all ${formData.quantity} ${formData.type === "TABLE" ? "table" : "seat"}${formData.quantity !== 1 ? "s" : ""}`,
+        variant: "destructive",
+      })
+      return
+    }
+    
+    const missingCuisines = formData.cuisines.filter((c, index) => !c || !c.trim())
+    if (missingCuisines.length > 0) {
+      const missingIndices = formData.cuisines
+        .map((c, index) => (!c || !c.trim()) ? index + 1 : null)
+        .filter((i): i is number => i !== null)
+      toast({
+        title: "Error",
+        description: `Please select cuisine preferences for ${formData.type === "TABLE" ? "table" : "seat"} ${missingIndices.join(", ")}`,
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Validate batch information
+    if (formData.batchType === "SCHOOL_YEAR") {
       if (!formData.school?.trim()) {
         toast({
           title: "Error",
-          description: "School is required when requesting batch seating",
+          description: "School is required",
           variant: "destructive",
         })
         return
@@ -361,7 +401,25 @@ export default function BookPage() {
       if (!formData.gradYear) {
         toast({
           title: "Error",
-          description: "Year of completion is required when requesting batch seating",
+          description: "Year of completion is required",
+          variant: "destructive",
+        })
+        return
+      }
+    } else if (formData.batchType === "PSG") {
+      if (!formData.psgSchool?.trim()) {
+        toast({
+          title: "Error",
+          description: "Please select a PSG school",
+          variant: "destructive",
+        })
+        return
+      }
+    } else if (formData.batchType === "SCHOOL_STAFF") {
+      if (!formData.schoolStaffSchool?.trim()) {
+        toast({
+          title: "Error",
+          description: "Please select a school",
           variant: "destructive",
         })
         return
@@ -371,15 +429,25 @@ export default function BookPage() {
     setLoading(true)
 
     try {
+      // Safety check for formData
+      if (!formData) {
+        throw new Error("Form data is not available")
+      }
+
+      // Destructure to exclude batchType, psgSchool, schoolStaffSchool, cuisines, and tableDiscountApplied (not part of schema)
+      const { batchType, psgSchool, schoolStaffSchool, cuisines, tableDiscountApplied, ...formDataWithoutBatchType } = formData
       const bookingData = {
-        ...formData,
+        ...formDataWithoutBatchType,
         category: defaultCategory,
         tableCapacity: formData.type === "TABLE" ? formData.tableCapacity : undefined,
-        membershipValidated: membershipValidated && !!formData.membershipNo,
-        voucherCode: voucherValidated && voucherData ? formData.voucherCode.trim() : undefined,
-        wantsBatchSeating: formData.wantsBatchSeating,
-        school: formData.wantsBatchSeating ? formData.school : undefined,
-        gradYear: formData.wantsBatchSeating ? formData.gradYear : undefined,
+        membershipValidated: !!(formData.membershipNo && typeof formData.membershipNo === 'string' && formData.membershipNo.trim()),
+        voucherCode: voucherValidated && voucherData && formData.voucherCode ? formData.voucherCode.trim() : undefined,
+        wantsBatchSeating: true, // Always true since we always show batch info
+        // Use PSG school if PSG is selected, School Staff school if School Staff is selected, otherwise use regular school
+        school: formData.batchType === "PSG" ? (formData.psgSchool || "") : formData.batchType === "SCHOOL_STAFF" ? (formData.schoolStaffSchool || "") : (formData.school || ""),
+        gradYear: (formData.batchType === "PSG" || formData.batchType === "SCHOOL_STAFF") ? undefined : formData.gradYear,
+        cuisine: (formData.cuisines && Array.isArray(formData.cuisines) && formData.cuisines.length > 0) ? JSON.stringify(formData.cuisines) : undefined,
+        tableDiscountApplied: Boolean(formData.tableDiscountApplied),
       }
       const result = await createBooking(bookingData)
       if (result.error) {
@@ -448,20 +516,18 @@ export default function BookPage() {
               <Label htmlFor="booking-type">Booking Type</Label>
               <select
                 id="booking-type"
-                value={formData.type === "SEAT" ? "SEAT" : `TABLE-${formData.tableCapacity}`}
+                value={formData.type === "SEAT" ? "SEAT" : "TABLE-10"}
                 onChange={(e) => {
                   const value = e.target.value
                   if (value === "SEAT") {
                     setFormData({ ...formData, type: "SEAT" })
                   } else {
-                    const capacity = value === "TABLE-11" ? 11 : 10
-                    setFormData({ ...formData, type: "TABLE", tableCapacity: capacity })
+                    setFormData({ ...formData, type: "TABLE", tableCapacity: 10 })
                   }
                 }}
                 className="mt-2 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
               >
                 <option value="TABLE-10">Table (10 seater)</option>
-                <option value="TABLE-11">Table (11 seater)</option>
                 <option value="SEAT">Individual Seat (1 seat)</option>
               </select>
             </div>
@@ -484,9 +550,22 @@ export default function BookPage() {
                   }
                   const newQuantity = parseInt(value, 10)
                   if (!isNaN(newQuantity) && newQuantity > 0) {
+                    // Sync cuisines array with new quantity
+                    const currentCuisines = formData.cuisines
+                    const newCuisines = [...currentCuisines]
+                    if (newQuantity > currentCuisines.length) {
+                      // Add empty strings for new items
+                      while (newCuisines.length < newQuantity) {
+                        newCuisines.push("")
+                      }
+                    } else if (newQuantity < currentCuisines.length) {
+                      // Trim array if quantity decreased
+                      newCuisines.splice(newQuantity)
+                    }
                     setFormData({
                       ...formData,
                       quantity: newQuantity,
+                      cuisines: newCuisines,
                     })
                   }
                 }}
@@ -495,7 +574,7 @@ export default function BookPage() {
               />
               {inventoryAvailable && !inventoryAvailable.available && (
                 <p className="mt-2 text-sm text-brand-red font-medium">
-                  {inventoryAvailable.error || `Only ${inventoryAvailable.availableCount} available. You requested ${formData.quantity}.`}
+                  {inventoryAvailable.error || "Exceeded maximum allowed limit"}
                 </p>
               )}
               {inventoryAvailable && inventoryAvailable.available && inventoryAvailable.availableCount < 5 && (
@@ -505,80 +584,103 @@ export default function BookPage() {
               )}
             </div>
 
-            <div className="space-y-4 p-4 rounded-xl bg-slate-50 border border-slate-200">
+            <div>
+              <Label className="text-base font-semibold text-slate-900">
+                Cuisine Preference * ({formData.quantity} {formData.type === "TABLE" ? "table" : "seat"}{formData.quantity !== 1 ? "s" : ""})
+              </Label>
+              <p className="text-sm text-slate-600 mt-1 mb-4">
+                {formData.type === "TABLE"
+                  ? "Please select a cuisine preference for each table you are booking. All guests at a table MUST be served the same cuisine."
+                  : "Please select a cuisine preference for each seat you are booking."
+                }
+              </p>
               <div className="space-y-3">
-                <Label className="text-base font-semibold text-slate-900">Would you like to be seated near or with your batch?</Label>
-                <div className="flex gap-6">
-                  <label className="flex items-center gap-2 cursor-pointer group">
-                    <input
-                      type="radio"
-                      name="wantsBatchSeating"
-                      checked={formData.wantsBatchSeating === true}
-                      onChange={() => setFormData({ ...formData, wantsBatchSeating: true })}
-                      className="w-4 h-4 text-primary focus:ring-primary focus:ring-2"
-                    />
-                    <span className="text-sm font-medium text-slate-700 group-hover:text-primary transition-colors">Yes</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer group">
-                    <input
-                      type="radio"
-                      name="wantsBatchSeating"
-                      checked={formData.wantsBatchSeating === false}
-                      onChange={() => setFormData({ ...formData, wantsBatchSeating: false, school: "", gradYear: undefined })}
-                      className="w-4 h-4 text-primary focus:ring-primary focus:ring-2"
-                    />
-                    <span className="text-sm font-medium text-slate-700 group-hover:text-primary transition-colors">No</span>
-                  </label>
-                </div>
-                <p className="text-xs text-slate-500 italic">
-                  We will attempt to seat you on a best effort basis
-                </p>
-              </div>
-
-              {formData.wantsBatchSeating && (
-                <div className="space-y-4 border-t border-slate-300 pt-4 mt-4 transition-all duration-300 ease-out animate-slide-down">
-                  <Label className="text-base font-semibold text-slate-900">Tell us about the batch that you most identify with:</Label>
-                  
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="transition-all duration-300 ease-out delay-75 animate-slide-down">
-                      <Label htmlFor="school">School *</Label>
-                      <Input
-                        id="school"
-                        value={formData.school}
-                        onChange={(e) =>
-                          setFormData({ ...formData, school: e.target.value })
+                {Array.from({ length: formData.quantity }).map((_, index) => (
+                  <div key={index} className="space-y-2">
+                    <Label htmlFor={`cuisine-${index}`} className="text-sm font-medium text-slate-700">
+                      {formData.type === "TABLE" ? "Table" : "Seat"} {index + 1} *
+                    </Label>
+                    <select
+                      id={`cuisine-${index}`}
+                      value={formData.cuisines[index] || ""}
+                      onChange={(e) => {
+                        const newCuisines = [...formData.cuisines]
+                        newCuisines[index] = e.target.value
+                        // Ensure array length matches quantity
+                        while (newCuisines.length < formData.quantity) {
+                          newCuisines.push("")
                         }
-                        placeholder="e.g., ACS (Barker Road), ACS (Independent), etc."
-                        required={formData.wantsBatchSeating}
-                        className="mt-2"
-                      />
-                    </div>
-
-                    <div className="transition-all duration-300 ease-out delay-75 animate-slide-down">
-                      <Label htmlFor="gradYear">Year of Completion *</Label>
-                      <Input
-                        id="gradYear"
-                        type="number"
-                        min="1900"
-                        max={new Date().getFullYear() + 10}
-                        value={formData.gradYear || ""}
-                        onChange={(e) => {
-                          const value = e.target.value
-                          if (value === "") {
-                            setFormData({ ...formData, gradYear: undefined })
-                          } else {
-                            const year = parseInt(value, 10)
-                            if (!isNaN(year)) {
-                              setFormData({ ...formData, gradYear: year })
-                            }
-                          }
-                        }}
-                        placeholder="e.g., 2020"
-                        required={formData.wantsBatchSeating}
-                        className="mt-2"
-                      />
-                    </div>
+                        setFormData({ ...formData, cuisines: newCuisines })
+                      }}
+                      required
+                      className="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
+                    >
+                      <option value="">Select cuisine</option>
+                      <option value="Chinese">Chinese</option>
+                      <option value="Chinese-Vegetarian">Chinese-Vegetarian</option>
+                      <option value="Halal">Halal</option>
+                    </select>
                   </div>
+                ))}
+              </div>
+              
+              {/* Table Bundle Discount Button */}
+              {formData.type === "SEAT" && formData.quantity === 10 && !formData.tableDiscountApplied && (
+                formData.membershipNo && formData.membershipNo.trim() ? (
+                  (() => {
+                    // Check if all cuisines are selected and valid for discount
+                    const validCuisines = ["Halal", "Chinese-Vegetarian"]
+                    const allCuisinesSelected = formData.cuisines.length === 10 && formData.cuisines.every(c => c && c.trim())
+                    const allSpecialCuisines = allCuisinesSelected && formData.cuisines.every(c => validCuisines.includes(c))
+
+                    return allSpecialCuisines ? (
+                      <div className="mt-4 p-4 rounded-xl bg-green-50 border border-green-200">
+                        <p className="text-sm font-semibold text-green-700 flex items-center gap-2 mb-2">
+                          <span>🎉</span> Table Bundle Discount Available!
+                        </p>
+                        <p className="text-xs text-green-600 mb-3">
+                          All 10 seats have Halal or Chinese-Vegetarian cuisine. Click below to get the table price instead of 10 individual seat prices.
+                        </p>
+                        <Button
+                          type="button"
+                          onClick={() => setFormData(prev => ({ ...prev, tableDiscountApplied: true }))}
+                          className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold"
+                        >
+                          Apply Table Bundle Discount
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="mt-4 p-4 rounded-xl bg-amber-50 border border-amber-200">
+                        <p className="text-sm font-semibold text-amber-700 flex items-center gap-2">
+                          <span>💡</span> Table Bundle Discount Available
+                        </p>
+                        <p className="text-xs text-amber-600 mt-1">
+                          Select your cuisine for all 10 seats to unlock the table bundle discount.
+                        </p>
+                      </div>
+                    )
+                  })()
+                ) : (
+                  <div className="mt-4 p-4 rounded-xl bg-blue-50 border border-blue-200">
+                    <p className="text-sm font-semibold text-blue-700 flex items-center gap-2">
+                      <span>ℹ️</span> Membership Required
+                    </p>
+                    <p className="text-xs text-blue-600 mt-1">
+                      Enter a membership number below to unlock the table bundle discount for 10 seats.
+                    </p>
+                  </div>
+                )
+              )}
+
+              {/* Applied Discount Confirmation */}
+              {formData.tableDiscountApplied && (
+                <div className="mt-4 p-4 rounded-xl bg-green-50 border border-green-200">
+                  <p className="text-sm font-semibold text-green-700 flex items-center gap-2">
+                    <span>✅</span> Table Bundle Discount Applied!
+                  </p>
+                  <p className="text-xs text-green-600 mt-1">
+                    You&apos;re getting the table price instead of 10 individual seat prices.
+                  </p>
                 </div>
               )}
             </div>
@@ -625,35 +727,169 @@ export default function BookPage() {
 
             <div>
               <Label htmlFor="membershipNo">Membership Number (Optional)</Label>
-              <div className="mt-2 flex gap-2">
-                <Input
-                  id="membershipNo"
-                  value={formData.membershipNo}
-                  onChange={(e) => {
-                    setFormData({ ...formData, membershipNo: e.target.value })
-                    // Reset validation if membership number changes
-                    if (membershipValidated) {
-                      setMembershipValidated(false)
-                    }
-                  }}
-                  className="flex-1"
-                  placeholder="Enter membership number"
-                />
-                <Button
-                  type="button"
-                  onClick={handleValidateMembership}
-                  disabled={validatingMembership || !formData.membershipNo.trim()}
-                  variant={membershipValidated ? "default" : "outline"}
-                  className={membershipValidated ? "bg-secondary text-primary hover:bg-secondary/90 font-semibold" : "border-2 border-slate-200 hover:border-primary hover:text-primary hover:bg-primary/5"}
-                >
-                  {validatingMembership ? "Validating..." : membershipValidated ? "✓ Validated" : "Validate"}
-                </Button>
-              </div>
-              {membershipValidated && (
+              <Input
+                id="membershipNo"
+                value={formData.membershipNo}
+                onChange={(e) =>
+                  setFormData({ ...formData, membershipNo: e.target.value })
+                }
+                onBlur={() => {
+                  // Auto-apply member price when user clicks away
+                  if (formData.membershipNo && formData.membershipNo.trim()) {
+                    toast({
+                      title: "Members price applied",
+                      description: "Member pricing has been applied to your booking",
+                    })
+                  }
+                }}
+                className="mt-2"
+                placeholder="Enter membership number"
+              />
+              {formData.membershipNo && formData.membershipNo.trim() && (
                 <p className="mt-2 text-sm text-green-600 font-semibold flex items-center gap-1">
                   <span className="text-green-600">✓</span> Members price applied
                 </p>
               )}
+            </div>
+
+            <div className="space-y-4 p-4 rounded-xl bg-slate-50 border border-slate-200">
+              <Label className="text-base font-semibold text-slate-900">Tell us about your batch:</Label>
+
+              <div className="space-y-3">
+                <div className="flex flex-wrap gap-6">
+                  <label className="flex items-center gap-2 cursor-pointer group">
+                    <input
+                      type="radio"
+                      name="batchType"
+                      checked={formData.batchType === "SCHOOL_YEAR"}
+                      onChange={() => setFormData({ ...formData, batchType: "SCHOOL_YEAR", psgSchool: "", schoolStaffSchool: "" })}
+                      className="w-4 h-4 text-primary focus:ring-primary focus:ring-2"
+                    />
+                    <span className="text-sm font-medium text-slate-700 group-hover:text-primary transition-colors">School + Year of Completion</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer group">
+                    <input
+                      type="radio"
+                      name="batchType"
+                      checked={formData.batchType === "PSG"}
+                      onChange={() => setFormData({ ...formData, batchType: "PSG", school: "", gradYear: undefined, schoolStaffSchool: "" })}
+                      className="w-4 h-4 text-primary focus:ring-primary focus:ring-2"
+                    />
+                    <span className="text-sm font-medium text-slate-700 group-hover:text-primary transition-colors">PSG</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer group">
+                    <input
+                      type="radio"
+                      name="batchType"
+                      checked={formData.batchType === "SCHOOL_STAFF"}
+                      onChange={() => setFormData({ ...formData, batchType: "SCHOOL_STAFF", school: "", gradYear: undefined, psgSchool: "" })}
+                      className="w-4 h-4 text-primary focus:ring-primary focus:ring-2"
+                    />
+                    <span className="text-sm font-medium text-slate-700 group-hover:text-primary transition-colors">School Staff</span>
+                  </label>
+                </div>
+              </div>
+
+              {formData.batchType === "SCHOOL_YEAR" && (
+                <div className="space-y-4 border-t border-slate-300 pt-4 mt-4 transition-all duration-300 ease-out animate-slide-down">
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="transition-all duration-300 ease-out delay-75 animate-slide-down">
+                      <Label htmlFor="school">School *</Label>
+                      <Input
+                        id="school"
+                        value={formData.school}
+                        onChange={(e) =>
+                          setFormData({ ...formData, school: e.target.value })
+                        }
+                        placeholder="e.g., ACS (Barker Road), ACS (Independent), etc."
+                        required
+                        className="mt-2"
+                      />
+                    </div>
+
+                    <div className="transition-all duration-300 ease-out delay-75 animate-slide-down">
+                      <Label htmlFor="gradYear">Year of Completion *</Label>
+                      <Input
+                        id="gradYear"
+                        type="number"
+                        min="1900"
+                        max={new Date().getFullYear() + 10}
+                        value={formData.gradYear || ""}
+                        onChange={(e) => {
+                          const value = e.target.value
+                          if (value === "") {
+                            setFormData({ ...formData, gradYear: undefined })
+                          } else {
+                            const year = parseInt(value, 10)
+                            if (!isNaN(year)) {
+                              setFormData({ ...formData, gradYear: year })
+                            }
+                          }
+                        }}
+                        placeholder="e.g., 2020"
+                        required
+                        className="mt-2"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {formData.batchType === "PSG" && (
+                <div className="space-y-4 border-t border-slate-300 pt-4 mt-4 transition-all duration-300 ease-out animate-slide-down">
+                  <div className="transition-all duration-300 ease-out delay-75 animate-slide-down">
+                    <Label htmlFor="psgSchool">PSG School *</Label>
+                    <select
+                      id="psgSchool"
+                      value={formData.psgSchool}
+                      onChange={(e) =>
+                        setFormData({ ...formData, psgSchool: e.target.value })
+                      }
+                      required
+                      className="mt-2 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
+                    >
+                      <option value="">Select a school</option>
+                      <option value="ACS Primary">ACS Primary</option>
+                      <option value="ACS Junior">ACS Junior</option>
+                      <option value="ACS Barker Road">ACS Barker Road</option>
+                      <option value="ACS Independent">ACS Independent</option>
+                      <option value="ACS International">ACS International</option>
+                      <option value="ACS Academy">ACS Academy</option>
+                      <option value="ACJC">ACJC</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {formData.batchType === "SCHOOL_STAFF" && (
+                <div className="space-y-4 border-t border-slate-300 pt-4 mt-4 transition-all duration-300 ease-out animate-slide-down">
+                  <div className="transition-all duration-300 ease-out delay-75 animate-slide-down">
+                    <Label htmlFor="schoolStaffSchool">School *</Label>
+                    <select
+                      id="schoolStaffSchool"
+                      value={formData.schoolStaffSchool}
+                      onChange={(e) =>
+                        setFormData({ ...formData, schoolStaffSchool: e.target.value })
+                      }
+                      required
+                      className="mt-2 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
+                    >
+                      <option value="">Select a school</option>
+                      <option value="ACS Primary">ACS Primary</option>
+                      <option value="ACS Junior">ACS Junior</option>
+                      <option value="ACS Barker Road">ACS Barker Road</option>
+                      <option value="ACS Independent">ACS Independent</option>
+                      <option value="ACS International">ACS International</option>
+                      <option value="ACS Academy">ACS Academy</option>
+                      <option value="ACJC">ACJC</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              <p className="text-xs text-slate-500 italic">
+                We will attempt to seat you with your batch or group on a best effort basis
+              </p>
             </div>
 
             <div>
@@ -690,39 +926,62 @@ export default function BookPage() {
               )}
             </div>
 
+            {/* Second Apply Table Discount Button */}
+            {formData.type === "SEAT" && formData.quantity === 10 && !formData.tableDiscountApplied && (
+              formData.membershipNo && formData.membershipNo.trim() ? (
+                (() => {
+                  // Check if all cuisines are selected and valid for discount
+                  const validCuisines = ["Halal", "Chinese-Vegetarian"]
+                  const allCuisinesSelected = formData.cuisines.length === 10 && formData.cuisines.every(c => c && c.trim())
+                  const allSpecialCuisines = allCuisinesSelected && formData.cuisines.every(c => validCuisines.includes(c))
+
+                  return allSpecialCuisines ? (
+                    <div className="flex justify-center mb-4">
+                      <Button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, tableDiscountApplied: true }))}
+                        className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2"
+                      >
+                        🎉 Apply Table Bundle Discount
+                      </Button>
+                    </div>
+                  ) : null
+                })()
+              ) : null
+            )}
+
             <div className="rounded-xl border-2 border-slate-200 bg-gradient-to-br from-slate-50 to-white p-6 shadow-sm">
               <div className="space-y-3 mb-4">
                 {formData.type === "TABLE" && (
                   <>
                     <div className="flex justify-between text-sm font-medium text-slate-700">
                       <span>Table ({formData.tableCapacity}-seater) × {formData.quantity}</span>
-                      <span className="text-slate-900">S${priceBreakdown.tablePrice.toFixed(2)}</span>
+                      <span className="text-slate-900">S${priceBreakdown.displayTablePrice.toFixed(2)}</span>
                     </div>
                     {priceBreakdown.tableDiscount > 0 && (
                       <div className="flex justify-between text-sm font-medium text-green-600">
-                        <span>Table Discount</span>
+                        <span>Member Discount</span>
                         <span>-S${priceBreakdown.tableDiscount.toFixed(2)}</span>
                       </div>
                     )}
                   </>
                 )}
-                {(formData.type === "SEAT" || (formData.type === "TABLE" && formData.tableCapacity === 11)) && (
+                {formData.type === "SEAT" && (
                   <>
                     <div className="flex justify-between text-sm font-medium text-slate-700">
-                      <span>
-                        {formData.type === "SEAT" 
-                          ? `Individual Seat × ${formData.quantity}`
-                          : `11th Seat Rate × ${formData.quantity}`
-                        }
-                      </span>
-                      <span className="text-slate-900">S${priceBreakdown.seatPrice.toFixed(2)}</span>
+                      <span>Individual Seat × {formData.quantity}</span>
+                      <span className="text-slate-900">S${priceBreakdown.displaySeatPrice.toFixed(2)}</span>
                     </div>
                     {priceBreakdown.seatDiscount > 0 && (
                       <div className="flex justify-between text-sm font-medium text-green-600">
-                        <span>
-                          {formData.type === "SEAT" ? "Seat Discount" : "11th Seat Discount"}
-                        </span>
+                        <span>Member Discount</span>
                         <span>-S${priceBreakdown.seatDiscount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {priceBreakdown.tableBundleDiscount > 0 && (
+                      <div className="flex justify-between text-sm font-medium text-green-600">
+                        <span>🎉 Table Bundle Discount</span>
+                        <span>-S${priceBreakdown.tableBundleDiscount.toFixed(2)}</span>
                       </div>
                     )}
                   </>

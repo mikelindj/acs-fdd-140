@@ -26,10 +26,6 @@ export default async function AdminDashboardPage() {
     .filter(b => b.type === "TABLE" && b.table?.capacity === 10)
     .reduce((sum, b) => sum + b.quantity, 0)
   
-  // 11-seater tables sold: sum of quantities for TABLE bookings with capacity 11
-  const tablesSold11 = paidBookings
-    .filter(b => b.type === "TABLE" && b.table?.capacity === 11)
-    .reduce((sum, b) => sum + b.quantity, 0)
   
   // Seats sold: sum of quantities for SEAT bookings
   const seatsSold = paidBookings
@@ -47,6 +43,40 @@ export default async function AdminDashboardPage() {
     }
     return sum
   }, 0)
+
+  // Cuisine breakdown
+  const cuisineBreakdown = paidBookings.reduce((acc, booking) => {
+    if (booking.cuisine) {
+      try {
+        const cuisines: string[] = JSON.parse(booking.cuisine)
+        const guestMultiplier = booking.type === "TABLE" && booking.table
+          ? booking.table.capacity
+          : 1
+
+        cuisines.forEach((cuisine) => {
+          const existing = acc.find(item => item.cuisine === cuisine)
+          if (existing) {
+            existing.count += guestMultiplier
+          } else {
+            acc.push({ cuisine, count: guestMultiplier })
+          }
+        })
+      } catch (error) {
+        // If cuisine parsing fails, add to "Unknown" category
+        const existing = acc.find(item => item.cuisine === "Unknown")
+        const guestCount = booking.type === "TABLE" && booking.table
+          ? booking.quantity * booking.table.capacity
+          : booking.quantity
+
+        if (existing) {
+          existing.count += guestCount
+        } else {
+          acc.push({ cuisine: "Unknown", count: guestCount })
+        }
+      }
+    }
+    return acc
+  }, [] as Array<{ cuisine: string; count: number }>).sort((a, b) => b.count - a.count)
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
@@ -88,7 +118,7 @@ export default async function AdminDashboardPage() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         <h2 className="text-3xl font-semibold tracking-tight text-slate-900 mb-8">Dashboard</h2>
 
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 mb-8">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mb-8">
           <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
             <h3 className="text-sm font-medium text-slate-500 mb-2">Completed Bookings</h3>
             <p className="text-3xl font-semibold text-green-600">{completedBookings}</p>
@@ -98,16 +128,20 @@ export default async function AdminDashboardPage() {
             <p className="text-3xl font-semibold text-slate-900">{tablesSold10}</p>
           </div>
           <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="text-sm font-medium text-slate-500 mb-2">11-Seater Tables</h3>
-            <p className="text-3xl font-semibold text-slate-900">{tablesSold11}</p>
-          </div>
-          <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
             <h3 className="text-sm font-medium text-slate-500 mb-2">Seats Sold</h3>
             <p className="text-3xl font-semibold text-slate-900">{seatsSold}</p>
           </div>
-          <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="text-sm font-medium text-slate-500 mb-2">Total Guests Expected</h3>
-            <p className="text-3xl font-semibold text-slate-900">{totalGuestsExpected}</p>
+          <div className="rounded-lg border border-blue-200 bg-blue-50 p-6 shadow-sm">
+            <h3 className="text-sm font-medium text-blue-700 mb-2">Total Guests Expected</h3>
+            <p className="text-3xl font-semibold text-blue-900 mb-3">{totalGuestsExpected}</p>
+            <div className="space-y-1 text-xs">
+              {cuisineBreakdown.map((item) => (
+                <div key={item.cuisine} className="flex justify-between text-blue-600">
+                  <span>{item.cuisine}:</span>
+                  <span className="font-medium">{item.count}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 

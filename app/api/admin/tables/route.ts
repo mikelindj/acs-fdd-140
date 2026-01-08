@@ -24,6 +24,9 @@ export async function GET() {
           id: true,
           name: true,
           email: true,
+          school: true,
+          gradYear: true,
+          membershipNo: true,
         },
       }),
     ])

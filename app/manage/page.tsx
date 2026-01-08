@@ -23,6 +23,7 @@ interface Booking {
   totalAmount: string | number
   quantity: number
   createdAt: string
+  cuisine?: string | null
   table?: Table | null
 }
 
@@ -49,6 +50,43 @@ function ManagePageContent() {
     logoImageUrl: null,
     footerLogoImageUrl: null,
   })
+
+  // Format cuisine display for the manage page
+  const formatCuisineDisplay = (cuisineJson: string, type: string) => {
+    try {
+      const cuisines: string[] = JSON.parse(cuisineJson)
+      if (!Array.isArray(cuisines) || cuisines.length === 0) return "Not specified"
+
+      // Count occurrences of each cuisine
+      const cuisineCounts: Record<string, number> = {}
+      cuisines.forEach(cuisine => {
+        cuisineCounts[cuisine] = (cuisineCounts[cuisine] || 0) + 1
+      })
+
+      // Format the breakdown
+      const breakdownParts = Object.entries(cuisineCounts).map(([cuisine, count]) => {
+        const itemType = type === "TABLE" ? "Table" : "Seat"
+        if (count === 1) {
+          return `1 ${cuisine} ${itemType.toLowerCase()}`
+        } else {
+          return `${count} ${cuisine} ${itemType.toLowerCase()}s`
+        }
+      })
+
+      // Join with commas and "and" for the last item
+      if (breakdownParts.length === 1) {
+        return breakdownParts[0]
+      } else if (breakdownParts.length === 2) {
+        return `${breakdownParts[0]} and ${breakdownParts[1]}`
+      } else {
+        const lastPart = breakdownParts.pop()
+        return `${breakdownParts.join(", ")}, and ${lastPart}`
+      }
+    } catch (error) {
+      console.warn('Error parsing cuisine JSON in manage page:', cuisineJson)
+      return "Not specified"
+    }
+  }
 
   useEffect(() => {
     const fetchEventSettings = async () => {
@@ -284,8 +322,8 @@ function ManagePageContent() {
                 {allBookings.length > 1 ? "Your Reservations" : "View Your Reservation"}
               </h1>
               <p className="text-slate-600 text-lg max-w-2xl mx-auto">
-                {allBookings.length > 1 
-                  ? `You have ${allBookings.length} table${allBookings.length > 1 ? 's' : ''} reserved`
+                {allBookings.length > 1
+                  ? `You have ${allBookings.length} reservation${allBookings.length > 1 ? 's' : ''} confirmed`
                   : "View your booking details"}
               </p>
             </div>
@@ -329,70 +367,49 @@ function ManagePageContent() {
                           <Label className="text-slate-500">Total Amount</Label>
                           <p className="mt-1 font-semibold text-slate-900">S${bookingItem.totalAmount}</p>
                         </div>
+                        <div>
+                          <Label className="text-slate-500">Cuisine</Label>
+                          <p className="mt-1 font-semibold text-slate-900">
+                            {bookingItem.cuisine ? formatCuisineDisplay(bookingItem.cuisine, bookingItem.type) : "Not specified"}
+                          </p>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Right side - Table Assignment */}
+                    {/* Right side - Table/Seat Assignment */}
                     <div className="md:w-80 flex-shrink-0">
                       <h3 className="text-lg font-semibold text-slate-900 mb-4">
-                        Table Assignment{bookingItem.quantity > 1 ? ` (${bookingItem.quantity} tables)` : ''}
+                        {bookingItem.type === "TABLE" ? "Table" : "Seat"} Assignment{bookingItem.quantity > 1 ? ` (${bookingItem.quantity} ${bookingItem.type === "TABLE" ? "tables" : "seats"})` : ''}
                       </h3>
                       <div className="space-y-3">
-                        {Array.from({ length: bookingItem.quantity }).map((_, index) => {
-                          // For now, show the assigned table for the first slot, and "not assigned" for others
-                          // In the future, this could be enhanced to show multiple tables if the schema supports it
-                          const isAssigned = index === 0 && bookingItem.table
-                          return (
-                            <div
-                              key={index}
-                              className="rounded-lg border border-slate-200 bg-slate-50 p-4"
-                            >
-                              {isAssigned ? (
-                                <div className="space-y-2">
-                                  <div className="flex items-center justify-between mb-2">
-                                    <Label className="text-slate-500 text-xs">Table {index + 1}</Label>
-                                    <span
-                                      className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
-                                        bookingItem.table!.status === "FULL"
-                                          ? "bg-green-100 text-green-800"
-                                          : bookingItem.table!.status === "RESERVED"
-                                          ? "bg-yellow-100 text-yellow-800"
-                                          : "bg-slate-100 text-slate-800"
-                                      }`}
-                                    >
-                                      {bookingItem.table!.status}
-                                    </span>
-                                  </div>
-                                  <div>
-                                    <Label className="text-slate-500 text-xs">Table Number</Label>
-                                    <p className="mt-1 font-bold text-lg text-slate-900">
-                                      {bookingItem.table!.tableNumber}
-                                    </p>
-                                  </div>
-                                  <div>
-                                    <Label className="text-slate-500 text-xs">Capacity</Label>
-                                    <p className="mt-1 font-semibold text-slate-900">
-                                      {bookingItem.table!.capacity} seats
-                                    </p>
-                                  </div>
-                                </div>
-                              ) : (
-                                <div>
-                                  <div className="flex items-center justify-between mb-2">
-                                    <Label className="text-slate-500 text-xs">Table {index + 1}</Label>
-                                    <span className="inline-flex rounded-full px-2 py-1 text-xs font-semibold bg-slate-100 text-slate-800">
-                                      PENDING
-                                    </span>
-                                  </div>
-                                  <p className="text-slate-600 text-sm mt-2">Table not yet assigned</p>
-                                  <p className="text-slate-500 text-xs mt-1">
-                                    Will be assigned by admin team.
-                                  </p>
-                                </div>
-                              )}
+                        {Array.from({ length: bookingItem.quantity }).map((_, index) => (
+                          <div
+                            key={index}
+                            className="rounded-lg border border-slate-200 bg-slate-50 p-4"
+                          >
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between mb-2">
+                                <Label className="text-slate-500 text-xs">
+                                  {bookingItem.type === "TABLE" ? "Table" : "Seat"} {index + 1}
+                                </Label>
+                                <span className="inline-flex rounded-full px-2 py-1 text-xs font-semibold bg-green-100 text-green-800">
+                                  CONFIRMED
+                                </span>
+                              </div>
+                              <div>
+                                <Label className="text-slate-500 text-xs">
+                                  {bookingItem.type === "TABLE" ? "Table" : "Seat"} Number
+                                </Label>
+                                <p className="mt-1 font-bold text-lg text-slate-900">
+                                  Not yet assigned
+                                </p>
+                              </div>
+                              <p className="text-slate-600 text-sm mt-2">
+                                Will be assigned by admin team by 25 Feb 2026.
+                              </p>
                             </div>
-                          )
-                        })}
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>
@@ -421,7 +438,7 @@ function ManagePageContent() {
            
            <div className="text-center text-white md:text-right">
               © 140th ACS OBA FOUNDERS DAY DINNER, 2026
-<p className="text-[0.5rem] text-slate-400 mt-2">This page designed and built by ACSOBA Volunteers: <a href="https://nofa.io" className="hover:text-white transition-colors">Michael Lin</a> and <a href="https://github.com/kennethch22" className="hover:text-white transition-colors">Kenneth Hendra</a></p>
+<p className="text-[0.5rem] text-slate-400 mt-2">This page is designed and built by ACSOBA Volunteers: <a href="https://nofa.io" className="hover:text-white transition-colors">Michael Lin</a> and <a href="https://github.com/kennethch22" className="hover:text-white transition-colors">Kenneth Hendra</a></p>
 
            </div>
         </div>

@@ -14,14 +14,22 @@ export const bookingSchema = z.object({
   wantsBatchSeating: z.boolean().optional(),
   school: z.string().optional(),
   gradYear: z.number().int().min(1900).max(new Date().getFullYear() + 10).optional(),
+  cuisine: z.string().optional(), // JSON array of cuisine selections
+  tableDiscountApplied: z.boolean().optional(), // Whether table bundle discount was manually applied
 }).refine((data) => {
-  // If wantsBatchSeating is true, school and gradYear are required
+  // Batch seating validation based on what fields are provided
   if (data.wantsBatchSeating) {
-    return !!data.school?.trim() && !!data.gradYear
+    // If gradYear is provided, it means SCHOOL_YEAR batch type was selected
+    if (data.gradYear !== undefined && data.gradYear !== null) {
+      return !!data.school?.trim() && !!data.gradYear
+    } else {
+      // If gradYear is not provided, it means PSG or SCHOOL_STAFF batch type was selected
+      return !!data.school?.trim()
+    }
   }
   return true
 }, {
-  message: "School and Year of Completion are required when requesting batch seating",
+  message: "Please complete all required batch information",
   path: ["school"], // This will show the error on the school field
 })
 

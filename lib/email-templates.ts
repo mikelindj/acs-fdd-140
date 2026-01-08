@@ -190,6 +190,7 @@ export async function getPurchaseConfirmationEmail(
     tableHash?: string | null
     tableNumber?: string | null
     tableCapacity?: number | null
+    cuisine?: string | null
   }>
 ): Promise<string> {
   const { getEventSettings } = await import("@/lib/event-settings")
@@ -205,13 +206,58 @@ export async function getPurchaseConfirmationEmail(
     return `S$${num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
   }
 
+  // Format cuisine breakdown
+  const formatCuisineBreakdown = (cuisineJson: string | null | undefined, quantity: number, type: string) => {
+    if (!cuisineJson) return ""
+
+    try {
+      const cuisines: string[] = JSON.parse(cuisineJson)
+      if (!Array.isArray(cuisines) || cuisines.length === 0) return ""
+
+      // Count occurrences of each cuisine
+      const cuisineCounts: Record<string, number> = {}
+      cuisines.forEach(cuisine => {
+        cuisineCounts[cuisine] = (cuisineCounts[cuisine] || 0) + 1
+      })
+
+      // Format the breakdown
+      const breakdownParts = Object.entries(cuisineCounts).map(([cuisine, count]) => {
+        if (count === 1) {
+          return `1 ${cuisine} ${type.toLowerCase()}`
+        } else {
+          return `${count} ${cuisine} ${type.toLowerCase()}s`
+        }
+      })
+
+      // Join with commas and "and" for the last item
+      if (breakdownParts.length === 1) {
+        return ` (${breakdownParts[0]})`
+      } else if (breakdownParts.length === 2) {
+        return ` (${breakdownParts[0]} and ${breakdownParts[1]})`
+      } else {
+        const lastPart = breakdownParts.pop()
+        return ` (${breakdownParts.join(", ")}, and ${lastPart})`
+      }
+    } catch (error) {
+      console.warn('Error parsing cuisine JSON in email template:', cuisineJson)
+      return ""
+    }
+  }
+
   // Format item description
   const formatItem = (booking: typeof bookings[0]) => {
+    const itemType = booking.type === "TABLE" ? "Table" : "Seat"
+    const itemTypePlural = booking.type === "TABLE" ? "Tables" : "Seats"
+
     if (booking.type === "TABLE") {
       const capacity = booking.tableCapacity || 10
-      return `${booking.quantity} ${booking.quantity === 1 ? "Table" : "Tables"} (${capacity}-seater)`
+      const baseDescription = `${booking.quantity} ${booking.quantity === 1 ? itemType : itemTypePlural} (${capacity}-seater)`
+      const cuisineBreakdown = formatCuisineBreakdown(booking.cuisine, booking.quantity, itemType)
+      return baseDescription + cuisineBreakdown
     } else {
-      return `${booking.quantity} ${booking.quantity === 1 ? "Seat" : "Seats"}`
+      const baseDescription = `${booking.quantity} ${booking.quantity === 1 ? itemType : itemTypePlural}`
+      const cuisineBreakdown = formatCuisineBreakdown(booking.cuisine, booking.quantity, itemType)
+      return baseDescription + cuisineBreakdown
     }
   }
 
@@ -258,7 +304,7 @@ export async function getPurchaseConfirmationEmail(
           <tr>
             <td style="padding: 40px 30px; background-color: #ffffff;">
               <h1 style="margin: 0 0 10px 0; font-size: 28px; font-weight: 700; color: #1e293b; line-height: 1.2;">Thank You for Your Purchase, ${buyerName}!</h1>
-              <p style="margin: 0 0 30px 0; font-size: 16px; color: #1e293b; line-height: 1.6;">Your payment has been successfully processed. Here are the details of your booking:</p>
+              <p style="margin: 0 0 30px 0; font-size: 16px; color: #1e293b; line-height: 1.6;">Your payment has been successfully processed. All purchases are final and non-refundable. Here are the details of your booking:</p>
               
               <!-- Order Summary Card -->
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f8fafc; border-radius: 16px; padding: 24px; margin: 0 0 30px 0; border: 1px solid #e2e8f0;">
@@ -289,12 +335,12 @@ export async function getPurchaseConfirmationEmail(
               <!-- Additional Information -->
               <p style="margin: 0 0 30px 0; font-size: 16px; color: #1e293b; line-height: 1.6;">
                 ${bookings.some(b => b.type === "TABLE") 
-                  ? `Table assignments will be arranged by our team based on the batch information you provided. You will receive further details closer to the event date.`
-                  : `Your seat assignment will be arranged by our team. You will receive further details closer to the event date.`
+                  ? `Table assignments will be arranged by our team based on the batch or group information you provided. You will receive your table allocation by 25 Feb 2026 via email.`
+                  : `Your seat assignment will be arranged by our team. You will receive your table allocation by 25 Feb 2026 via email.`
                 }
               </p>
 
-              <p style="margin: 0; font-size: 14px; color: #64748b; line-height: 1.6;">If you have any questions, please contact our support team.</p>
+              <p style="margin: 0; font-size: 14px; color: #64748b; line-height: 1.6;">If you have any questions, please contact us at admin@acsoba.org.</p>
             </td>
           </tr>
 

@@ -365,7 +365,7 @@ export default function InventoryPage() {
                 />
               </div>
               <div>
-                <Label htmlFor="seatPrice">Individual Seat / 11th Seat Price</Label>
+                <Label htmlFor="seatPrice">Individual Seat</Label>
                 <Input
                   id="seatPrice"
                   type="number"

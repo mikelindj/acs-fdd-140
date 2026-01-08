@@ -68,16 +68,6 @@ export default async function HomePage() {
     // Use defaults if fetch fails
   }
 
-  // Calculate 11-Seater Prices
-  const price11 = tablePrice + seatPrice
-  
-  // Calculate member price for 11-seater if either member price exists
-  let price11Members: number | null = null
-  if (tableMembersPrice !== null || seatMembersPrice !== null) {
-      const tPrice = tableMembersPrice !== null ? tableMembersPrice : tablePrice
-      const sPrice = seatMembersPrice !== null ? seatMembersPrice : seatPrice
-      price11Members = tPrice + sPrice
-  }
 
   return (
     <div className={`min-h-screen flex flex-col bg-white bg-wavy-pattern font-sans selection:bg-brand-red selection:text-white ${oldFont.variable}`}>
@@ -198,58 +188,13 @@ export default async function HomePage() {
             <div className="text-center mb-16 space-y-4">
                <h2 className="text-3xl md:text-5xl font-bold text-primary">Reserve Your Seat</h2>
                <p className="text-slate-600 text-lg max-w-2xl mx-auto">
-                 Choose from 11-seater tables, 10-seater tables, or individual seats.
+                 Choose from 10-seater tables or individual seats.
                </p>
             </div>
             
-            <div className="grid lg:grid-cols-3 md:grid-cols-2 gap-8">
+            <div className="grid lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
                
-               {/* 1. 11-Seater Table Card */}
-               <div className="group relative p-8 rounded-[2rem] bg-white bg-wavy-pattern border border-slate-200 shadow-sm hover:shadow-2xl hover:border-brand-red/30 transition-all duration-300 overflow-hidden">
-                  <div className="absolute -top-10 left-0 w-[calc(100%+5rem)] -ml-10 h-1.5 bg-gradient-to-r from-primary via-brand-red to-secondary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 z-10" />
-                  
-                  <div className="flex justify-between items-start mb-6">
-                    <div>
-                      <h3 className="text-2xl font-bold text-slate-900">11-Seater Table</h3>
-                      <p className="text-sm text-slate-500 font-medium mt-1">Best for larger groups</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex flex-col text-slate-900 mb-8">
-                    <div className="flex items-baseline">
-                        <span className="text-4xl font-bold tracking-tight">{formatPrice(price11)}</span>
-                        <span className="ml-2 text-sm font-medium text-slate-500">/ table</span>
-                    </div>
-                    {price11Members !== null && (
-                      <div className="text-sm font-medium text-green-600 mt-1">
-                        (Members: {formatPrice(price11Members)})
-                      </div>
-                    )}
-                  </div>
-
-                  <ul className="space-y-4 text-sm text-slate-600 mb-10">
-                    <li className="flex gap-3 items-center">
-                      <div className="h-5 w-5 rounded-full bg-secondary/20 flex items-center justify-center text-secondary-foreground text-xs font-bold">✓</div> 
-                      Priority seating location
-                    </li>
-                    <li className="flex gap-3 items-center">
-                      <div className="h-5 w-5 rounded-full bg-secondary/20 flex items-center justify-center text-secondary-foreground text-xs font-bold">✓</div> 
-                      11 Guest tickets included
-                    </li>
-                    <li className="flex gap-3 items-center">
-                       <div className="h-5 w-5 rounded-full bg-secondary/20 flex items-center justify-center text-secondary-foreground text-xs font-bold">✓</div> 
-                      Custom Table Signage
-                    </li>
-                  </ul>
-                  
-                  <Link href="/book" className="block w-full">
-                    <Button className="w-full h-14 text-base font-bold bg-primary hover:bg-brand-red transition-colors rounded-xl shadow-lg hover:shadow-brand-red/25">
-                      Book 11-Seater
-                    </Button>
-                  </Link>
-               </div>
-
-               {/* 2. 10-Seater Table Card */}
+               {/* 1. 10-Seater Table Card */}
                <div className="group relative p-8 rounded-[2rem] bg-white bg-wavy-pattern border border-slate-200 shadow-sm hover:shadow-2xl hover:border-brand-red/30 transition-all duration-300 overflow-hidden">
                   <div className="absolute -top-10 left-0 w-[calc(100%+5rem)] -ml-10 h-1.5 bg-gradient-to-r from-primary via-brand-red to-secondary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 z-10" />
                   
@@ -294,7 +239,7 @@ export default async function HomePage() {
                   </Link>
                </div>
 
-               {/* 3. Individual Seat Card */}
+               {/* 2. Individual Seat Card */}
                <div className="group relative p-8 rounded-[2rem] bg-white bg-wavy-pattern border border-slate-200 shadow-sm hover:shadow-2xl hover:border-secondary/50 transition-all duration-300 overflow-hidden">
                   <div className="absolute -top-10 left-0 w-[calc(100%+5rem)] -ml-10 h-1.5 bg-gradient-to-r from-secondary to-primary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 z-10" />
 

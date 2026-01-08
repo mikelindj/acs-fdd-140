@@ -1,5 +1,8 @@
+"use client"
+
 import Image from "next/image"
 import Link from "next/link"
+import { useState } from "react"
 
 interface LogoProps {
   logoUrl?: string | null
@@ -17,17 +20,18 @@ export function Logo({
   linkToHome = true
 }: LogoProps) {
   const defaultLogo = "/images/acs-140-logo.jpg"
-  const imageSrc = logoUrl || defaultLogo
+  const [imgSrc, setImgSrc] = useState(logoUrl || defaultLogo)
   
   const logoImage = (
     <div className={className}>
       <Image 
-        src={imageSrc} 
+        src={imgSrc} 
         alt={alt} 
         width={200}
         height={128}
         className="object-contain w-full h-full"
         priority={priority}
+        onError={() => setImgSrc(defaultLogo)}
       />
     </div>
   )

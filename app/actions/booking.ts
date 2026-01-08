@@ -4,20 +4,11 @@ import { prisma } from "@/lib/prisma"
 import { bookingSchema } from "@/lib/validations"
 import { generateTableHash, generateInviteCode } from "@/lib/crypto"
 import { createHitPayPayment } from "@/lib/hitpay"
-import { validateMembershipNumber } from "@/lib/membership"
 import { z } from "zod"
 
 export async function createBooking(data: z.infer<typeof bookingSchema>) {
   try {
     const validated = bookingSchema.parse(data)
-
-    // Validate membership if provided
-    if (validated.membershipNo) {
-      const isValid = await validateMembershipNumber(validated.membershipNo)
-      if (!isValid) {
-        return { error: "Invalid membership number" }
-      }
-    }
 
     // Fetch inventory settings for dynamic pricing
     const inventorySettings = await prisma.inventorySettings.findUnique({
@@ -110,6 +101,10 @@ export async function createBooking(data: z.infer<typeof bookingSchema>) {
     }
 
     let subtotal: number
+
+    // Check for table bundle discount (manually applied by user)
+    const hasTableBundleDiscount = !isTable && validated.tableDiscountApplied === true
+
     if (isElevenSeater) {
       // 11-seater = 1 table (10-seater) + 1 seat
       subtotal = (tablePrice + seatPrice) * validated.quantity
@@ -118,7 +113,12 @@ export async function createBooking(data: z.infer<typeof bookingSchema>) {
       subtotal = tablePrice * validated.quantity
     } else {
       // Individual seat
-      subtotal = seatPrice * validated.quantity
+      if (hasTableBundleDiscount) {
+        // Apply table bundle discount: fixed price of $2100 for 10 seats
+        subtotal = 2100
+      } else {
+        subtotal = seatPrice * validated.quantity
+      }
     }
 
     // Validate and apply voucher if provided
@@ -297,6 +297,7 @@ export async function createBooking(data: z.infer<typeof bookingSchema>) {
           buyerId: buyer.id,
           status: isFreeBooking ? 'PAID' : 'PENDING',
           wantsBatchSeating: validated.wantsBatchSeating ?? false,
+          cuisine: validated.cuisine ?? null,
           voucherId: voucherId,
         },
       })
@@ -444,6 +445,7 @@ export async function createBooking(data: z.infer<typeof bookingSchema>) {
           tableHash: tableHash || null,
           tableNumber: null,
           tableCapacity: validated.tableCapacity || null,
+          cuisine: validated.cuisine || null,
         }]
 
         // Send confirmation email
@@ -594,6 +596,7 @@ export async function getBookingDetails(bookingId: string) {
       balanceDue: Number(booking.balanceDue),
       createdAt: booking.createdAt.toISOString(),
       updatedAt: booking.updatedAt.toISOString(),
+      cuisine: booking.cuisine,
       // Format inviteCodes dates
       inviteCodes: booking.inviteCodes.map((invite) => ({
         ...invite,

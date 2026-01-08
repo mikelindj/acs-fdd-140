@@ -331,7 +331,7 @@ export default function SetupPage() {
              
              <div className="text-center text-white md:text-right">
                 © 140th ACS OBA FOUNDERS DAY DINNER, 2026
-                <p className="text-[0.5rem] text-slate-400 mt-2">This page designed and built by ACSOBA Volunteers: <a href="https://nofa.io" className="hover:text-white transition-colors">Michael Lin</a> and <a href="https://github.com/kennethch22" className="hover:text-white transition-colors">Kenneth Hendra</a></p>
+                <p className="text-[0.5rem] text-slate-400 mt-2">This page is designed and built by ACSOBA Volunteers: <a href="https://nofa.io" className="hover:text-white transition-colors">Michael Lin</a> and <a href="https://github.com/kennethch22" className="hover:text-white transition-colors">Kenneth Hendra</a></p>
              </div>
           </div>
         </footer>
@@ -601,7 +601,7 @@ export default function SetupPage() {
             </Button>
           </div>
           <p className="text-sm text-slate-500 mt-4">
-            <strong>Export:</strong> Downloads an Excel file with event settings and all orders/income data.
+            <strong>Export:</strong> Downloads an Excel file with event settings, all orders/income data, cuisine breakdown by guest count, and batch grouping information.
             <br />
             <strong>Reset:</strong> This will permanently delete all event data, bookings, tables, guests, and vouchers. This action cannot be undone.
           </p>
