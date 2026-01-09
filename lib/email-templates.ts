@@ -358,6 +358,20 @@ export async function getPurchaseConfirmationEmail(
                         <tr>
                           <td style="padding: 0;">
                             <p style="margin: 0 0 4px 0; font-size: 16px; font-weight: 600; color: #1e293b;">${formatItem(booking)}</p>
+                            <p style="margin: 0 0 4px 0; font-size: 14px; color: #64748b;">
+                              ${(() => {
+                                if (!booking.cuisine) return 'Cuisines: Not specified';
+                                try {
+                                  const cuisines = JSON.parse(booking.cuisine);
+                                  if (Array.isArray(cuisines) && cuisines.length > 0) {
+                                    return 'Cuisines: ' + cuisines.map((c, i) => `${i + 1}. ${c}`).join(', ');
+                                  }
+                                  return 'Cuisines: Not specified';
+                                } catch {
+                                  return 'Cuisines: Not specified';
+                                }
+                              })()}
+                            </p>
                             <p style="margin: 0; font-size: 14px; color: #64748b;">Amount: ${formatAmount(booking.totalAmount)}</p>
                           </td>
                         </tr>
