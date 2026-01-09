@@ -263,12 +263,18 @@ export async function getPurchaseConfirmationEmail(
         cuisineCounts[cuisine] = (cuisineCounts[cuisine] || 0) + 1
       })
 
-      // Format the breakdown with indentation
-      const breakdownLines = Object.entries(cuisineCounts).map(([cuisine, count]) => {
-        return `   ${count} ${cuisine.toLowerCase()} cuisine`
+      // Format as comma-separated list in parentheses with title case
+      const breakdownParts = Object.entries(cuisineCounts).map(([cuisine, count]) => {
+        // Convert to title case: "chinese-vegetarian" → "Chinese-Vegetarian"
+        const titleCase = cuisine
+          .toLowerCase()
+          .split('-')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join('-')
+        return `${count} ${titleCase} cuisine`
       })
 
-      return `\n${breakdownLines.join('\n')}`
+      return `\n(${breakdownParts.join(', ')})`
     } catch {
       console.warn('Error parsing cuisine JSON in email template:', cuisineJson)
       return ""
@@ -285,7 +291,7 @@ export async function getPurchaseConfirmationEmail(
       const cuisineBreakdown = formatCuisineBreakdown(booking.cuisine, booking.quantity, itemType)
       return baseDescription + cuisineBreakdown
     } else {
-      // For seats, handle single cuisine
+      // For seats, handle cuisine
       const baseDescription = `${booking.quantity} x ${itemTypePlural}`
       if (booking.cuisine) {
         try {
@@ -295,8 +301,13 @@ export async function getPurchaseConfirmationEmail(
             return baseDescription + cuisineBreakdown
           }
         } catch {
-          // If JSON parsing fails, show as single cuisine
-          return `${baseDescription}\n   ${booking.cuisine.toLowerCase()} cuisine`
+          // If JSON parsing fails, show as single cuisine in title case
+          const titleCase = booking.cuisine
+            .toLowerCase()
+            .split('-')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join('-')
+          return `${baseDescription}\n(${titleCase} cuisine)`
         }
       }
       return baseDescription
