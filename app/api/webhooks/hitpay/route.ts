@@ -48,10 +48,37 @@ export async function POST(request: NextRequest) {
     // Find booking by reference number
     const booking = await prisma.booking.findUnique({
       where: { id: referenceNumber },
-      include: {
-        buyer: true,
-        table: true,
-        inviteCodes: true,
+      select: {
+        id: true,
+        type: true,
+        category: true,
+        quantity: true,
+        totalAmount: true,
+        cuisine: true,
+        status: true,
+        hitpayPaymentId: true,
+        buyer: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        table: {
+          select: {
+            id: true,
+            tableNumber: true,
+            tableHash: true,
+            capacity: true,
+          },
+        },
+        inviteCodes: {
+          select: {
+            id: true,
+            code: true,
+            email: true,
+          },
+        },
       },
     })
 
