@@ -156,6 +156,7 @@ export async function POST(request: NextRequest) {
 
         // Send email for this transaction only
         console.log(`Sending confirmation email to ${buyerEmail} for booking ${booking.id} (${booking.type}, qty: ${booking.quantity})`)
+        console.log(`Cuisine data: ${booking.cuisine}`)
         await sendEmail({
           to: buyerEmail,
           subject: "Thank You for Your Purchase - ACS Founders' Day Dinner",

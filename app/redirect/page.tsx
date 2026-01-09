@@ -164,10 +164,12 @@ export default async function RedirectPage({
         tableHash: booking.table?.tableHash || null,
         tableNumber: booking.table?.tableNumber || null,
         tableCapacity: booking.table?.capacity || null,
+        cuisine: booking.cuisine,
       }]
 
       // Send email for this transaction only (webhook might have already sent it, but this ensures it's sent)
       console.log(`[Redirect] Sending confirmation email to ${buyerEmail} for booking ${booking.id} (${booking.type}, qty: ${booking.quantity})`)
+      console.log(`[Redirect] Cuisine data: ${booking.cuisine}`)
       await sendEmail({
         to: buyerEmail,
         subject: "Thank You for Your Purchase - ACS Founders' Day Dinner",
