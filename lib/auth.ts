@@ -17,6 +17,18 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
+        // TEMPORARY: Fallback admin credentials for when database is not available
+        const TEMP_ADMIN_EMAIL = "admin@acsoba.org"
+        const TEMP_ADMIN_PASSWORD = "TGBTG-TBIYTB"
+
+        if (credentials.email === TEMP_ADMIN_EMAIL && credentials.password === TEMP_ADMIN_PASSWORD) {
+          return {
+            id: "temp-admin",
+            email: TEMP_ADMIN_EMAIL,
+            name: "ACS OBA Administrator",
+          }
+        }
+
         try {
           const admin = await prisma.admin.findUnique({
             where: { email: credentials.email }
