@@ -82,7 +82,7 @@ function ManagePageContent() {
         const lastPart = breakdownParts.pop()
         return `${breakdownParts.join(", ")}, and ${lastPart}`
       }
-    } catch (error) {
+    } catch (_error) {
       console.warn('Error parsing cuisine JSON in manage page:', cuisineJson)
       return "Not specified"
     }
@@ -100,8 +100,8 @@ function ManagePageContent() {
             footerLogoImageUrl: data.footerLogoImageUrl || null,
           })
         }
-      } catch (error) {
-        console.error("Error fetching event settings:", error)
+      } catch (_error) {
+        console.error("Error fetching event settings:", _error)
       }
     }
     fetchEventSettings()

@@ -329,13 +329,13 @@ export default function TablesPage() {
               <div className="p-6">
                 <div className="grid grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-3">
                   {tables.map((table) => {
-                    const tableNumber = parseInt(table.tableNumber)
+                    const _tableNumber = parseInt(table.tableNumber)
                     const isSelected = selectedTable === table.id
                     const occupancyRate = table.capacity > 0 ? (table.guests.length / table.capacity) * 100 : 0
 
                     return (
-                      <div
-                        key={table.id}
+                  <div
+                    key={table.id}
                         onClick={() => handleTableSelect(table.id)}
                         className={`relative rounded-lg border-2 p-3 cursor-pointer transition-all duration-200 ${
                           isSelected
@@ -370,22 +370,22 @@ export default function TablesPage() {
                               style={{ width: `${occupancyRate}%` }}
                             />
                           </div>
-                        </div>
+                    </div>
 
                         {/* Status badge */}
                         <div className="absolute -top-1 -right-1">
                           <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${
-                            table.status === "FULL"
-                              ? "bg-green-100 text-green-800"
-                              : table.status === "RESERVED"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : "bg-slate-100 text-slate-800"
+                          table.status === "FULL"
+                            ? "bg-green-100 text-green-800"
+                            : table.status === "RESERVED"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-slate-100 text-slate-800"
                           }`}>
                             {table.status === "FULL" ? "✓" :
                              table.status === "RESERVED" ? "○" : "□"}
-                          </span>
-                        </div>
-                      </div>
+                      </span>
+                    </div>
+                  </div>
                     )
                   })}
                 </div>
@@ -420,7 +420,7 @@ export default function TablesPage() {
                 ].map((filter) => (
                   <button
                     key={filter.key}
-                    onClick={() => setFilterBy(filter.key as any)}
+                    onClick={() => setFilterBy(filter.key as "all" | "school" | "year" | "membership")}
                     className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
                       filterBy === filter.key
                         ? "bg-blue-100 text-blue-700 font-medium"
@@ -511,14 +511,14 @@ export default function TablesPage() {
                   </div>
                 )}
 
-                {selectedTable && selectedGuests.length > 0 && (
-                  <Button
-                    onClick={handleAssign}
-                    className="w-full"
+            {selectedTable && selectedGuests.length > 0 && (
+              <Button
+                onClick={handleAssign}
+                className="w-full"
                     disabled={selectedGuests.length === 0 || !selectedTable}
-                  >
+              >
                     Assign {selectedGuests.length} Guest{selectedGuests.length !== 1 ? "s" : ""} to Table
-                  </Button>
+              </Button>
                 )}
               </div>
             )}

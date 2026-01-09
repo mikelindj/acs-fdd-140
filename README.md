@@ -181,8 +181,8 @@ The application will be available at `http://localhost:3000`
 ## Default Admin Credentials
 
 After seeding:
-- Email: `admin@acs.edu.sg`
-- Password: `admin123`
+- Email: `admin@acsoba.org`
+- Password: `TGBTG-TBIYTB`
 
 **⚠️ Change these credentials in production!**
 

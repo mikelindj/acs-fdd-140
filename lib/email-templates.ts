@@ -238,7 +238,7 @@ export async function getPurchaseConfirmationEmail(
         const lastPart = breakdownParts.pop()
         return ` (${breakdownParts.join(", ")}, and ${lastPart})`
       }
-    } catch (error) {
+    } catch (_error) {
       console.warn('Error parsing cuisine JSON in email template:', cuisineJson)
       return ""
     }

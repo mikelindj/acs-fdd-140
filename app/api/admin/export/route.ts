@@ -31,7 +31,7 @@ function calculateCuisineBreakdown(cuisineJson: string | null | undefined, type:
     })
 
     return result
-  } catch (error) {
+  } catch (_error) {
     console.warn('Error parsing cuisine JSON in export:', cuisineJson)
     return result
   }
@@ -149,8 +149,8 @@ export async function GET() {
         "Content-Disposition": `attachment; filename="${filename}"`,
       },
     })
-  } catch (error) {
-    console.error("Error exporting data:", error)
+  } catch (_error) {
+    console.error("Error exporting data:", _error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

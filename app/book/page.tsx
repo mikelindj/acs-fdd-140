@@ -49,7 +49,7 @@ export default function BookPage() {
   } | null>(null)
   const [formData, setFormData] = useState({
     type: "TABLE" as "TABLE" | "SEAT",
-    tableCapacity: 10 as 10,
+    tableCapacity: 10 as const,
     quantity: 1,
     buyerName: "",
     buyerEmail: "",
@@ -182,7 +182,7 @@ export default function BookPage() {
       }
       setFormData(prev => ({ ...prev, cuisines: newCuisines, tableDiscountApplied: false }))
     }
-  }, [formData.quantity])
+  }, [formData.quantity, formData.cuisines])
 
   // Reset table discount when membership changes
   useEffect(() => {
@@ -202,7 +202,7 @@ export default function BookPage() {
         cuisines: Array(formData.quantity).fill("") 
       }))
     }
-  }, []) // Only run on mount
+  }, [formData.cuisines.length, formData.quantity])
 
 
   // Calculate price breakdown based on inventory settings
@@ -302,7 +302,7 @@ export default function BookPage() {
       voucherDiscount: voucherDiscount,
       total: Math.round(finalTotal * 100) / 100,
     }
-  }, [inventorySettings, formData.type, formData.tableCapacity, formData.quantity, formData.membershipNo, voucherValidated, voucherData, formData.tableDiscountApplied, formData.cuisines])
+  }, [inventorySettings, formData, voucherValidated, voucherData])
 
   const priceBreakdown = calculatePriceBreakdown()
   const total = priceBreakdown.total
@@ -375,7 +375,7 @@ export default function BookPage() {
       return
     }
     
-    const missingCuisines = formData.cuisines.filter((c, index) => !c || !c.trim())
+    const missingCuisines = formData.cuisines.filter((c, _index) => !c || !c.trim())
     if (missingCuisines.length > 0) {
       const missingIndices = formData.cuisines
         .map((c, index) => (!c || !c.trim()) ? index + 1 : null)
@@ -435,7 +435,7 @@ export default function BookPage() {
       }
 
       // Destructure to exclude batchType, psgSchool, schoolStaffSchool, cuisines, and tableDiscountApplied (not part of schema)
-      const { batchType, psgSchool, schoolStaffSchool, cuisines, tableDiscountApplied, ...formDataWithoutBatchType } = formData
+      const { batchType: _batchType, psgSchool: _psgSchool, schoolStaffSchool: _schoolStaffSchool, cuisines: _cuisines, tableDiscountApplied: _tableDiscountApplied, ...formDataWithoutBatchType } = formData
       const bookingData = {
         ...formDataWithoutBatchType,
         category: defaultCategory,
@@ -842,10 +842,10 @@ export default function BookPage() {
                     <select
                       id="psgSchool"
                       value={formData.psgSchool}
-                      onChange={(e) =>
+                onChange={(e) =>
                         setFormData({ ...formData, psgSchool: e.target.value })
-                      }
-                      required
+                }
+                required
                       className="mt-2 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
                     >
                       <option value="">Select a school</option>
@@ -857,7 +857,7 @@ export default function BookPage() {
                       <option value="ACS Academy">ACS Academy</option>
                       <option value="ACJC">ACJC</option>
                     </select>
-                  </div>
+            </div>
                 </div>
               )}
 
@@ -868,10 +868,10 @@ export default function BookPage() {
                     <select
                       id="schoolStaffSchool"
                       value={formData.schoolStaffSchool}
-                      onChange={(e) =>
+                onChange={(e) =>
                         setFormData({ ...formData, schoolStaffSchool: e.target.value })
-                      }
-                      required
+                }
+                required
                       className="mt-2 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
                     >
                       <option value="">Select a school</option>
@@ -883,8 +883,8 @@ export default function BookPage() {
                       <option value="ACS Academy">ACS Academy</option>
                       <option value="ACJC">ACJC</option>
                     </select>
-                  </div>
-                </div>
+            </div>
+            </div>
               )}
 
               <p className="text-xs text-slate-500 italic">
