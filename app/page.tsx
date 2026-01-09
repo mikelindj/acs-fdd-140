@@ -220,15 +220,15 @@ export default async function HomePage() {
                   <ul className="space-y-4 text-sm text-slate-600 mb-10">
                     <li className="flex gap-3 items-center">
                       <div className="h-5 w-5 rounded-full bg-secondary/20 flex items-center justify-center text-secondary-foreground text-xs font-bold">✓</div> 
-                      Priority seating location
+                      10 tickets to the Shangri-La Dinner
                     </li>
                     <li className="flex gap-3 items-center">
                       <div className="h-5 w-5 rounded-full bg-secondary/20 flex items-center justify-center text-secondary-foreground text-xs font-bold">✓</div> 
-                      10 Guest tickets included
+                      Private table just for your own guests
                     </li>
                     <li className="flex gap-3 items-center">
                        <div className="h-5 w-5 rounded-full bg-secondary/20 flex items-center justify-center text-secondary-foreground text-xs font-bold">✓</div> 
-                      Custom Table Signage
+                      Seated around or near your batch or group
                     </li>
                   </ul>
                   
@@ -263,11 +263,11 @@ export default async function HomePage() {
                   <ul className="space-y-4 text-sm text-slate-600 mb-10">
                     <li className="flex gap-3 items-center">
                       <div className="h-5 w-5 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 text-xs font-bold">✓</div> 
-                      Open seating assignment
+                      Open seating assignment (unless purchased in groups of 10)
                     </li>
                     <li className="flex gap-3 items-center">
                       <div className="h-5 w-5 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 text-xs font-bold">✓</div> 
-                      1 Guest ticket included
+                      Cuisine options for Chinese, Vegetarian, or Halal
                     </li>
                     <li className="flex gap-3 items-center">
                        <div className="h-5 w-5 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 text-xs font-bold">✓</div> 

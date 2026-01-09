@@ -45,7 +45,7 @@ jobs:
           image: asia-southeast1-docker.pkg.dev/acs-founders-day-140/acs-repo/acs-fdd140:${{ github.sha }}
           env_vars: |
             DATABASE_URL=${{ secrets.DATABASE_URL }}
-            NEXTAUTH_URL=https://acs-fdd140-361501297750.asia-southeast1.run.app
+            NEXTAUTH_URL=https://140.acsoba.org
             NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
             GMAIL_USER=${{ secrets.GMAIL_USER }}
             GMAIL_APP_PASSWORD=${{ secrets.GMAIL_APP_PASSWORD }}
@@ -53,9 +53,9 @@ jobs:
             HITPAY_API_KEY=${{ secrets.HITPAY_API_KEY }}
             HITPAY_SALT=${{ secrets.HITPAY_SALT }}
             HITPAY_WEBHOOK_SECRET=${{ secrets.HITPAY_WEBHOOK_SECRET }}
-            HITPAY_RETURN_URL=https://acs-fdd140-361501297750.asia-southeast1.run.app
-            HITPAY_WEBHOOK_URL=https://acs-fdd140-361501297750.asia-southeast1.run.app
-            NEXT_PUBLIC_SITE_URL=https://acs-fdd140-361501297750.asia-southeast1.run.app
+            HITPAY_RETURN_URL=https://140.acsoba.org
+            HITPAY_WEBHOOK_URL=https://140.acsoba.org
+            NEXT_PUBLIC_SITE_URL=https://140.acsoba.org
             MEMBERSHIP_DB_HOST=${{ secrets.MEMBERSHIP_DB_HOST }}
             MEMBERSHIP_DB_USER=${{ secrets.MEMBERSHIP_DB_USER }}
             MEMBERSHIP_DB_PASSWORD=${{ secrets.MEMBERSHIP_DB_PASSWORD }}
