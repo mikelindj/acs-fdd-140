@@ -181,19 +181,23 @@ export async function POST(request: NextRequest) {
 
         if (buyerEmail) {
           // Prepare booking details for email
+          const parseCuisines = (cuisineJson: string | null | undefined): string[] => {
+            if (!cuisineJson) return [];
+            try {
+              const parsed = JSON.parse(cuisineJson);
+              return Array.isArray(parsed) ? parsed.filter((c: string) => c && c.trim()) : [];
+            } catch {
+              return [];
+            }
+          };
+
+          const cuisines = parseCuisines(updated.cuisine);
+
           const bookingDetails = {
             type: updated.type as string,
             quantity: updated.quantity,
-            cuisine: updated.type === 'SEAT' && updated.cuisine ? updated.cuisine : undefined,
-            cuisines: updated.type === 'TABLE' ? (() => {
-              try {
-                // Parse cuisine JSON array for tables
-                const cuisines = updated.cuisine ? JSON.parse(updated.cuisine) : [];
-                return cuisines.filter((c: string) => c && c.trim());
-              } catch {
-                return [];
-              }
-            })() : undefined
+            cuisine: updated.type === 'SEAT' && cuisines.length > 0 ? cuisines[0] : undefined,
+            cuisines: updated.type === 'TABLE' ? cuisines : undefined
           };
 
           await sendEmail({

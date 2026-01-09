@@ -124,6 +124,7 @@ export async function POST(request: NextRequest) {
           tableHash: booking.table?.tableHash || null,
           tableNumber: booking.table?.tableNumber || null,
           tableCapacity: booking.table?.capacity || null,
+          cuisine: booking.cuisine,
         }]
 
         // Send email for this transaction only
