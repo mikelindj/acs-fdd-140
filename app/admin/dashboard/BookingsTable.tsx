@@ -119,7 +119,7 @@ export function BookingsTable({ bookings }: BookingsTableProps) {
         const lastPart = breakdownParts.pop()
         return `${breakdownParts.join(", ")}, and ${lastPart}`
       }
-    } catch (_error) {
+    } catch {
       console.warn('Error parsing cuisine JSON in admin dashboard:', cuisineJson)
       return "Not specified"
     }

@@ -6,31 +6,57 @@ type PaymentUpdateStatus = "PENDING" | "PAID" | "FAILED" | "REFUNDED"
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const tableHash = searchParams.get("tableHash")
+  const bookingId = searchParams.get("bookingId")
 
-  if (!tableHash) {
-    return NextResponse.json({ error: "tableHash is required" }, { status: 400 })
+  if (!tableHash && !bookingId) {
+    return NextResponse.json({ error: "tableHash or bookingId is required" }, { status: 400 })
   }
 
   try {
-    const table = await prisma.table.findUnique({
-      where: { tableHash },
-      include: {
-        booking: {
-          include: {
-            buyer: true,
-            guests: true,
-            inviteCodes: true,
+    let booking
+    let buyerId
+
+    if (tableHash) {
+      // Handle table bookings
+      const table = await prisma.table.findUnique({
+        where: { tableHash },
+        include: {
+          booking: {
+            include: {
+              buyer: true,
+              guests: true,
+              inviteCodes: true,
+            },
           },
         },
-      },
-    })
+      })
 
-    if (!table || !table.booking) {
-      return NextResponse.json({ error: "Booking not found" }, { status: 404 })
+      if (!table || !table.booking) {
+        return NextResponse.json({ error: "Booking not found" }, { status: 404 })
+      }
+
+      booking = table.booking
+      buyerId = booking.buyerId
+    } else if (bookingId) {
+      // Handle seat bookings
+      booking = await prisma.booking.findUnique({
+        where: { id: bookingId },
+        include: {
+          buyer: true,
+          guests: true,
+          inviteCodes: true,
+          table: true,
+        },
+      })
+
+      if (!booking) {
+        return NextResponse.json({ error: "Booking not found" }, { status: 404 })
+      }
+
+      buyerId = booking.buyerId
+    } else {
+      return NextResponse.json({ error: "Invalid request" }, { status: 400 })
     }
-
-    // Fetch all bookings for this buyer (for multiple table/seat support)
-    const buyerId = table.booking.buyerId
     const allBookings = await prisma.booking.findMany({
       where: {
         buyerId,
@@ -46,8 +72,8 @@ export async function GET(request: NextRequest) {
     })
 
     return NextResponse.json({
-      booking: table.booking,
-      guests: table.booking.guests,
+      booking: booking,
+      guests: booking.guests,
       allBookings: allBookings.map((b) => ({
         id: b.id,
         type: b.type,
@@ -154,10 +180,26 @@ export async function POST(request: NextRequest) {
         ])
 
         if (buyerEmail) {
+          // Prepare booking details for email
+          const bookingDetails = {
+            type: updated.type as string,
+            quantity: updated.quantity,
+            cuisine: updated.type === 'SEAT' && updated.cuisine ? updated.cuisine : undefined,
+            cuisines: updated.type === 'TABLE' ? (() => {
+              try {
+                // Parse cuisine JSON array for tables
+                const cuisines = updated.cuisine ? JSON.parse(updated.cuisine) : [];
+                return cuisines.filter((c: string) => c && c.trim());
+              } catch {
+                return [];
+              }
+            })() : undefined
+          };
+
           await sendEmail({
             to: buyerEmail,
             subject: "Booking Confirmed - ACS Founders' Day Dinner",
-            html: await getBookingConfirmationEmail(buyerName),
+            html: await getBookingConfirmationEmail(buyerName, bookingDetails),
           })
         }
       } catch (emailError) {

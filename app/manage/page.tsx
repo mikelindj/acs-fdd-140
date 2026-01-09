@@ -30,6 +30,7 @@ interface Booking {
 function ManagePageContent() {
   const searchParams = useSearchParams()
   const tableHash = searchParams.get("table")
+  const bookingId = searchParams.get("bookingId")
   const paymentStatus = searchParams.get("paymentStatus")
   const paymentId = searchParams.get("paymentId")
   const multipleTables = searchParams.get("multipleTables")
@@ -109,13 +110,24 @@ function ManagePageContent() {
 
   const fetchBooking = useCallback(async () => {
     try {
-      const res = await fetch(`/api/bookings?tableHash=${tableHash}`)
-      const data = await res.json()
-      if (data.booking) {
-        setBooking(data.booking)
+      // For table bookings, use tableHash
+      if (tableHash) {
+        const res = await fetch(`/api/bookings?tableHash=${tableHash}`)
+        const data = await res.json()
+        if (data.booking) {
+          setBooking(data.booking)
+        }
+        if (data.allBookings) {
+          setAllBookings(data.allBookings)
+        }
       }
-      if (data.allBookings) {
-        setAllBookings(data.allBookings)
+      // For seat bookings, use bookingId
+      else if (bookingId) {
+        const res = await fetch(`/api/bookings?bookingId=${bookingId}`)
+        const data = await res.json()
+        if (data.booking) {
+          setBooking(data.booking)
+        }
       }
     } catch {
       toast({
@@ -126,13 +138,13 @@ function ManagePageContent() {
     } finally {
       setLoading(false)
     }
-  }, [tableHash, toast])
+  }, [tableHash, bookingId, toast])
 
   useEffect(() => {
-    if (tableHash) {
+    if (tableHash || bookingId) {
       fetchBooking()
     }
-  }, [fetchBooking, tableHash])
+  }, [fetchBooking, tableHash, bookingId])
 
   // Surface payment result if redirected from HitPay
   useEffect(() => {

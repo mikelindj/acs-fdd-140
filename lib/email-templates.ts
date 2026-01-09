@@ -1,4 +1,9 @@
-export async function getBookingConfirmationEmail(buyerName: string): Promise<string> {
+export async function getBookingConfirmationEmail(buyerName: string, bookingDetails?: {
+  type: string;
+  quantity: number;
+  cuisine?: string;
+  cuisines?: string[];
+}): Promise<string> {
   const { getEventSettings } = await import("@/lib/event-settings")
   const eventSettings = await getEventSettings()
   const eventName = eventSettings.eventName || "ACS Founders' Day Dinner"
@@ -44,6 +49,44 @@ export async function getBookingConfirmationEmail(buyerName: string): Promise<st
             <td style="padding: 40px 30px; background-color: #ffffff;">
               <h1 style="margin: 0 0 10px 0; font-size: 28px; font-weight: 700; color: #1e293b; line-height: 1.2;">Hello ${buyerName},</h1>
               <p style="margin: 0 0 20px 0; font-size: 16px; color: #1e293b; line-height: 1.6;">Thank you for your booking! Your payment has been successfully processed.</p>
+
+              ${bookingDetails ? `
+              <!-- Booking Details -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 30px 0; background-color: #f8fafc; border-radius: 12px; overflow: hidden;">
+                <tr>
+                  <td style="padding: 24px;">
+                    <h3 style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600; color: #1e293b;">Booking Summary</h3>
+
+                    ${bookingDetails.type === 'TABLE' ? `
+                    <p style="margin: 0 0 12px 0; font-size: 16px; color: #1e293b; font-weight: 500;">${bookingDetails.quantity} x Table${bookingDetails.quantity > 1 ? 's' : ''}</p>
+
+                    ${bookingDetails.cuisines && bookingDetails.cuisines.length > 0 ? `
+                    <div style="margin: 0 0 0 20px;">
+                      ${(() => {
+                        const cuisineCounts: { [key: string]: number } = {};
+                        bookingDetails.cuisines.forEach(cuisine => {
+                          cuisineCounts[cuisine] = (cuisineCounts[cuisine] || 0) + 1;
+                        });
+                        return Object.entries(cuisineCounts)
+                          .map(([cuisine, count]) => `<p style="margin: 4px 0; font-size: 14px; color: #64748b;">${count} ${cuisine.toLowerCase()} cuisine</p>`)
+                          .join('');
+                      })()}
+                    </div>
+                    ` : ''}
+                    ` : `
+                    <p style="margin: 0 0 12px 0; font-size: 16px; color: #1e293b; font-weight: 500;">${bookingDetails.quantity} x Seat${bookingDetails.quantity > 1 ? 's' : ''}</p>
+
+                    ${bookingDetails.cuisine ? `
+                    <div style="margin: 0 0 0 20px;">
+                      <p style="margin: 4px 0; font-size: 14px; color: #64748b;">${bookingDetails.cuisine.toLowerCase()} cuisine</p>
+                    </div>
+                    ` : ''}
+                    `}
+                  </td>
+                </tr>
+              </table>
+              ` : ''}
+
               <p style="margin: 0 0 30px 0; font-size: 16px; color: #1e293b; line-height: 1.6;">Table assignments will be arranged by our team based on the batch information you provided. You will receive further details closer to the event date.</p>
               <p style="margin: 0; font-size: 14px; color: #64748b; line-height: 1.6;">If you have any questions, please contact our support team.</p>
             </td>
@@ -220,25 +263,13 @@ export async function getPurchaseConfirmationEmail(
         cuisineCounts[cuisine] = (cuisineCounts[cuisine] || 0) + 1
       })
 
-      // Format the breakdown
-      const breakdownParts = Object.entries(cuisineCounts).map(([cuisine, count]) => {
-        if (count === 1) {
-          return `1 ${cuisine} ${type.toLowerCase()}`
-        } else {
-          return `${count} ${cuisine} ${type.toLowerCase()}s`
-        }
+      // Format the breakdown with indentation
+      const breakdownLines = Object.entries(cuisineCounts).map(([cuisine, count]) => {
+        return `   ${count} ${cuisine.toLowerCase()} cuisine`
       })
 
-      // Join with commas and "and" for the last item
-      if (breakdownParts.length === 1) {
-        return ` (${breakdownParts[0]})`
-      } else if (breakdownParts.length === 2) {
-        return ` (${breakdownParts[0]} and ${breakdownParts[1]})`
-      } else {
-        const lastPart = breakdownParts.pop()
-        return ` (${breakdownParts.join(", ")}, and ${lastPart})`
-      }
-    } catch (_error) {
+      return `\n${breakdownLines.join('\n')}`
+    } catch {
       console.warn('Error parsing cuisine JSON in email template:', cuisineJson)
       return ""
     }
@@ -246,18 +277,29 @@ export async function getPurchaseConfirmationEmail(
 
   // Format item description
   const formatItem = (booking: typeof bookings[0]) => {
-    const itemType = booking.type === "TABLE" ? "Table" : "Seat"
-    const itemTypePlural = booking.type === "TABLE" ? "Tables" : "Seats"
+    const itemType = booking.type === "TABLE" ? "table" : "seat"
+    const itemTypePlural = booking.type === "TABLE" ? "tables" : "seats"
 
     if (booking.type === "TABLE") {
-      const capacity = booking.tableCapacity || 10
-      const baseDescription = `${booking.quantity} ${booking.quantity === 1 ? itemType : itemTypePlural} (${capacity}-seater)`
+      const baseDescription = `${booking.quantity} x ${itemTypePlural}`
       const cuisineBreakdown = formatCuisineBreakdown(booking.cuisine, booking.quantity, itemType)
       return baseDescription + cuisineBreakdown
     } else {
-      const baseDescription = `${booking.quantity} ${booking.quantity === 1 ? itemType : itemTypePlural}`
-      const cuisineBreakdown = formatCuisineBreakdown(booking.cuisine, booking.quantity, itemType)
-      return baseDescription + cuisineBreakdown
+      // For seats, handle single cuisine
+      const baseDescription = `${booking.quantity} x ${itemTypePlural}`
+      if (booking.cuisine) {
+        try {
+          const cuisines: string[] = JSON.parse(booking.cuisine)
+          if (Array.isArray(cuisines) && cuisines.length > 0) {
+            const cuisineBreakdown = formatCuisineBreakdown(booking.cuisine, booking.quantity, itemType)
+            return baseDescription + cuisineBreakdown
+          }
+        } catch {
+          // If JSON parsing fails, show as single cuisine
+          return `${baseDescription}\n   ${booking.cuisine.toLowerCase()} cuisine`
+        }
+      }
+      return baseDescription
     }
   }
 

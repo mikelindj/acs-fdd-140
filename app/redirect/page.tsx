@@ -180,12 +180,13 @@ export default async function RedirectPage({
     }
   }
 
-  // Handle seat bookings - they don't have tables, redirect to success page
+  // Handle seat bookings - redirect to manage page like table bookings
   if (booking.type === "SEAT") {
     const params = new URLSearchParams()
     if (status) params.set("paymentStatus", status)
     if (paymentId) params.set("paymentId", paymentId)
-    redirect(`/payment/success?${params.toString()}`)
+    params.set("bookingId", booking.id) // Pass booking ID for seat bookings
+    redirect(`/manage?${params.toString()}`)
   }
 
   // For table bookings, redirect to manage page

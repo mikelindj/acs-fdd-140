@@ -61,7 +61,7 @@ export default async function AdminDashboardPage() {
             acc.push({ cuisine, count: guestMultiplier })
           }
         })
-      } catch (_error) {
+      } catch {
         // If cuisine parsing fails, add to "Unknown" category
         const existing = acc.find(item => item.cuisine === "Unknown")
         const guestCount = booking.type === "TABLE" && booking.table
