@@ -22,6 +22,7 @@ interface InventorySettings {
 export default function BookPage() {
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
+  const [paymentProcessing, setPaymentProcessing] = useState(false)
   const [validatingVoucher, setValidatingVoucher] = useState(false)
   const [voucherValidated, setVoucherValidated] = useState(false)
   const [voucherData, setVoucherData] = useState<{
@@ -451,6 +452,7 @@ export default function BookPage() {
       }
       const result = await createBooking(bookingData)
       if (result.error) {
+        setPaymentProcessing(false)
         toast({
           title: "Error",
           description: result.error,
@@ -474,6 +476,7 @@ export default function BookPage() {
       })
     } finally {
       setLoading(false)
+      setPaymentProcessing(false)
     }
   }
 
@@ -496,6 +499,36 @@ export default function BookPage() {
           </nav>
         </div>
       </header>
+
+      {/* Payment Processing Overlay */}
+      {paymentProcessing && (
+        <div className="fixed inset-0 bg-white bg-opacity-95 z-50 flex items-center justify-center">
+          <div className="text-center space-y-6 max-w-md mx-4">
+            <div className="relative">
+              <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-8 h-8 bg-primary rounded-full animate-pulse"></div>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold text-slate-900">
+                Processing Your Payment
+              </h2>
+              <p className="text-slate-600">
+                Please wait while we securely connect you to our payment gateway...
+              </p>
+            </div>
+            <div className="flex justify-center space-x-1">
+              <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
+              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+            </div>
+            <p className="text-sm text-slate-500">
+              This may take a few seconds. Please do not close this window.
+            </p>
+          </div>
+        </div>
+      )}
 
       <main className="flex-1 py-12 px-4">
         <div className="container max-w-6xl mx-auto">

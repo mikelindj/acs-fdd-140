@@ -404,8 +404,15 @@ function ManagePageContent() {
                                 <Label className="text-slate-500 text-xs">
                                   {bookingItem.type === "TABLE" ? "Table" : "Seat"} {index + 1}
                                 </Label>
-                                <span className="inline-flex rounded-full px-2 py-1 text-xs font-semibold bg-green-100 text-green-800">
-                                  CONFIRMED
+                                <span className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
+                                  paymentStatus?.toLowerCase() === 'canceled' || paymentStatus?.toLowerCase() === 'cancelled'
+                                    ? "bg-yellow-100 text-yellow-800"
+                                    : "bg-green-100 text-green-800"
+                                }`}>
+                                  {paymentStatus?.toLowerCase() === 'canceled' || paymentStatus?.toLowerCase() === 'cancelled'
+                                    ? "PENDING"
+                                    : "CONFIRMED"
+                                  }
                                 </span>
                               </div>
                               <div>
