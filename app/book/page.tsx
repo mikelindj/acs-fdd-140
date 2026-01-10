@@ -10,12 +10,26 @@ import { Logo } from "@/components/Logo"
 import { Footer } from "@/components/Footer"
 
 interface InventorySettings {
-  tablePrice: number
-  seatPrice: number
-  tablePromoPrice: number | null
-  seatPromoPrice: number | null
-  tableMembersPrice: number | null
-  seatMembersPrice: number | null
+  table: {
+    regular: {
+      nonMember: number
+      member: number | null
+    }
+    promo: {
+      nonMember: number | null
+      member: number | null
+    }
+  }
+  seat: {
+    regular: {
+      nonMember: number
+      member: number | null
+    }
+    promo: {
+      nonMember: number | null
+      member: number | null
+    }
+  }
 }
 
 
@@ -94,33 +108,32 @@ export default function BookPage() {
         const res = await fetch("/api/pricing/public")
         if (res.ok) {
           const data = await res.json()
-          // Extract pricing from the response
-          const tablePrice = data.table?.regular?.nonMember || 1000
-          const seatPrice = data.seat?.regular?.nonMember || 100
-          const tablePromoPrice = data.table?.promo?.nonMember || null
-          const seatPromoPrice = data.seat?.promo?.nonMember || null
-          const tableMembersPrice = data.table?.regular?.member || null
-          const seatMembersPrice = data.seat?.regular?.member || null
-          
-          setInventorySettings({
-            tablePrice,
-            seatPrice,
-            tablePromoPrice,
-            seatPromoPrice,
-            tableMembersPrice,
-            seatMembersPrice,
-          })
+          setInventorySettings(data)
         }
       } catch (error) {
         console.error("Error fetching inventory:", error)
         // Use defaults
         setInventorySettings({
-          tablePrice: 1000,
-          seatPrice: 100,
-          tablePromoPrice: null,
-          seatPromoPrice: null,
-          tableMembersPrice: null,
-          seatMembersPrice: null,
+          table: {
+            regular: {
+              nonMember: 1000,
+              member: null,
+            },
+            promo: {
+              nonMember: null,
+              member: null,
+            },
+          },
+          seat: {
+            regular: {
+              nonMember: 100,
+              member: null,
+            },
+            promo: {
+              nonMember: null,
+              member: null,
+            },
+          },
         })
       }
     }
@@ -219,42 +232,77 @@ export default function BookPage() {
         tableBundleDiscount: 0,
         voucherDiscount: 0,
         total: 0,
+        promoDiscount: 0,
+        isPromoApplied: false,
       }
     }
 
     const isTable = formData.type === "TABLE"
-    // Base prices (non-discounted)
-    const baseTablePrice = Number(inventorySettings.tablePrice || 0)
-    const baseSeatPrice = Number(inventorySettings.seatPrice || 0)
-
-    // Check if membership is entered
     const hasMembership = formData.membershipNo && typeof formData.membershipNo === 'string' && formData.membershipNo.trim()
 
-    // Always show full rates for display purposes
-    const displayTablePrice = Number(inventorySettings.tablePrice)
-    const displaySeatPrice = Number(inventorySettings.seatPrice)
+    // Determine base prices - use promo price if available, otherwise regular price
+    let tableBasePrice: number
+    let seatBasePrice: number
+    let tablePromoDiscount = 0
+    let seatPromoDiscount = 0
+    let isPromoApplied = false
 
-    // Get actual prices (with membership or promo discounts) for calculation
+    if (isTable) {
+      const regularPrice = Number(inventorySettings.table.regular.nonMember)
+      const promoPrice = inventorySettings.table.promo.nonMember
+
+      if (promoPrice !== null && promoPrice < regularPrice) {
+        tableBasePrice = promoPrice
+        tablePromoDiscount = regularPrice - promoPrice
+        isPromoApplied = true
+      } else {
+        tableBasePrice = regularPrice
+      }
+    } else {
+      const regularPrice = Number(inventorySettings.seat.regular.nonMember)
+      const promoPrice = inventorySettings.seat.promo.nonMember
+
+      if (promoPrice !== null && promoPrice < regularPrice) {
+        seatBasePrice = promoPrice
+        seatPromoDiscount = regularPrice - promoPrice
+        isPromoApplied = true
+      } else {
+        seatBasePrice = regularPrice
+      }
+    }
+
+    // Apply membership discount on top of base price (promo or regular)
     let tablePrice: number
     let seatPrice: number
-    let tableDiscount = 0
-    let seatDiscount = 0
+    let tableMemberDiscount = 0
+    let seatMemberDiscount = 0
 
     if (hasMembership) {
-      // Use members price if membership number is entered
-      tablePrice = Number(inventorySettings.tableMembersPrice || inventorySettings.tablePrice)
-      seatPrice = Number(inventorySettings.seatMembersPrice || inventorySettings.seatPrice)
-      // Calculate discount from base price (only if lower than base)
-      tableDiscount = Math.max(0, baseTablePrice - tablePrice)
-      seatDiscount = Math.max(0, baseSeatPrice - seatPrice)
+      if (isTable) {
+        const memberPrice = inventorySettings.table.regular.member
+        if (memberPrice !== null && memberPrice < tableBasePrice) {
+          tablePrice = memberPrice
+          tableMemberDiscount = tableBasePrice - memberPrice
+        } else {
+          tablePrice = tableBasePrice
+        }
+      } else {
+        const memberPrice = inventorySettings.seat.regular.member
+        if (memberPrice !== null && memberPrice < seatBasePrice) {
+          seatPrice = memberPrice
+          seatMemberDiscount = seatBasePrice - memberPrice
+        } else {
+          seatPrice = seatBasePrice
+        }
+      }
     } else {
-      // Use regular prices (no member discount)
-      tablePrice = Number(inventorySettings.tablePrice)
-      seatPrice = Number(inventorySettings.seatPrice)
-      // No discounts without membership
-      tableDiscount = 0
-      seatDiscount = 0
+      tablePrice = tableBasePrice
+      seatPrice = seatBasePrice
     }
+
+    // Display prices (always show regular prices for comparison)
+    const displayTablePrice = Number(inventorySettings.table.regular.nonMember)
+    const displaySeatPrice = Number(inventorySettings.seat.regular.nonMember)
 
     let total = 0
     let tableBundleDiscount = 0
@@ -294,13 +342,15 @@ export default function BookPage() {
 
     return {
       tablePrice: isTable ? tablePrice * formData.quantity : 0,
-      tableDiscount: isTable ? tableDiscount * formData.quantity : 0,
+      tableDiscount: isTable ? tableMemberDiscount * formData.quantity : 0,
       seatPrice: !isTable ? seatPrice * formData.quantity : 0,
-      seatDiscount: !isTable ? seatDiscount * formData.quantity : 0,
+      seatDiscount: !isTable ? seatMemberDiscount * formData.quantity : 0,
       displaySeatPrice: !isTable ? displaySeatPrice * formData.quantity : 0, // Full rate for display
       displayTablePrice: isTable ? displayTablePrice * formData.quantity : 0, // Full rate for display
       tableBundleDiscount: tableBundleDiscount,
       voucherDiscount: voucherDiscount,
+      promoDiscount: isTable ? tablePromoDiscount * formData.quantity : seatPromoDiscount * formData.quantity,
+      isPromoApplied,
       total: Math.round(finalTotal * 100) / 100,
     }
   }, [inventorySettings, formData, voucherValidated, voucherData])
@@ -989,8 +1039,14 @@ export default function BookPage() {
                   <>
                     <div className="flex justify-between text-sm font-medium text-slate-700">
                       <span>Table ({formData.tableCapacity}-seater) × {formData.quantity}</span>
-                      <span className="text-slate-900">S${priceBreakdown.displayTablePrice.toFixed(2)}</span>
+                      <span className={`text-slate-900 ${priceBreakdown.isPromoApplied ? 'line-through text-slate-500' : ''}`}>S${priceBreakdown.displayTablePrice.toFixed(2)}</span>
                     </div>
+                    {priceBreakdown.promoDiscount > 0 && (
+                      <div className="flex justify-between text-sm font-medium text-orange-600">
+                        <span>🎉 Promotional Price</span>
+                        <span>-S${priceBreakdown.promoDiscount.toFixed(2)}</span>
+                      </div>
+                    )}
                     {priceBreakdown.tableDiscount > 0 && (
                       <div className="flex justify-between text-sm font-medium text-green-600">
                         <span>Member Discount</span>
@@ -1003,8 +1059,14 @@ export default function BookPage() {
                   <>
                     <div className="flex justify-between text-sm font-medium text-slate-700">
                       <span>Individual Seat × {formData.quantity}</span>
-                      <span className="text-slate-900">S${priceBreakdown.displaySeatPrice.toFixed(2)}</span>
+                      <span className={`text-slate-900 ${priceBreakdown.isPromoApplied ? 'line-through text-slate-500' : ''}`}>S${priceBreakdown.displaySeatPrice.toFixed(2)}</span>
                     </div>
+                    {priceBreakdown.promoDiscount > 0 && (
+                      <div className="flex justify-between text-sm font-medium text-orange-600">
+                        <span>🎉 Promotional Price</span>
+                        <span>-S${priceBreakdown.promoDiscount.toFixed(2)}</span>
+                      </div>
+                    )}
                     {priceBreakdown.seatDiscount > 0 && (
                       <div className="flex justify-between text-sm font-medium text-green-600">
                         <span>Member Discount</span>
