@@ -241,39 +241,31 @@ export default function BookPage() {
     const hasMembership = formData.membershipNo && typeof formData.membershipNo === 'string' && formData.membershipNo.trim()
 
     // Determine base prices - use promo price if available, otherwise regular price
-    let tableBasePrice: number
-    let seatBasePrice: number
+    let tableBasePrice = Number(inventorySettings.table.regular.nonMember)
+    let seatBasePrice = Number(inventorySettings.seat.regular.nonMember)
     let tablePromoDiscount = 0
     let seatPromoDiscount = 0
     let isPromoApplied = false
 
     if (isTable) {
-      const regularPrice = Number(inventorySettings.table.regular.nonMember)
       const promoPrice = inventorySettings.table.promo.nonMember
-
-      if (promoPrice !== null && promoPrice < regularPrice) {
+      if (promoPrice !== null && promoPrice < tableBasePrice) {
         tableBasePrice = promoPrice
-        tablePromoDiscount = regularPrice - promoPrice
+        tablePromoDiscount = Number(inventorySettings.table.regular.nonMember) - promoPrice
         isPromoApplied = true
-      } else {
-        tableBasePrice = regularPrice
       }
     } else {
-      const regularPrice = Number(inventorySettings.seat.regular.nonMember)
       const promoPrice = inventorySettings.seat.promo.nonMember
-
-      if (promoPrice !== null && promoPrice < regularPrice) {
+      if (promoPrice !== null && promoPrice < seatBasePrice) {
         seatBasePrice = promoPrice
-        seatPromoDiscount = regularPrice - promoPrice
+        seatPromoDiscount = Number(inventorySettings.seat.regular.nonMember) - promoPrice
         isPromoApplied = true
-      } else {
-        seatBasePrice = regularPrice
       }
     }
 
     // Apply membership discount on top of base price (promo or regular)
-    let tablePrice: number
-    let seatPrice: number
+    let tablePrice = tableBasePrice
+    let seatPrice = seatBasePrice
     let tableMemberDiscount = 0
     let seatMemberDiscount = 0
 
@@ -426,7 +418,7 @@ export default function BookPage() {
       return
     }
     
-    const missingCuisines = formData.cuisines.filter((c, _index) => !c || !c.trim())
+    const missingCuisines = formData.cuisines.filter((c) => !c || !c.trim())
     if (missingCuisines.length > 0) {
       const missingIndices = formData.cuisines
         .map((c, index) => (!c || !c.trim()) ? index + 1 : null)
@@ -678,7 +670,7 @@ export default function BookPage() {
                 }
               </p>
               <div className="space-y-3">
-                {Array.from({ length: formData.quantity }).map((_, index) => (
+                {Array.from({ length: formData.quantity }).map((_item, index) => (
                   <div key={index} className="space-y-2">
                     <Label htmlFor={`cuisine-${index}`} className="text-sm font-medium text-slate-700">
                       {formData.type === "TABLE" ? "Table" : "Seat"} {index + 1} *

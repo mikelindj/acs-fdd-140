@@ -5,7 +5,7 @@ export async function GET() {
   let envLocalContent = null;
   try {
     envLocalContent = readFileSync(join(process.cwd(), '.env.local'), 'utf8');
-  } catch (error) {
+  } catch {
     envLocalContent = "File not found or readable";
   }
 

@@ -332,7 +332,6 @@ export default function TablesPage() {
               <div className="p-6">
                 <div className="grid grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-3">
                   {tables.map((table) => {
-                    const _tableNumber = parseInt(table.tableNumber)
                     const isSelected = selectedTable === table.id
                     const occupancyRate = table.capacity > 0 ? (table.guests.length / table.capacity) * 100 : 0
 

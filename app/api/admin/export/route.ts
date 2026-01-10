@@ -31,7 +31,7 @@ function calculateCuisineBreakdown(cuisineJson: string | null | undefined, type:
     })
 
     return result
-  } catch (_error) {
+  } catch {
     console.warn('Error parsing cuisine JSON in export:', cuisineJson)
     return result
   }

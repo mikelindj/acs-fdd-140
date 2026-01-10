@@ -250,7 +250,7 @@ export async function getPurchaseConfirmationEmail(
   }
 
   // Format cuisine breakdown
-  const formatCuisineBreakdown = (cuisineJson: string | null | undefined, quantity: number, type: string) => {
+  const formatCuisineBreakdown = (cuisineJson: string | null | undefined) => {
     if (!cuisineJson) return ""
 
     try {
@@ -283,12 +283,11 @@ export async function getPurchaseConfirmationEmail(
 
   // Format item description
   const formatItem = (booking: typeof bookings[0]) => {
-    const itemType = booking.type === "TABLE" ? "table" : "seat"
     const itemTypePlural = booking.type === "TABLE" ? "tables" : "seats"
 
     if (booking.type === "TABLE") {
       const baseDescription = `${booking.quantity} x ${itemTypePlural}`
-      const cuisineBreakdown = formatCuisineBreakdown(booking.cuisine, booking.quantity, itemType)
+      const cuisineBreakdown = formatCuisineBreakdown(booking.cuisine)
       return baseDescription + cuisineBreakdown
     } else {
       // For seats, handle cuisine
@@ -297,7 +296,7 @@ export async function getPurchaseConfirmationEmail(
         try {
           const cuisines: string[] = JSON.parse(booking.cuisine)
           if (Array.isArray(cuisines) && cuisines.length > 0) {
-            const cuisineBreakdown = formatCuisineBreakdown(booking.cuisine, booking.quantity, itemType)
+            const cuisineBreakdown = formatCuisineBreakdown(booking.cuisine)
             return baseDescription + cuisineBreakdown
           }
         } catch {

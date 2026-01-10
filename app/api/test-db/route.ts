@@ -17,12 +17,12 @@ export async function GET() {
         timestamp: new Date().toISOString()
       }
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Database test error:", error)
     return Response.json({
       success: false,
       message: "Database connection failed",
-      error: error.message,
+      error: error instanceof Error ? error.message : String(error),
       timestamp: new Date().toISOString()
     }, { status: 500 })
   }

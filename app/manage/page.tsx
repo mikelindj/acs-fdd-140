@@ -83,7 +83,7 @@ function ManagePageContent() {
         const lastPart = breakdownParts.pop()
         return `${breakdownParts.join(", ")}, and ${lastPart}`
       }
-    } catch (_error) {
+    } catch {
       console.warn('Error parsing cuisine JSON in manage page:', cuisineJson)
       return "Not specified"
     }
