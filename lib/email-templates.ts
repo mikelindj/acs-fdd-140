@@ -397,6 +397,32 @@ export async function getPurchaseConfirmationEmail(
             </td>
           </tr>
 
+          <!-- Promotional Section -->
+          <tr>
+            <td style="padding: 30px; background-color: #f8fafc; border-top: 1px solid #e2e8f0;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; border-radius: 12px; padding: 24px; border: 1px solid #e2e8f0;">
+                <tr>
+                  <td>
+                    <h3 style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600; color: #1e293b;">🎉 Celebrate the 140th Anniversary!</h3>
+                    <p style="margin: 0 0 16px 0; font-size: 15px; color: #374151; line-height: 1.6;">
+                      Mark this milestone with our exclusive <strong>140th Founders Day Polo Tee</strong> – featuring the official commemorative logo and timeless ACS heritage colors.
+                    </p>
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top: 16px;">
+                      <tr>
+                        <td>
+                          <a href="https://acsoba.org/product/140th-founders-day-polo-tee-commemorative-logo-and-classic-colours/"
+                             style="display: inline-block; background-color: #1e293b; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; text-align: center;">
+                            Shop Now - Limited Edition!
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
           <!-- Footer -->
           <tr>
             <td style="background-color: #0f172a; padding: 40px 30px; text-align: center;">

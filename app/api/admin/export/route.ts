@@ -112,10 +112,10 @@ export async function GET() {
         "Wants Batch Seating": booking.wantsBatchSeating ? "Yes" : "No",
         "Guests Count": booking.guests.length,
         // Grouping columns
-        "School": booking.gradYear ? booking.school || "" : "",
-        "Year": booking.gradYear || "",
-        "PSG-School": !booking.gradYear ? booking.school || "" : "",
-        "Staff-School": !booking.gradYear ? booking.school || "" : "",
+        "School": booking.buyer.gradYear ? booking.buyer.school || "" : "",
+        "Year": booking.buyer.gradYear || "",
+        "PSG-School": !booking.buyer.gradYear ? booking.buyer.school || "" : "",
+        "Staff-School": !booking.buyer.gradYear ? booking.buyer.school || "" : "",
         // Cuisine columns
         "Chinese": cuisineBreakdown.Chinese || 0,
         "Chinese-Vegetarian": cuisineBreakdown["Chinese-Vegetarian"] || 0,

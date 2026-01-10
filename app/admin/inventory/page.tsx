@@ -234,6 +234,9 @@ export default function InventoryPage() {
                <Link href="/admin/dashboard" className="hover:text-primary transition-colors">
                  Dashboard
                </Link>
+               <Link href="/admin/bookings" className="hover:text-primary transition-colors">
+                 Bookings
+               </Link>
                <Link href="/admin/setup" className="hover:text-primary transition-colors">
                  Setup
                </Link>
@@ -287,13 +290,16 @@ export default function InventoryPage() {
              <Link href="/admin/dashboard" className="px-3 py-2 rounded-lg hover:bg-primary/10 hover:text-primary transition-all duration-200">
                Dashboard
              </Link>
+             <Link href="/admin/bookings" className="px-3 py-2 rounded-lg hover:bg-primary/10 hover:text-primary transition-all duration-200">
+               Bookings
+             </Link>
              <Link href="/admin/setup" className="px-3 py-2 rounded-lg hover:bg-primary/10 hover:text-primary transition-all duration-200">
                Setup
              </Link>
              <Link href="/admin/tables" className="px-3 py-2 rounded-lg hover:bg-primary/10 hover:text-primary transition-all duration-200">
                Tables
              </Link>
-             <Link href="/admin/inventory" className="px-3 py-2 rounded-lg hover:bg-primary/10 hover:text-primary transition-all duration-200">
+             <Link href="/admin/inventory" className="px-3 py-2 rounded-lg bg-primary/10 text-primary transition-all duration-200">
                Inventory
              </Link>
              <Link href="/admin/broadcast" className="px-3 py-2 rounded-lg hover:bg-primary/10 hover:text-primary transition-all duration-200">

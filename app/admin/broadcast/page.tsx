@@ -98,6 +98,9 @@ export default function BroadcastPage() {
              <Link href="/admin/dashboard" className="px-3 py-2 rounded-lg hover:bg-primary/10 hover:text-primary transition-all duration-200">
                Dashboard
              </Link>
+             <Link href="/admin/bookings" className="px-3 py-2 rounded-lg hover:bg-primary/10 hover:text-primary transition-all duration-200">
+               Bookings
+             </Link>
              <Link href="/admin/setup" className="px-3 py-2 rounded-lg hover:bg-primary/10 hover:text-primary transition-all duration-200">
                Setup
              </Link>
@@ -107,7 +110,7 @@ export default function BroadcastPage() {
              <Link href="/admin/inventory" className="px-3 py-2 rounded-lg hover:bg-primary/10 hover:text-primary transition-all duration-200">
                Inventory
              </Link>
-             <Link href="/admin/broadcast" className="px-3 py-2 rounded-lg hover:bg-primary/10 hover:text-primary transition-all duration-200">
+             <Link href="/admin/broadcast" className="px-3 py-2 rounded-lg bg-primary/10 text-primary transition-all duration-200">
                Broadcast
              </Link>
              <Link href="/api/auth/signout" className="px-3 py-2 rounded-lg hover:bg-slate-100 hover:text-slate-900 transition-all duration-200">

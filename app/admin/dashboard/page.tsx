@@ -92,8 +92,11 @@ export default async function AdminDashboardPage() {
           </div>
           
           <nav className="flex items-center gap-2 text-sm font-medium text-slate-600">
-             <Link href="/admin/dashboard" className="px-3 py-2 rounded-lg hover:bg-primary/10 hover:text-primary transition-all duration-200">
+             <Link href="/admin/dashboard" className="px-3 py-2 rounded-lg bg-primary/10 text-primary transition-all duration-200">
                Dashboard
+             </Link>
+             <Link href="/admin/bookings" className="px-3 py-2 rounded-lg hover:bg-primary/10 hover:text-primary transition-all duration-200">
+               Bookings
              </Link>
              <Link href="/admin/setup" className="px-3 py-2 rounded-lg hover:bg-primary/10 hover:text-primary transition-all duration-200">
                Setup
