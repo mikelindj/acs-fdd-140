@@ -341,6 +341,39 @@ export default function BookPage() {
   const priceBreakdown = calculatePriceBreakdown()
   const total = priceBreakdown.total
 
+  // Helper functions for quantity controls
+  const decreaseQuantity = () => {
+    if (formData.quantity > 1) {
+      const newQuantity = formData.quantity - 1
+      // Sync cuisines array with new quantity
+      const currentCuisines = formData.cuisines
+      const newCuisines = [...currentCuisines]
+      newCuisines.splice(newQuantity) // Trim array if quantity decreased
+      setFormData({
+        ...formData,
+        quantity: newQuantity,
+        cuisines: newCuisines,
+        tableDiscountApplied: false, // Reset table discount when quantity changes
+      })
+    }
+  }
+
+  const increaseQuantity = () => {
+    const newQuantity = formData.quantity + 1
+    // Sync cuisines array with new quantity
+    const currentCuisines = formData.cuisines
+    const newCuisines = [...currentCuisines]
+    while (newCuisines.length < newQuantity) {
+      newCuisines.push("") // Add empty strings for new items
+    }
+    setFormData({
+      ...formData,
+      quantity: newQuantity,
+      cuisines: newCuisines,
+      tableDiscountApplied: false, // Reset table discount when quantity changes
+    })
+  }
+
   const handleValidateVoucher = async () => {
     if (!formData.voucherCode.trim()) {
       toast({
@@ -600,44 +633,64 @@ export default function BookPage() {
 
             <div>
               <Label htmlFor="quantity">Quantity *</Label>
-              <Input
-                id="quantity"
-                type="number"
-                min="1"
-                value={formData.quantity}
-                onChange={(e) => {
-                  const value = e.target.value
-                  if (value === "" || value === null || value === undefined) {
-                    setFormData({
-                      ...formData,
-                      quantity: 1,
-                    })
-                    return
-                  }
-                  const newQuantity = parseInt(value, 10)
-                  if (!isNaN(newQuantity) && newQuantity > 0) {
-                    // Sync cuisines array with new quantity
-                    const currentCuisines = formData.cuisines
-                    const newCuisines = [...currentCuisines]
-                    if (newQuantity > currentCuisines.length) {
-                      // Add empty strings for new items
-                      while (newCuisines.length < newQuantity) {
-                        newCuisines.push("")
-                      }
-                    } else if (newQuantity < currentCuisines.length) {
-                      // Trim array if quantity decreased
-                      newCuisines.splice(newQuantity)
+              <div className="flex items-center mt-2">
+                <Button
+                  type="button"
+                  onClick={decreaseQuantity}
+                  disabled={formData.quantity <= 1}
+                  className="px-3 py-2 h-10 rounded-l-xl border border-r-0 border-slate-300 bg-white hover:bg-slate-50 text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  variant="outline"
+                >
+                  -
+                </Button>
+                <Input
+                  id="quantity"
+                  type="number"
+                  min="1"
+                  value={formData.quantity}
+                  onChange={(e) => {
+                    const value = e.target.value
+                    if (value === "" || value === null || value === undefined) {
+                      setFormData({
+                        ...formData,
+                        quantity: 1,
+                      })
+                      return
                     }
-                    setFormData({
-                      ...formData,
-                      quantity: newQuantity,
-                      cuisines: newCuisines,
-                    })
-                  }
-                }}
-                required
-                className="mt-2"
-              />
+                    const newQuantity = parseInt(value, 10)
+                    if (!isNaN(newQuantity) && newQuantity > 0) {
+                      // Sync cuisines array with new quantity
+                      const currentCuisines = formData.cuisines
+                      const newCuisines = [...currentCuisines]
+                      if (newQuantity > currentCuisines.length) {
+                        // Add empty strings for new items
+                        while (newCuisines.length < newQuantity) {
+                          newCuisines.push("")
+                        }
+                      } else if (newQuantity < currentCuisines.length) {
+                        // Trim array if quantity decreased
+                        newCuisines.splice(newQuantity)
+                      }
+                      setFormData({
+                        ...formData,
+                        quantity: newQuantity,
+                        cuisines: newCuisines,
+                        tableDiscountApplied: false, // Reset table discount when quantity changes
+                      })
+                    }
+                  }}
+                  required
+                  className="rounded-none border-x-0 text-center w-20 h-10 focus:border-primary focus:ring-0"
+                />
+                <Button
+                  type="button"
+                  onClick={increaseQuantity}
+                  className="px-3 py-2 h-10 rounded-r-xl border border-l-0 border-slate-300 bg-white hover:bg-slate-50 text-slate-700"
+                  variant="outline"
+                >
+                  +
+                </Button>
+              </div>
               {inventoryAvailable && !inventoryAvailable.available && (
                 <p className="mt-2 text-sm text-brand-red font-medium">
                   {inventoryAvailable.error || "Exceeded maximum allowed limit"}
