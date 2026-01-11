@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 import { Logo } from "@/components/Logo"
 import { Footer } from "@/components/Footer"
+import { Minus, Plus } from "lucide-react"
 
 interface InventorySettings {
   table: {
@@ -39,6 +40,7 @@ export default function BookPage() {
   const [paymentProcessing, setPaymentProcessing] = useState(false)
   const [validatingVoucher, setValidatingVoucher] = useState(false)
   const [voucherValidated, setVoucherValidated] = useState(false)
+  const [showMembershipToast, setShowMembershipToast] = useState(false)
   const [voucherData, setVoucherData] = useState<{
     id: string
     code: string
@@ -633,15 +635,16 @@ export default function BookPage() {
 
             <div>
               <Label htmlFor="quantity">Quantity *</Label>
-              <div className="flex items-center mt-2">
+              <div className="flex items-center mt-2 w-full gap-3">
                 <Button
                   type="button"
                   onClick={decreaseQuantity}
                   disabled={formData.quantity <= 1}
-                  className="px-3 py-2 h-10 rounded-l-xl border border-r-0 border-slate-300 bg-white hover:bg-slate-50 text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-shrink-0 w-10 h-10 rounded-full border border-slate-300 bg-white hover:bg-slate-100 hover:border-slate-400 active:bg-slate-200 text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-slate-300 transition-all duration-150"
                   variant="outline"
+                  aria-label="Decrease quantity"
                 >
-                  -
+                  <Minus className="w-4 h-4" />
                 </Button>
                 <Input
                   id="quantity"
@@ -680,15 +683,16 @@ export default function BookPage() {
                     }
                   }}
                   required
-                  className="rounded-none border-x-0 text-center w-20 h-10 focus:border-primary focus:ring-0"
+                  className="text-center flex-1 h-10 border border-slate-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all duration-150 min-w-0"
                 />
                 <Button
                   type="button"
                   onClick={increaseQuantity}
-                  className="px-3 py-2 h-10 rounded-r-xl border border-l-0 border-slate-300 bg-white hover:bg-slate-50 text-slate-700"
+                  className="flex-shrink-0 w-10 h-10 rounded-full border border-slate-300 bg-white hover:bg-slate-100 hover:border-slate-400 active:bg-slate-200 text-slate-700 transition-all duration-150"
                   variant="outline"
+                  aria-label="Increase quantity"
                 >
-                  +
+                  <Plus className="w-4 h-4" />
                 </Button>
               </div>
               {inventoryAvailable && !inventoryAvailable.available && (
@@ -845,30 +849,44 @@ export default function BookPage() {
             </div>
 
             <div>
-              <Label htmlFor="membershipNo">Membership Number (Optional)</Label>
-              <Input
+              <div className="rounded-lg bg-blue-50 border border-blue-200 p-3 mb-3">
+                <p className="text-sm text-blue-700 font-medium">
+                  Enter your membership number for members-only price (Optional).
+                  <Input
                 id="membershipNo"
                 value={formData.membershipNo}
-                onChange={(e) =>
+                onChange={(e) => {
                   setFormData({ ...formData, membershipNo: e.target.value })
-                }
+                  // Hide the success message immediately when user starts typing
+                  if (showMembershipToast) {
+                    setShowMembershipToast(false)
+                  }
+                }}
                 onBlur={() => {
-                  // Auto-apply member price when user clicks away
+                  // Auto-apply member price when user clicks away - delay for 2 seconds
                   if (formData.membershipNo && formData.membershipNo.trim()) {
-                    toast({
-                      title: "Members price applied",
-                      description: "Member pricing has been applied to your booking",
-                    })
+                    setTimeout(() => {
+                      setShowMembershipToast(true)
+                      toast({
+                        title: "Members price applied",
+                        description: "Member pricing has been applied to your booking",
+                      })
+                    }, 2000)
+                  } else {
+                    setShowMembershipToast(false)
                   }
                 }}
                 className="mt-2"
                 placeholder="Enter membership number"
               />
-              {formData.membershipNo && formData.membershipNo.trim() && (
+              {showMembershipToast && (
                 <p className="mt-2 text-sm text-green-600 font-semibold flex items-center gap-1">
                   <span className="text-green-600">✓</span> Members price applied
                 </p>
               )}
+                </p>
+              </div>
+
             </div>
 
             <div className="space-y-4 p-4 rounded-xl bg-slate-50 border border-slate-200">

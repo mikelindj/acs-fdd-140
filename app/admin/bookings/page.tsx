@@ -6,6 +6,8 @@ import { Logo } from "@/components/Logo"
 import { Footer } from "@/components/Footer"
 import { getEventSettings } from "@/lib/event-settings"
 
+export const dynamic = 'force-dynamic'
+
 export default async function AdminBookingsPage() {
   await getCurrentAdmin()
   const eventSettings = await getEventSettings()
