@@ -25,53 +25,26 @@ export async function GET(request: NextRequest) {
 
     if (type === "TABLE") {
       // Count existing table bookings (both PAID and PENDING count as taken to prevent overbooking)
+      // Count by quantity since PENDING bookings don't have tables assigned yet
       const existingTableBookings = await prisma.booking.findMany({
         where: {
           type: "TABLE",
           status: { in: ["PAID", "PENDING"] },
         },
-        include: {
-          table: true,
-        },
       })
 
-      if (tableCapacity === 11) {
-        // Check 11-seater availability
-        const bookedElevenSeaters = existingTableBookings.filter(
-          (b) => b.table?.capacity === 11
-        ).length
+      // Sum up all booked tables by quantity
+      const totalBookedTables = existingTableBookings.reduce((sum, b) => sum + b.quantity, 0)
+      const available = totalTables - totalBookedTables
+      const requested = quantity || 1
 
-        const available = maxElevenSeaterTables - bookedElevenSeaters
-        const requested = quantity || 1
-
-        return NextResponse.json({
-          available: requested <= available,
-          availableCount: available,
-          requestedCount: requested,
-          type: "TABLE",
-          tableCapacity: 11,
-        })
-      } else {
-        // Check 10-seater availability
-        // Total available = totalTables - booked 11-seaters - booked 10-seaters
-        const bookedElevenSeaters = existingTableBookings.filter(
-          (b) => b.table?.capacity === 11
-        ).length
-        const bookedTenSeaters = existingTableBookings.filter(
-          (b) => b.table?.capacity === 10
-        ).length
-
-        const available = totalTables - bookedElevenSeaters - bookedTenSeaters
-        const requested = quantity || 1
-
-        return NextResponse.json({
-          available: requested <= available,
-          availableCount: available,
-          requestedCount: requested,
-          type: "TABLE",
-          tableCapacity: 10,
-        })
-      }
+      return NextResponse.json({
+        available: requested <= available,
+        availableCount: available,
+        requestedCount: requested,
+        type: "TABLE",
+        tableCapacity: tableCapacity || 10,
+      })
     } else if (type === "SEAT") {
       // Count existing seat bookings (both PAID and PENDING count as taken to prevent overbooking)
       const existingSeatBookings = await prisma.booking.findMany({

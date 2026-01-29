@@ -25,42 +25,22 @@ export async function createBooking(data: z.infer<typeof bookingSchema>) {
 
     if (isTable) {
       // Count existing PAID and PENDING table bookings to prevent overbooking
+      // Count by quantity since PENDING bookings don't have tables assigned yet
       const existingTableBookings = await prisma.booking.findMany({
         where: {
           type: "TABLE",
           status: { in: ["PAID", "PENDING"] },
         },
-        include: {
-          table: true,
-        },
       })
 
-      if (isElevenSeater) {
-        // Check 11-seater availability
-        const bookedElevenSeaters = existingTableBookings.filter(
-          (b) => b.table?.capacity === 11
-        ).length
-        const available = inventorySettings.maxElevenSeaterTables - bookedElevenSeaters
+      // Sum up all booked tables by quantity
+      const totalBookedTables = existingTableBookings.reduce((sum, b) => sum + b.quantity, 0)
+      const totalAvailableTables = inventorySettings.totalTables
+      const available = totalAvailableTables - totalBookedTables
 
-        if (validated.quantity > available) {
-          return { 
-            error: `Only ${available} eleven-seater table${available !== 1 ? 's' : ''} available. You requested ${validated.quantity}.` 
-          }
-        }
-      } else {
-        // Check 10-seater availability
-        const bookedElevenSeaters = existingTableBookings.filter(
-          (b) => b.table?.capacity === 11
-        ).length
-        const bookedTenSeaters = existingTableBookings.filter(
-          (b) => b.table?.capacity === 10
-        ).length
-        const available = inventorySettings.totalTables - bookedElevenSeaters - bookedTenSeaters
-
-        if (validated.quantity > available) {
-          return { 
-            error: `Only ${available} ten-seater table${available !== 1 ? 's' : ''} available. You requested ${validated.quantity}.` 
-          }
+      if (validated.quantity > available) {
+        return { 
+          error: `Only ${available} table${available !== 1 ? 's' : ''} available. You requested ${validated.quantity}.` 
         }
       }
     } else {
@@ -292,32 +272,14 @@ export async function createBooking(data: z.infer<typeof bookingSchema>) {
             type: "TABLE",
             status: { in: ["PAID", "PENDING"] },
           },
-          include: {
-            table: true,
-          },
         })
 
-        if (isElevenSeater) {
-          const txBookedElevenSeaters = txExistingTableBookings.filter(
-            (b) => b.table?.capacity === 11
-          ).length
-          const txAvailable = inventorySettings.maxElevenSeaterTables - txBookedElevenSeaters
+        // Sum up all booked tables by quantity
+        const txTotalBookedTables = txExistingTableBookings.reduce((sum, b) => sum + b.quantity, 0)
+        const txAvailable = inventorySettings.totalTables - txTotalBookedTables
 
-          if (validated.quantity > txAvailable) {
-            throw new Error(`INVENTORY_EXCEEDED:Only ${txAvailable} eleven-seater table${txAvailable !== 1 ? 's' : ''} available. You requested ${validated.quantity}.`)
-          }
-        } else {
-          const txBookedElevenSeaters = txExistingTableBookings.filter(
-            (b) => b.table?.capacity === 11
-          ).length
-          const txBookedTenSeaters = txExistingTableBookings.filter(
-            (b) => b.table?.capacity === 10
-          ).length
-          const txAvailable = inventorySettings.totalTables - txBookedElevenSeaters - txBookedTenSeaters
-
-          if (validated.quantity > txAvailable) {
-            throw new Error(`INVENTORY_EXCEEDED:Only ${txAvailable} ten-seater table${txAvailable !== 1 ? 's' : ''} available. You requested ${validated.quantity}.`)
-          }
+        if (validated.quantity > txAvailable) {
+          throw new Error(`INVENTORY_EXCEEDED:Only ${txAvailable} table${txAvailable !== 1 ? 's' : ''} available. You requested ${validated.quantity}.`)
         }
       } else {
         const txExistingSeatBookings = await tx.booking.findMany({
