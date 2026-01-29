@@ -24,11 +24,11 @@ export async function createBooking(data: z.infer<typeof bookingSchema>) {
     const isElevenSeater = isTable && validated.tableCapacity === 11
 
     if (isTable) {
-      // Count existing PAID table bookings
+      // Count existing PAID and PENDING table bookings to prevent overbooking
       const existingTableBookings = await prisma.booking.findMany({
         where: {
           type: "TABLE",
-          status: "PAID",
+          status: { in: ["PAID", "PENDING"] },
         },
         include: {
           table: true,
@@ -64,11 +64,11 @@ export async function createBooking(data: z.infer<typeof bookingSchema>) {
         }
       }
     } else {
-      // Check seat availability
+      // Check seat availability (count both PAID and PENDING to prevent overbooking)
       const existingSeatBookings = await prisma.booking.findMany({
         where: {
           type: "SEAT",
-          status: "PAID",
+          status: { in: ["PAID", "PENDING"] },
         },
       })
 
@@ -285,6 +285,57 @@ export async function createBooking(data: z.infer<typeof bookingSchema>) {
         }
       }
 
+      // Re-check inventory inside transaction to prevent race conditions
+      if (isTable) {
+        const txExistingTableBookings = await tx.booking.findMany({
+          where: {
+            type: "TABLE",
+            status: { in: ["PAID", "PENDING"] },
+          },
+          include: {
+            table: true,
+          },
+        })
+
+        if (isElevenSeater) {
+          const txBookedElevenSeaters = txExistingTableBookings.filter(
+            (b) => b.table?.capacity === 11
+          ).length
+          const txAvailable = inventorySettings.maxElevenSeaterTables - txBookedElevenSeaters
+
+          if (validated.quantity > txAvailable) {
+            throw new Error(`INVENTORY_EXCEEDED:Only ${txAvailable} eleven-seater table${txAvailable !== 1 ? 's' : ''} available. You requested ${validated.quantity}.`)
+          }
+        } else {
+          const txBookedElevenSeaters = txExistingTableBookings.filter(
+            (b) => b.table?.capacity === 11
+          ).length
+          const txBookedTenSeaters = txExistingTableBookings.filter(
+            (b) => b.table?.capacity === 10
+          ).length
+          const txAvailable = inventorySettings.totalTables - txBookedElevenSeaters - txBookedTenSeaters
+
+          if (validated.quantity > txAvailable) {
+            throw new Error(`INVENTORY_EXCEEDED:Only ${txAvailable} ten-seater table${txAvailable !== 1 ? 's' : ''} available. You requested ${validated.quantity}.`)
+          }
+        }
+      } else {
+        const txExistingSeatBookings = await tx.booking.findMany({
+          where: {
+            type: "SEAT",
+            status: { in: ["PAID", "PENDING"] },
+          },
+        })
+
+        const txBookedSeats = txExistingSeatBookings.reduce((sum, booking) => sum + booking.quantity, 0)
+        const txTotalAvailableSeats = (inventorySettings.totalTables * 10) + inventorySettings.maxElevenSeaterTables
+        const txAvailable = txTotalAvailableSeats - txBookedSeats
+
+        if (validated.quantity > txAvailable) {
+          throw new Error(`INVENTORY_EXCEEDED:Only ${txAvailable} seat${txAvailable !== 1 ? 's' : ''} available. You requested ${validated.quantity}.`)
+        }
+      }
+
       // Create booking - if free, mark as PAID immediately
       const newBooking = await tx.booking.create({
         data: {
@@ -320,8 +371,18 @@ export async function createBooking(data: z.infer<typeof bookingSchema>) {
         // Return null to indicate duplicate was detected
         return null
       }
+      if (error.message?.startsWith("INVENTORY_EXCEEDED:")) {
+        // Return the inventory error message
+        const errorMessage = error.message.replace("INVENTORY_EXCEEDED:", "")
+        return { inventoryError: errorMessage }
+      }
       throw error
     })
+
+    // If inventory exceeded error was detected in transaction, return error
+    if (booking && typeof booking === 'object' && 'inventoryError' in booking) {
+      return { error: booking.inventoryError }
+    }
 
     // If duplicate was detected in transaction, return existing booking
     if (!booking) {

@@ -24,11 +24,11 @@ export async function GET(request: NextRequest) {
     const maxElevenSeaterTables = inventorySettings.maxElevenSeaterTables
 
     if (type === "TABLE") {
-      // Count existing table bookings (only PAID ones count as taken)
+      // Count existing table bookings (both PAID and PENDING count as taken to prevent overbooking)
       const existingTableBookings = await prisma.booking.findMany({
         where: {
           type: "TABLE",
-          status: "PAID",
+          status: { in: ["PAID", "PENDING"] },
         },
         include: {
           table: true,
@@ -73,11 +73,11 @@ export async function GET(request: NextRequest) {
         })
       }
     } else if (type === "SEAT") {
-      // Count existing seat bookings (only PAID ones count as taken)
+      // Count existing seat bookings (both PAID and PENDING count as taken to prevent overbooking)
       const existingSeatBookings = await prisma.booking.findMany({
         where: {
           type: "SEAT",
-          status: "PAID",
+          status: { in: ["PAID", "PENDING"] },
         },
       })
 
