@@ -1,7 +1,5 @@
-import Link from "next/link"
 import Image from "next/image"
-import { Calendar, MapPin } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Calendar, MapPin, AlertCircle } from "lucide-react"
 import { UnifrakturMaguntia } from "next/font/google"
 import { prisma } from "@/lib/prisma"
 import { getEventSettings } from "@/lib/event-settings"
@@ -118,11 +116,10 @@ export default async function HomePage() {
                </p>
 
                <div className="flex flex-col sm:flex-row gap-4 pt-4 justify-center lg:justify-start">
-                  <Link href="#pricing">
-                    <Button className="h-14 px-8 bg-secondary text-primary hover:bg-white hover:scale-105 transition-all font-bold text-base rounded-lg shadow-[0_0_20px_rgba(255,198,41,0.2)]">
-                      Reserve Table
-                    </Button>
-                  </Link>
+                  <div className="inline-flex items-center gap-3 h-14 px-8 bg-white/10 backdrop-blur-sm border border-white/20 text-white font-bold text-base rounded-lg">
+                    <AlertCircle className="w-5 h-5 text-secondary" />
+                    <span>Event Sold Out</span>
+                  </div>
                </div>
             </div>
 
@@ -185,10 +182,31 @@ export default async function HomePage() {
         {/* --- PRICING SECTION --- */}
         <section id="pricing" className="py-24 bg-white bg-wavy-pattern relative">
           <div className="container max-w-6xl mx-auto px-4 relative z-10">
+            {/* Sold Out Banner */}
+            <div className="mb-12 p-6 bg-brand-red/10 border border-brand-red/20 rounded-2xl max-w-2xl mx-auto">
+              <div className="flex items-start gap-4">
+                <div className="p-2 bg-brand-red rounded-lg text-white flex-shrink-0">
+                  <AlertCircle className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-brand-red mb-2">Event Sold Out</h3>
+                  <p className="text-slate-600">
+                    Thank you for your overwhelming support! All tables and seats have been sold out.
+                  </p>
+                  <p className="text-slate-600 mt-2">
+                    For enquiries, please contact us at{" "}
+                    <a href="mailto:admin@acsoba.org" className="text-primary font-semibold hover:underline">
+                      admin@acsoba.org
+                    </a>
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <div className="text-center mb-16 space-y-4">
-               <h2 className="text-3xl md:text-5xl font-bold text-primary">Reserve Your Seat</h2>
+               <h2 className="text-3xl md:text-5xl font-bold text-primary">Ticket Prices</h2>
                <p className="text-slate-600 text-lg max-w-2xl mx-auto">
-                 Choose from 10-seater tables or individual seats.
+                 10-seater tables and individual seats.
                </p>
             </div>
             
@@ -232,11 +250,10 @@ export default async function HomePage() {
                     </li>
                   </ul>
                   
-                  <Link href="/book" className="block w-full">
-                    <Button className="w-full h-14 text-base font-bold bg-primary hover:bg-brand-red transition-colors rounded-xl shadow-lg hover:shadow-brand-red/25">
-                      Book 10-Seater
-                    </Button>
-                  </Link>
+                  <div className="w-full h-14 text-base font-bold bg-slate-100 text-slate-500 rounded-xl flex items-center justify-center gap-2">
+                    <AlertCircle className="w-5 h-5" />
+                    Sold Out
+                  </div>
                </div>
 
                {/* 2. Individual Seat Card */}
@@ -275,11 +292,10 @@ export default async function HomePage() {
                     </li>
                   </ul>
                   
-                  <Link href="/book" className="block w-full">
-                    <Button variant="outline" className="w-full h-14 text-base font-bold border-2 border-slate-200 text-slate-600 hover:text-primary hover:border-primary hover:bg-primary/5 rounded-xl transition-all">
-                      Book Individual Seat
-                    </Button>
-                  </Link>
+                  <div className="w-full h-14 text-base font-bold bg-slate-100 text-slate-500 rounded-xl flex items-center justify-center gap-2">
+                    <AlertCircle className="w-5 h-5" />
+                    Sold Out
+                  </div>
                </div>
             </div>
 
