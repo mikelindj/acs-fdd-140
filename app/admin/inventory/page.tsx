@@ -19,6 +19,7 @@ interface InventorySettings {
   seatPromoPrice: number | null
   tableMembersPrice: number | null
   seatMembersPrice: number | null
+  isSoldOut: boolean
 }
 
 interface Voucher {
@@ -317,9 +318,50 @@ export default function InventoryPage() {
         <h2 className="text-3xl font-semibold tracking-tight text-slate-900 mb-8">Inventory Management</h2>
 
         <div className="space-y-8">
+          {/* Sold Out Toggle */}
+          <div className={`rounded-lg border-2 p-6 shadow-sm ${inventory.isSoldOut ? 'border-brand-red bg-brand-red/5' : 'border-slate-200 bg-white'}`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-semibold text-slate-900">Event Status</h3>
+                <p className="text-sm text-slate-600 mt-1">
+                  {inventory.isSoldOut 
+                    ? "Bookings are currently disabled. The sold out banner is displayed on the website."
+                    : "Bookings are open and customers can purchase tables/seats."
+                  }
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setInventory({ ...inventory, isSoldOut: !inventory.isSoldOut })
+                }}
+                className={`relative inline-flex h-8 w-16 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+                  inventory.isSoldOut ? 'bg-brand-red' : 'bg-slate-300'
+                }`}
+              >
+                <span
+                  className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-lg transition-transform ${
+                    inventory.isSoldOut ? 'translate-x-9' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+            <div className="mt-4 flex items-center gap-3">
+              <span className={`px-3 py-1.5 rounded-full text-sm font-semibold ${
+                inventory.isSoldOut 
+                  ? 'bg-brand-red/20 text-brand-red' 
+                  : 'bg-green-100 text-green-800'
+              }`}>
+                {inventory.isSoldOut ? '🚫 SOLD OUT' : '✓ BOOKINGS OPEN'}
+              </span>
+              <span className="text-sm text-slate-500">
+                Click the toggle to {inventory.isSoldOut ? 'enable bookings' : 'mark as sold out'}
+              </span>
+            </div>
+          </div>
+
           {/* Inventory Settings */}
           <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="text-xl font-semibold text-slate-900 mb-6">Settings</h3>
+            <h3 className="text-xl font-semibold text-slate-900 mb-6">Pricing & Inventory</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <Label htmlFor="totalTables">Total Number of Tables</Label>

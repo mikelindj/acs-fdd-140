@@ -35,6 +35,7 @@ export async function GET() {
     const vipSeatMembersPrice = seatMembersPrice ? seatMembersPrice * 1.2 : null
 
     return NextResponse.json({
+      isSoldOut: settings.isSoldOut,
       table: {
         regular: {
           nonMember: tablePrice,
@@ -73,6 +74,7 @@ export async function GET() {
       const vipSeatPrice = seatPrice * 1.2
 
       return NextResponse.json({
+        isSoldOut: false,
         table: {
           regular: {
             nonMember: tablePrice,

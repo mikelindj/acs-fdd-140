@@ -165,6 +165,7 @@ model InventorySettings {
   seatPromoPrice         Decimal? @db.Decimal(10, 2)
   tableMembersPrice      Decimal? @db.Decimal(10, 2)
   seatMembersPrice       Decimal? @db.Decimal(10, 2)
+  isSoldOut              Boolean  @default(false)
   updatedAt              DateTime @updatedAt
 
   @@map("inventory_settings")

@@ -50,6 +50,7 @@ export async function PUT(request: NextRequest) {
       seatPromoPrice,
       tableMembersPrice,
       seatMembersPrice,
+      isSoldOut,
     } = body
 
     const settings = await prisma.inventorySettings.upsert({
@@ -63,6 +64,7 @@ export async function PUT(request: NextRequest) {
         seatPromoPrice: seatPromoPrice ?? undefined,
         tableMembersPrice: tableMembersPrice ?? undefined,
         seatMembersPrice: seatMembersPrice ?? undefined,
+        isSoldOut: isSoldOut ?? undefined,
       },
       create: {
         id: "inventory",
@@ -74,6 +76,7 @@ export async function PUT(request: NextRequest) {
         seatPromoPrice: seatPromoPrice ?? null,
         tableMembersPrice: tableMembersPrice ?? null,
         seatMembersPrice: seatMembersPrice ?? null,
+        isSoldOut: isSoldOut ?? false,
       },
     })
 

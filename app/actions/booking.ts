@@ -19,6 +19,11 @@ export async function createBooking(data: z.infer<typeof bookingSchema>) {
       return { error: "Inventory settings not configured" }
     }
 
+    // Check if event is sold out
+    if (inventorySettings.isSoldOut) {
+      return { error: "Bookings are currently closed. The event is sold out." }
+    }
+
     // Check inventory availability before proceeding
     const isTable = validated.type === 'TABLE'
     const isElevenSeater = isTable && validated.tableCapacity === 11
