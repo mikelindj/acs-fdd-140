@@ -77,6 +77,7 @@ model Booking {
   school          String?
   gradYear        Int?
   cuisine         String?         // Chinese, Chinese-Vegetarian, or Halal
+  assignedTableNumbers Json?       // string[] e.g. ["1", "2", "3"] for table assignment emails
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
   buyer           Guest           @relation("GuestBookings", fields: [buyerId], references: [id])
@@ -197,6 +198,7 @@ model EventSettings {
   id              String   @id @default("event")
   eventName       String?
   eventDate       DateTime?
+  eventTime       String?  // e.g. "7:00 PM" or "19:00"
   eventVenue      String?
   logoImageUrl    String?
   footerLogoImageUrl String?

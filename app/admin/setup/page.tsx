@@ -16,6 +16,7 @@ interface EventSettings {
   id: string
   eventName: string | null
   eventDate: string | null
+  eventTime: string | null
   eventVenue: string | null
   logoImageUrl: string | null
   footerLogoImageUrl: string | null
@@ -35,6 +36,7 @@ export default function SetupPage() {
     id: "event",
     eventName: null,
     eventDate: null,
+    eventTime: null,
     eventVenue: null,
     logoImageUrl: null,
     footerLogoImageUrl: null,
@@ -435,6 +437,22 @@ export default function SetupPage() {
                   })
                 }
                 className="mt-2"
+              />
+            </div>
+            <div>
+              <Label htmlFor="eventTime">Event Time</Label>
+              <Input
+                id="eventTime"
+                type="text"
+                value={settings.eventTime || ""}
+                onChange={(e) =>
+                  setSettings({
+                    ...settings,
+                    eventTime: e.target.value || null,
+                  })
+                }
+                className="mt-2"
+                placeholder="e.g., 7:00 PM or 19:00"
               />
             </div>
             <div>

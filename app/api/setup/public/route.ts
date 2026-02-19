@@ -11,6 +11,7 @@ export async function GET() {
       return NextResponse.json({
         eventName: null,
         eventDate: null,
+        eventTime: null,
         eventVenue: null,
         logoImageUrl: null,
         footerLogoImageUrl: null,
@@ -21,6 +22,7 @@ export async function GET() {
     return NextResponse.json({
       eventName: settings.eventName,
       eventDate: settings.eventDate,
+      eventTime: settings.eventTime ?? null,
       eventVenue: settings.eventVenue,
       logoImageUrl: settings.logoImageUrl ?? null,
       footerLogoImageUrl: settings.footerLogoImageUrl ?? null,
@@ -31,6 +33,7 @@ export async function GET() {
     return NextResponse.json({
       eventName: null,
       eventDate: null,
+      eventTime: null,
       eventVenue: null,
       logoImageUrl: null,
       footerLogoImageUrl: null,

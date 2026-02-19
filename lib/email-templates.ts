@@ -456,6 +456,133 @@ export async function getPurchaseConfirmationEmail(
   `
 }
 
+/**
+ * Table assignment email: same design as getBookingConfirmationEmail.
+ * Assigned table numbers are rendered very large so they cannot be missed.
+ */
+export async function getTableAssignmentEmail(
+  buyerName: string,
+  assignedTables: string[]
+): Promise<string> {
+  const { getEventSettings } = await import("@/lib/event-settings")
+  const eventSettings = await getEventSettings()
+  const eventName = eventSettings.eventName || "ACS Founders' Day Dinner"
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://140.acsoba.org"
+  const logoUrl = `${baseUrl}/images/acs-140-logo.jpg`
+  const footerLogoUrl = `${baseUrl}/images/acs-logo.png`
+
+  const eventDateFormatted = eventSettings.eventDate
+    ? new Date(eventSettings.eventDate).toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : ""
+
+  const eventTime = eventSettings.eventTime?.trim() || ""
+  const eventVenue = eventSettings.eventVenue || ""
+  const eventDetails = [eventDateFormatted, eventTime, eventVenue].filter(Boolean).join(", ")
+
+  // Very large table numbers so they cannot be missed
+  const tableNumbersHtml = assignedTables
+    .filter(Boolean)
+    .map(
+      (t) =>
+        `<span style="display: inline-block; font-size: 48px; font-weight: 800; color: #1e293b; margin: 8px; padding: 12px 20px; background: #f1f5f9; border-radius: 12px; min-width: 72px; text-align: center;">${t}</span>`
+    )
+    .join("")
+
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Your Table Assignment - ${eventName}</title>
+  <!--[if mso]>
+  <style type="text/css">
+    body, table, td {font-family: Arial, sans-serif !important;}
+  </style>
+  <![endif]-->
+</head>
+<body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #0f172a;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f8fafc;">
+    <tr>
+      <td align="center" style="padding: 0;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+          
+          <!-- Header with Logo and Wavy Pattern -->
+          <tr>
+            <td style="background-color: #f8fafc; background-image: url('${baseUrl}/images/wavy-pattern.jpg'); background-size: cover; background-position: center; background-repeat: repeat; border-bottom: 1px solid #e2e8f0; padding: 40px 20px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td align="center" style="background-color: #ffffff; padding: 20px; border-radius: 16px;">
+                    <img src="${logoUrl}" alt="ACS 140 Years" style="max-width: 200px; height: auto; display: block; margin: 0 auto;" />
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Main Content -->
+          <tr>
+            <td style="padding: 40px 30px; background-color: #ffffff;">
+              <h1 style="margin: 0 0 10px 0; font-size: 28px; font-weight: 700; color: #1e293b; line-height: 1.2;">Thank you, ${buyerName}, for your booking.</h1>
+              <p style="margin: 0 0 24px 0; font-size: 16px; color: #1e293b; line-height: 1.6;">You have been assigned the following tables:</p>
+              
+              <!-- Large table numbers -->
+              <div style="margin: 0 0 32px 0; text-align: center;">
+                ${tableNumbersHtml || `<span style="font-size: 18px; color: #64748b;">No table numbers entered.</span>`}
+              </div>
+
+              <p style="margin: 0 0 20px 0; font-size: 16px; color: #1e293b; line-height: 1.6;">We're looking forward to seeing you at our event:</p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f8fafc; border-radius: 12px; padding: 20px; margin: 0 0 24px 0; border: 1px solid #e2e8f0;">
+                <tr>
+                  <td>
+                    <p style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b;">${eventName}</p>
+                    ${eventDetails ? `<p style="margin: 8px 0 0 0; font-size: 16px; color: #475569;">${eventDetails}</p>` : ""}
+                  </td>
+                </tr>
+              </table>
+              <p style="margin: 0; font-size: 14px; color: #64748b; line-height: 1.6;">If you have any questions, please contact our support team.</p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #0f172a; padding: 40px 30px; text-align: center;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td align="center" style="padding-bottom: 20px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td align="center" style="vertical-align: middle;">
+                          <img src="${footerLogoUrl}" alt="ACS Logo" style="width: 40px; height: 40px; display: inline-block; vertical-align: middle; margin-right: 12px;" />
+                          <span style="font-size: 16px; font-weight: 700; color: #ffffff; vertical-align: middle;">ACS OBA</span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding-top: 20px; border-top: 1px solid #334155;">
+                    <p style="margin: 0; font-size: 14px; color: #cbd5e1; line-height: 1.6;">© 140th ACS OBA FOUNDERS DAY DINNER, 2026</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `
+}
+
 export async function getBroadcastEmail(subject: string, content: string): Promise<string> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://140.acsoba.org"
   const logoUrl = `${baseUrl}/images/acs-140-logo.jpg`

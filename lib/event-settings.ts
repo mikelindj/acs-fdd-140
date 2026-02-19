@@ -16,6 +16,7 @@ export async function getEventSettings() {
       id: "event",
       eventName: null,
       eventDate: null,
+      eventTime: null,
       eventVenue: null,
       logoImageUrl: null,
       footerLogoImageUrl: null,
@@ -30,6 +31,7 @@ export async function getEventSettings() {
         id: "event",
         eventName: null,
         eventDate: null,
+        eventTime: null,
         eventVenue: null,
       }
     }
@@ -38,6 +40,7 @@ export async function getEventSettings() {
       id: "event",
       eventName: null,
       eventDate: null,
+      eventTime: null,
       eventVenue: null,
     }
   }

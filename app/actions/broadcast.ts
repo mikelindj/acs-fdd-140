@@ -2,9 +2,22 @@
 
 import { prisma } from "@/lib/prisma"
 import { sendEmail } from "@/lib/email"
-import { getBroadcastEmail } from "@/lib/email-templates"
+import { getBroadcastEmail, getTableAssignmentEmail } from "@/lib/email-templates"
 import { broadcastSchema } from "@/lib/validations"
 import { z } from "zod"
+
+export async function getTableAssignmentPreview(
+  buyerName: string,
+  assignedTables: string[]
+): Promise<{ html?: string; error?: string }> {
+  try {
+    const html = await getTableAssignmentEmail(buyerName, assignedTables ?? [])
+    return { html }
+  } catch (err) {
+    console.error("Table assignment preview error:", err)
+    return { error: err instanceof Error ? err.message : "Failed to generate preview" }
+  }
+}
 
 export async function sendBroadcast(data: z.infer<typeof broadcastSchema>) {
   try {

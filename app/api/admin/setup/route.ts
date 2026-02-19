@@ -20,6 +20,7 @@ export async function GET() {
           id: "event",
           eventName: null,
           eventDate: null,
+          eventTime: null,
           eventVenue: null,
         },
       })
@@ -40,10 +41,11 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { eventName, eventDate, eventVenue } = body
+    const { eventName, eventDate, eventTime, eventVenue } = body
 
     // Normalize empty strings to null
     const normalizedEventName = eventName?.trim() || null
+    const normalizedEventTime = eventTime?.trim() || null
     const normalizedEventVenue = eventVenue?.trim() || null
     
     const settings = await prisma.eventSettings.upsert({
@@ -51,12 +53,14 @@ export async function PUT(request: NextRequest) {
       update: {
         eventName: normalizedEventName ?? undefined,
         eventDate: eventDate ? new Date(eventDate) : undefined,
+        eventTime: normalizedEventTime ?? undefined,
         eventVenue: normalizedEventVenue ?? undefined,
       },
       create: {
         id: "event",
         eventName: normalizedEventName,
         eventDate: eventDate ? new Date(eventDate) : null,
+        eventTime: normalizedEventTime,
         eventVenue: normalizedEventVenue,
       },
     })
