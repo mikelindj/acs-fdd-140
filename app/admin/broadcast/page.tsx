@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
-import { sendBroadcast, getTableAssignmentPreview, getBroadcastPreview, sendTableAssignmentEmails } from "@/app/actions/broadcast"
+import { sendBroadcast, getTableAssignmentPreview, getBroadcastPreview, sendTableAssignmentEmails, sendTableAssignmentTestEmail, sendBroadcastTestEmail } from "@/app/actions/broadcast"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -51,6 +51,12 @@ export default function BroadcastPage() {
   const [broadcastPreviewHtml, setBroadcastPreviewHtml] = useState<string | null>(null)
   const [broadcastPreviewLoading, setBroadcastPreviewLoading] = useState(false)
   const [broadcastPreviewMode, setBroadcastPreviewMode] = useState<"desktop" | "mobile">("desktop")
+  const [previewBuyerName, setPreviewBuyerName] = useState("")
+  const [previewAssignedTables, setPreviewAssignedTables] = useState<string[]>([])
+  const [previewTestEmail, setPreviewTestEmail] = useState("")
+  const [broadcastPreviewTestEmail, setBroadcastPreviewTestEmail] = useState("")
+  const [tableAssignmentTestSending, setTableAssignmentTestSending] = useState(false)
+  const [broadcastTestSending, setBroadcastTestSending] = useState(false)
   const [formData, setFormData] = useState({
     subject: "",
     content: "",
@@ -150,6 +156,8 @@ export default function BroadcastPage() {
         setPreviewOpen(false)
       } else if (result.html) {
         setPreviewHtml(result.html)
+        setPreviewBuyerName(order.buyerName)
+        setPreviewAssignedTables(tables)
       }
     } catch {
       toast({ title: "Preview failed", description: "Could not generate preview", variant: "destructive" })
@@ -429,23 +437,59 @@ export default function BroadcastPage() {
           <DialogHeader className="p-6 pb-0">
             <DialogTitle>Table assignment email preview</DialogTitle>
             {!previewLoading && previewHtml && (
-              <div className="flex gap-2 mt-3">
-                <Button
-                  type="button"
-                  variant={previewMode === "desktop" ? "default" : "outline"}
-                  className="h-8 px-3 text-xs"
-                  onClick={() => setPreviewMode("desktop")}
-                >
-                  Desktop
-                </Button>
-                <Button
-                  type="button"
-                  variant={previewMode === "mobile" ? "default" : "outline"}
-                  className="h-8 px-3 text-xs"
-                  onClick={() => setPreviewMode("mobile")}
-                >
-                  Mobile
-                </Button>
+              <div className="flex flex-wrap items-center gap-3 mt-3">
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant={previewMode === "desktop" ? "default" : "outline"}
+                    className="h-8 px-3 text-xs"
+                    onClick={() => setPreviewMode("desktop")}
+                  >
+                    Desktop
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={previewMode === "mobile" ? "default" : "outline"}
+                    className="h-8 px-3 text-xs"
+                    onClick={() => setPreviewMode("mobile")}
+                  >
+                    Mobile
+                  </Button>
+                </div>
+                <div className="flex items-center gap-2 flex-1 min-w-[200px]">
+                  <Label htmlFor="preview-test-email" className="text-xs whitespace-nowrap text-slate-600">Send test to</Label>
+                  <Input
+                    id="preview-test-email"
+                    type="email"
+                    placeholder="email@example.com"
+                    value={previewTestEmail}
+                    onChange={(e) => setPreviewTestEmail(e.target.value)}
+                    className="h-8 text-sm flex-1 max-w-[220px]"
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="h-8 px-3 text-xs"
+                    disabled={!previewTestEmail.trim() || tableAssignmentTestSending}
+                    onClick={async () => {
+                      const email = previewTestEmail.trim()
+                      if (!email) return
+                      setTableAssignmentTestSending(true)
+                      try {
+                        const result = await sendTableAssignmentTestEmail(email, previewBuyerName, previewAssignedTables)
+                        if (result.error) {
+                          toast({ title: "Test send failed", description: result.error, variant: "destructive" })
+                        } else {
+                          toast({ title: "Test sent", description: `Table assignment email sent to ${email}` })
+                        }
+                      } finally {
+                        setTableAssignmentTestSending(false)
+                      }
+                    }}
+                  >
+                    {tableAssignmentTestSending ? "Sending…" : "Send test"}
+                  </Button>
+                </div>
               </div>
             )}
           </DialogHeader>
@@ -489,23 +533,59 @@ export default function BroadcastPage() {
           <DialogHeader className="p-6 pb-0">
             <DialogTitle>Broadcast email preview</DialogTitle>
             {!broadcastPreviewLoading && broadcastPreviewHtml && (
-              <div className="flex gap-2 mt-3">
-                <Button
-                  type="button"
-                  variant={broadcastPreviewMode === "desktop" ? "default" : "outline"}
-                  className="h-8 px-3 text-xs"
-                  onClick={() => setBroadcastPreviewMode("desktop")}
-                >
-                  Desktop
-                </Button>
-                <Button
-                  type="button"
-                  variant={broadcastPreviewMode === "mobile" ? "default" : "outline"}
-                  className="h-8 px-3 text-xs"
-                  onClick={() => setBroadcastPreviewMode("mobile")}
-                >
-                  Mobile
-                </Button>
+              <div className="flex flex-wrap items-center gap-3 mt-3">
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant={broadcastPreviewMode === "desktop" ? "default" : "outline"}
+                    className="h-8 px-3 text-xs"
+                    onClick={() => setBroadcastPreviewMode("desktop")}
+                  >
+                    Desktop
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={broadcastPreviewMode === "mobile" ? "default" : "outline"}
+                    className="h-8 px-3 text-xs"
+                    onClick={() => setBroadcastPreviewMode("mobile")}
+                  >
+                    Mobile
+                  </Button>
+                </div>
+                <div className="flex items-center gap-2 flex-1 min-w-[200px]">
+                  <Label htmlFor="broadcast-test-email" className="text-xs whitespace-nowrap text-slate-600">Send test to</Label>
+                  <Input
+                    id="broadcast-test-email"
+                    type="email"
+                    placeholder="email@example.com"
+                    value={broadcastPreviewTestEmail}
+                    onChange={(e) => setBroadcastPreviewTestEmail(e.target.value)}
+                    className="h-8 text-sm flex-1 max-w-[220px]"
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="h-8 px-3 text-xs"
+                    disabled={!broadcastPreviewTestEmail.trim() || broadcastTestSending}
+                    onClick={async () => {
+                      const email = broadcastPreviewTestEmail.trim()
+                      if (!email) return
+                      setBroadcastTestSending(true)
+                      try {
+                        const result = await sendBroadcastTestEmail(email, formData.subject, textToHtml(formData.content))
+                        if (result.error) {
+                          toast({ title: "Test send failed", description: result.error, variant: "destructive" })
+                        } else {
+                          toast({ title: "Test sent", description: `Broadcast email sent to ${email}` })
+                        }
+                      } finally {
+                        setBroadcastTestSending(false)
+                      }
+                    }}
+                  >
+                    {broadcastTestSending ? "Sending…" : "Send test"}
+                  </Button>
+                </div>
               </div>
             )}
           </DialogHeader>

@@ -34,6 +34,50 @@ export async function getBroadcastPreview(
 
 const TABLE_ASSIGNMENT_EMAIL_SUBJECT = "Your Table Assignment - ACS Founders' Day Dinner"
 
+function isValidEmail(s: string): boolean {
+  return typeof s === "string" && s.length > 0 && s.includes("@") && s.includes(".")
+}
+
+export async function sendTableAssignmentTestEmail(
+  to: string,
+  buyerName: string,
+  assignedTables: string[]
+): Promise<{ success?: true; error?: string }> {
+  if (!isValidEmail(to)) return { error: "Please enter a valid email address." }
+  try {
+    const html = await getTableAssignmentEmail(buyerName, assignedTables ?? [])
+    await sendEmail({
+      to: to.trim(),
+      subject: `[TEST] ${TABLE_ASSIGNMENT_EMAIL_SUBJECT}`,
+      html,
+    })
+    return { success: true }
+  } catch (err) {
+    console.error("Table assignment test send error:", err)
+    return { error: err instanceof Error ? err.message : "Failed to send test email" }
+  }
+}
+
+export async function sendBroadcastTestEmail(
+  to: string,
+  subject: string,
+  content: string
+): Promise<{ success?: true; error?: string }> {
+  if (!isValidEmail(to)) return { error: "Please enter a valid email address." }
+  try {
+    const html = await getBroadcastEmail(subject || "Preview", content || "")
+    await sendEmail({
+      to: to.trim(),
+      subject: `[TEST] ${subject || "Broadcast"}`,
+      html,
+    })
+    return { success: true }
+  } catch (err) {
+    console.error("Broadcast test send error:", err)
+    return { error: err instanceof Error ? err.message : "Failed to send test email" }
+  }
+}
+
 export async function sendTableAssignmentEmails(): Promise<
   | { success: true; sent: number; failed: number; results: { email: string; success: boolean; error?: string }[] }
   | { error: string }

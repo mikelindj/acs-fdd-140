@@ -1,3 +1,11 @@
+const EMAIL_PUBLIC_FALLBACK = "https://140.acsoba.org"
+
+/** Base URL for links/images in emails. Never use localhost so images load for all recipients. */
+function getEmailBaseUrl(): string {
+  const url = process.env.NEXT_PUBLIC_SITE_URL || EMAIL_PUBLIC_FALLBACK
+  return /localhost/i.test(url) ? EMAIL_PUBLIC_FALLBACK : url
+}
+
 export async function getBookingConfirmationEmail(buyerName: string, bookingDetails?: {
   type: string;
   quantity: number;
@@ -7,7 +15,7 @@ export async function getBookingConfirmationEmail(buyerName: string, bookingDeta
   const { getEventSettings } = await import("@/lib/event-settings")
   const eventSettings = await getEventSettings()
   const eventName = eventSettings.eventName || "ACS Founders' Day Dinner"
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://140.acsoba.org"
+  const baseUrl = getEmailBaseUrl()
   const logoUrl = `${baseUrl}/images/acs-140-logo.jpg`
   const footerLogoUrl = `${baseUrl}/images/acs-logo.png`
   
@@ -130,10 +138,10 @@ export async function getInviteEmail(inviteCode: string, buyerName: string, gues
   const { getEventSettings } = await import("@/lib/event-settings")
   const eventSettings = await getEventSettings()
   const eventName = eventSettings.eventName || "ACS Founders' Day Dinner"
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://140.acsoba.org"
+const baseUrl = getEmailBaseUrl()
   const logoUrl = `${baseUrl}/images/acs-140-logo.jpg`
   const footerLogoUrl = `${baseUrl}/images/acs-logo.png`
-  
+
   const url = `${baseUrl}/invite?code=${inviteCode}`
   return `
 <!DOCTYPE html>
@@ -239,7 +247,7 @@ export async function getPurchaseConfirmationEmail(
   const { getEventSettings } = await import("@/lib/event-settings")
   const eventSettings = await getEventSettings()
   const eventName = eventSettings.eventName || "ACS Founders' Day Dinner"
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://140.acsoba.org"
+  const baseUrl = getEmailBaseUrl()
   const logoUrl = `${baseUrl}/images/acs-140-logo.jpg`
   const footerLogoUrl = `${baseUrl}/images/acs-logo.png`
 
@@ -467,7 +475,7 @@ export async function getTableAssignmentEmail(
   const { getEventSettings } = await import("@/lib/event-settings")
   const eventSettings = await getEventSettings()
   const eventName = eventSettings.eventName || "ACS Founders' Day Dinner"
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://140.acsoba.org"
+  const baseUrl = getEmailBaseUrl()
   const logoUrl = `${baseUrl}/images/acs-140-logo.jpg`
   const footerLogoUrl = `${baseUrl}/images/acs-logo.png`
 
@@ -623,7 +631,7 @@ export async function getTableAssignmentEmail(
 }
 
 export async function getBroadcastEmail(subject: string, content: string): Promise<string> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://140.acsoba.org"
+  const baseUrl = getEmailBaseUrl()
   const logoUrl = `${baseUrl}/images/acs-140-logo.jpg`
   const footerLogoUrl = `${baseUrl}/images/acs-logo.png`
   
