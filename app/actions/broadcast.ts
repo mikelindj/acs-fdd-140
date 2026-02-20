@@ -1,10 +1,30 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { sendEmail } from "@/lib/email"
-import { getBroadcastEmail, getTableAssignmentEmail } from "@/lib/email-templates"
+import { sendEmail, prepareInlineImages } from "@/lib/email"
+import { getBroadcastEmail, getTableAssignmentEmail, getEmailBaseUrl } from "@/lib/email-templates"
 import { broadcastSchema } from "@/lib/validations"
 import { z } from "zod"
+
+function getTableAssignmentImageUrls(): { url: string; cid: string; filename: string }[] {
+  const base = getEmailBaseUrl()
+  return [
+    { url: `${base}/images/acs-140-logo.jpg`, cid: "acs140logo", filename: "acs-140-logo.jpg" },
+    { url: `${base}/images/acs-logo.png`, cid: "acslogo", filename: "acs-logo.png" },
+    { url: `${base}/images/wavy-pattern.jpg`, cid: "wavypattern", filename: "wavy-pattern.jpg" },
+    { url: "https://acsoba.org/wp-content/uploads/2026/01/140polo-4.png", cid: "polotee", filename: "140polo-4.png" },
+    { url: "https://acsoba.org/wp-content/uploads/2026/02/1.jpeg", cid: "cardecal", filename: "cardecal.jpeg" },
+  ]
+}
+
+function getBroadcastImageUrls(): { url: string; cid: string; filename: string }[] {
+  const base = getEmailBaseUrl()
+  return [
+    { url: `${base}/images/acs-140-logo.jpg`, cid: "acs140logo", filename: "acs-140-logo.jpg" },
+    { url: `${base}/images/acs-logo.png`, cid: "acslogo", filename: "acs-logo.png" },
+    { url: `${base}/images/wavy-pattern.jpg`, cid: "wavypattern", filename: "wavy-pattern.jpg" },
+  ]
+}
 
 export async function getTableAssignmentPreview(
   buyerName: string,
@@ -46,10 +66,12 @@ export async function sendTableAssignmentTestEmail(
   if (!isValidEmail(to)) return { error: "Please enter a valid email address." }
   try {
     const html = await getTableAssignmentEmail(buyerName, assignedTables ?? [])
+    const { html: htmlWithCid, attachments } = await prepareInlineImages(html, getTableAssignmentImageUrls())
     await sendEmail({
       to: to.trim(),
       subject: `[TEST] ${TABLE_ASSIGNMENT_EMAIL_SUBJECT}`,
-      html,
+      html: htmlWithCid,
+      attachments,
     })
     return { success: true }
   } catch (err) {
@@ -66,10 +88,12 @@ export async function sendBroadcastTestEmail(
   if (!isValidEmail(to)) return { error: "Please enter a valid email address." }
   try {
     const html = await getBroadcastEmail(subject || "Preview", content || "")
+    const { html: htmlWithCid, attachments } = await prepareInlineImages(html, getBroadcastImageUrls())
     await sendEmail({
       to: to.trim(),
       subject: `[TEST] ${subject || "Broadcast"}`,
-      html,
+      html: htmlWithCid,
+      attachments,
     })
     return { success: true }
   } catch (err) {
@@ -100,7 +124,8 @@ export async function sendTableAssignmentEmails(): Promise<
       const buyerName = b.buyer?.name ?? "Guest"
       try {
         const html = await getTableAssignmentEmail(buyerName, assignedTables)
-        await sendEmail({ to: email, subject: TABLE_ASSIGNMENT_EMAIL_SUBJECT, html })
+        const { html: htmlWithCid, attachments } = await prepareInlineImages(html, getTableAssignmentImageUrls())
+        await sendEmail({ to: email, subject: TABLE_ASSIGNMENT_EMAIL_SUBJECT, html: htmlWithCid, attachments })
         results.push({ email, success: true })
       } catch (err) {
         results.push({ email, success: false, error: err instanceof Error ? err.message : String(err) })
@@ -159,14 +184,18 @@ export async function sendBroadcast(data: z.infer<typeof broadcastSchema>) {
       recipients = unseated.filter(g => g.email) as Array<{ email: string; name: string }>
     }
 
-    // Send emails
+    // Send emails (prepare HTML + inline images once, reuse for all recipients)
+    const broadcastHtml = await getBroadcastEmail(validated.subject, validated.content)
+    const { html: htmlWithCid, attachments } = await prepareInlineImages(broadcastHtml, getBroadcastImageUrls())
+
     const results = []
     for (const recipient of recipients) {
       try {
         await sendEmail({
           to: recipient.email!,
           subject: validated.subject,
-          html: await getBroadcastEmail(validated.subject, validated.content),
+          html: htmlWithCid,
+          attachments,
         })
         results.push({ email: recipient.email, success: true })
       } catch (error) {

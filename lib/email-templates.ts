@@ -1,7 +1,7 @@
 const EMAIL_PUBLIC_FALLBACK = "https://140.acsoba.org"
 
 /** Base URL for links/images in emails. Never use localhost so images load for all recipients. */
-function getEmailBaseUrl(): string {
+export function getEmailBaseUrl(): string {
   const url = process.env.NEXT_PUBLIC_SITE_URL || EMAIL_PUBLIC_FALLBACK
   return /localhost/i.test(url) ? EMAIL_PUBLIC_FALLBACK : url
 }
