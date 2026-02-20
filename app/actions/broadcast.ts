@@ -19,6 +19,62 @@ export async function getTableAssignmentPreview(
   }
 }
 
+export async function getBroadcastPreview(
+  subject: string,
+  content: string
+): Promise<{ html?: string; error?: string }> {
+  try {
+    const html = await getBroadcastEmail(subject || "Preview", content || "")
+    return { html }
+  } catch (err) {
+    console.error("Broadcast preview error:", err)
+    return { error: err instanceof Error ? err.message : "Failed to generate preview" }
+  }
+}
+
+const TABLE_ASSIGNMENT_EMAIL_SUBJECT = "Your Table Assignment - ACS Founders' Day Dinner"
+
+export async function sendTableAssignmentEmails(): Promise<
+  | { success: true; sent: number; failed: number; results: { email: string; success: boolean; error?: string }[] }
+  | { error: string }
+> {
+  try {
+    const bookings = await prisma.booking.findMany({
+      where: { status: "PAID" },
+      include: { buyer: { select: { email: true, name: true } } },
+    })
+
+    const results: { email: string; success: boolean; error?: string }[] = []
+    for (const b of bookings) {
+      const email = b.buyer?.email
+      if (!email) {
+        results.push({ email: "(no email)", success: false, error: "Buyer has no email" })
+        continue
+      }
+      const raw = b.assignedTableNumbers as string[] | null
+      const assignedTables = Array.isArray(raw) ? raw : []
+      const buyerName = b.buyer?.name ?? "Guest"
+      try {
+        const html = await getTableAssignmentEmail(buyerName, assignedTables)
+        await sendEmail({ to: email, subject: TABLE_ASSIGNMENT_EMAIL_SUBJECT, html })
+        results.push({ email, success: true })
+      } catch (err) {
+        results.push({ email, success: false, error: err instanceof Error ? err.message : String(err) })
+      }
+    }
+
+    return {
+      success: true,
+      sent: results.filter((r) => r.success).length,
+      failed: results.filter((r) => !r.success).length,
+      results,
+    }
+  } catch (err) {
+    console.error("Send table assignment emails error:", err)
+    return { error: err instanceof Error ? err.message : "Failed to send table assignment emails" }
+  }
+}
+
 export async function sendBroadcast(data: z.infer<typeof broadcastSchema>) {
   try {
     const validated = broadcastSchema.parse(data)

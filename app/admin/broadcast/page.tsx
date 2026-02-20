@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
-import { sendBroadcast, getTableAssignmentPreview } from "@/app/actions/broadcast"
+import { sendBroadcast, getTableAssignmentPreview, getBroadcastPreview, sendTableAssignmentEmails } from "@/app/actions/broadcast"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -46,6 +46,11 @@ export default function BroadcastPage() {
   const [previewLoading, setPreviewLoading] = useState(false)
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop")
   const [savingId, setSavingId] = useState<string | null>(null)
+  const [sendingTableAssignment, setSendingTableAssignment] = useState(false)
+  const [broadcastPreviewOpen, setBroadcastPreviewOpen] = useState(false)
+  const [broadcastPreviewHtml, setBroadcastPreviewHtml] = useState<string | null>(null)
+  const [broadcastPreviewLoading, setBroadcastPreviewLoading] = useState(false)
+  const [broadcastPreviewMode, setBroadcastPreviewMode] = useState<"desktop" | "mobile">("desktop")
   const [formData, setFormData] = useState({
     subject: "",
     content: "",
@@ -232,6 +237,30 @@ export default function BroadcastPage() {
         <section className="mb-12">
           <h2 className="text-3xl font-semibold tracking-tight text-slate-900 mb-4">Table Assignment Emails</h2>
           <p className="text-slate-600 mb-6">Enter assigned table numbers for each order, then preview the email before sending.</p>
+          <div className="mb-6 flex items-center gap-3">
+            <Button
+              type="button"
+              disabled={ordersLoading || orders.length === 0 || sendingTableAssignment}
+              onClick={async () => {
+                setSendingTableAssignment(true)
+                try {
+                  const result = await sendTableAssignmentEmails()
+                  if ("error" in result) {
+                    toast({ title: "Error", description: result.error, variant: "destructive" })
+                    return
+                  }
+                  toast({
+                    title: "Table assignment emails sent",
+                    description: `Sent: ${result.sent}, Failed: ${result.failed}`,
+                  })
+                } finally {
+                  setSendingTableAssignment(false)
+                }
+              }}
+            >
+              {sendingTableAssignment ? "Sending…" : "Send table assignment via emails"}
+            </Button>
+          </div>
           {ordersLoading ? (
             <div className="rounded-lg border border-slate-200 bg-white p-8 shadow-sm text-slate-500">Loading orders...</div>
           ) : orders.length === 0 ? (
@@ -352,12 +381,37 @@ export default function BroadcastPage() {
               />
             </div>
 
+            <div className="flex gap-3">
             <Button
               type="submit"
               disabled={loading}
             >
               {loading ? "Sending..." : "Send Broadcast"}
             </Button>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={loading}
+              onClick={async () => {
+                setBroadcastPreviewOpen(true)
+                setBroadcastPreviewLoading(true)
+                setBroadcastPreviewHtml(null)
+                try {
+                  const result = await getBroadcastPreview(formData.subject, formData.content)
+                  if (result.error) {
+                    toast({ title: "Preview error", description: result.error, variant: "destructive" })
+                    setBroadcastPreviewOpen(false)
+                    return
+                  }
+                  if (result.html) setBroadcastPreviewHtml(result.html)
+                } finally {
+                  setBroadcastPreviewLoading(false)
+                }
+              }}
+            >
+              Preview
+            </Button>
+          </div>
           </form>
         </div>
       </div>
@@ -365,7 +419,13 @@ export default function BroadcastPage() {
 
       {/* Preview dialog */}
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0">
+        <DialogContent
+          className={`max-h-[90vh] flex flex-col p-0 ${
+            previewMode === "mobile"
+              ? "w-[95vw] max-w-[440px]"
+              : "w-[92vw] max-w-6xl"
+          }`}
+        >
           <DialogHeader className="p-6 pb-0">
             <DialogTitle>Table assignment email preview</DialogTitle>
             {!previewLoading && previewHtml && (
@@ -398,7 +458,7 @@ export default function BroadcastPage() {
                 className={
                   previewMode === "mobile"
                     ? "w-[375px] max-w-full border-2 border-slate-300 rounded-xl overflow-hidden shadow-xl bg-slate-200"
-                    : "w-full max-w-[600px]"
+                    : "w-full min-w-0"
                 }
               >
                 <iframe
@@ -406,6 +466,66 @@ export default function BroadcastPage() {
                   srcDoc={previewHtml}
                   className={
                     previewMode === "mobile"
+                      ? "w-[375px] h-[70vh] border-0 bg-white block"
+                      : "w-full h-[70vh] border border-slate-200 rounded-lg bg-white"
+                  }
+                  sandbox="allow-same-origin"
+                />
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Broadcast preview dialog */}
+      <Dialog open={broadcastPreviewOpen} onOpenChange={setBroadcastPreviewOpen}>
+        <DialogContent
+          className={`max-h-[90vh] flex flex-col p-0 ${
+            broadcastPreviewMode === "mobile"
+              ? "w-[95vw] max-w-[440px]"
+              : "w-[92vw] max-w-6xl"
+          }`}
+        >
+          <DialogHeader className="p-6 pb-0">
+            <DialogTitle>Broadcast email preview</DialogTitle>
+            {!broadcastPreviewLoading && broadcastPreviewHtml && (
+              <div className="flex gap-2 mt-3">
+                <Button
+                  type="button"
+                  variant={broadcastPreviewMode === "desktop" ? "default" : "outline"}
+                  className="h-8 px-3 text-xs"
+                  onClick={() => setBroadcastPreviewMode("desktop")}
+                >
+                  Desktop
+                </Button>
+                <Button
+                  type="button"
+                  variant={broadcastPreviewMode === "mobile" ? "default" : "outline"}
+                  className="h-8 px-3 text-xs"
+                  onClick={() => setBroadcastPreviewMode("mobile")}
+                >
+                  Mobile
+                </Button>
+              </div>
+            )}
+          </DialogHeader>
+          <div className="flex-1 min-h-0 p-6 pt-4 flex justify-center">
+            {broadcastPreviewLoading && (
+              <div className="flex items-center justify-center py-12 text-slate-500">Generating preview...</div>
+            )}
+            {!broadcastPreviewLoading && broadcastPreviewHtml && (
+              <div
+                className={
+                  broadcastPreviewMode === "mobile"
+                    ? "w-[375px] max-w-full border-2 border-slate-300 rounded-xl overflow-hidden shadow-xl bg-slate-200"
+                    : "w-full min-w-0"
+                }
+              >
+                <iframe
+                  title="Broadcast email preview"
+                  srcDoc={broadcastPreviewHtml}
+                  className={
+                    broadcastPreviewMode === "mobile"
                       ? "w-[375px] h-[70vh] border-0 bg-white block"
                       : "w-full h-[70vh] border border-slate-200 rounded-lg bg-white"
                   }

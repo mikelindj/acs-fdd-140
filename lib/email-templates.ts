@@ -88,7 +88,7 @@ export async function getBookingConfirmationEmail(buyerName: string, bookingDeta
               ` : ''}
 
               <p style="margin: 0 0 30px 0; font-size: 16px; color: #1e293b; line-height: 1.6;">Table assignments will be arranged by our team based on the batch information you provided. You will receive further details closer to the event date.</p>
-              <p style="margin: 0; font-size: 14px; color: #64748b; line-height: 1.6;">If you have any questions, please contact our support team.</p>
+              <p style="margin: 0; font-size: 14px; color: #64748b; line-height: 1.6;">If you have any questions, please contact our support team at admin@acsoba.org.</p>
             </td>
           </tr>
 
@@ -500,6 +500,18 @@ export async function getTableAssignmentEmail(
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>Your Table Assignment - ${eventName}</title>
+  <style type="text/css">
+    @media (max-width: 600px) {
+      .merchandise-items td {
+        display: block !important;
+        width: 100% !important;
+        box-sizing: border-box;
+      }
+      .merchandise-items td + td {
+        padding-top: 24px !important;
+      }
+    }
+  </style>
   <!--[if mso]>
   <style type="text/css">
     body, table, td {font-family: Arial, sans-serif !important;}
@@ -529,15 +541,8 @@ export async function getTableAssignmentEmail(
           <tr>
             <td style="padding: 40px 30px; background-color: #ffffff;">
               <h1 style="margin: 0 0 10px 0; font-size: 28px; font-weight: 700; color: #1e293b; line-height: 1.2;">Thank you, ${buyerName}, for your booking.</h1>
-              <p style="margin: 0 0 24px 0; font-size: 16px; color: #1e293b; line-height: 1.6;">You have been assigned the following tables:</p>
-              
-              <!-- Large table numbers -->
-              <div style="margin: 0 0 32px 0; text-align: center;">
-                ${tableNumbersHtml || `<span style="font-size: 18px; color: #64748b;">No table numbers entered.</span>`}
-              </div>
-
               <p style="margin: 0 0 20px 0; font-size: 16px; color: #1e293b; line-height: 1.6;">We're looking forward to seeing you at our event:</p>
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f8fafc; border-radius: 12px; padding: 20px; margin: 0 0 24px 0; border: 1px solid #e2e8f0;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f8fafc; border-radius: 12px; padding: 20px; margin: 0 0 32px 0; border: 1px solid #e2e8f0;">
                 <tr>
                   <td>
                     <p style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b;">${eventName}</p>
@@ -545,7 +550,41 @@ export async function getTableAssignmentEmail(
                   </td>
                 </tr>
               </table>
-              <p style="margin: 0; font-size: 14px; color: #64748b; line-height: 1.6;">If you have any questions, please contact our support team.</p>
+
+              <p style="margin: 0 0 24px 0; font-size: 16px; color: #1e293b; line-height: 1.6;">You have been assigned the following tables:</p>
+              <!-- Large table numbers -->
+              <div style="margin: 0 0 32px 0; text-align: center;">
+                ${tableNumbersHtml || `<span style="font-size: 18px; color: #64748b;">No table numbers entered.</span>`}
+              </div>
+
+              <p style="margin: 0 0 24px 0; font-size: 14px; color: #64748b; line-height: 1.6;">If you have any questions, please contact our support team at admin@acsoba.org.</p>
+
+              <!-- Merchandise Section -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
+                <tr>
+                  <td>
+                    <h3 style="margin: 0 0 20px 0; font-size: 18px; font-weight: 600; color: #1e293b;">Have you gotten your ACS140 Limited Edition Merchandise?</h3>
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="merchandise-items" style="border-collapse: collapse;">
+                      <tr>
+                        <td style="width: 50%; vertical-align: top; padding-right: 12px; padding-bottom: 16px;">
+                          <a href="https://acsoba.org/product/140th-founders-day-polo-tee-commemorative-logo-and-classic-colours/" style="text-decoration: none; color: inherit;">
+                            <img src="https://acsoba.org/wp-content/uploads/2026/01/140polo-4.png" alt="ACS140 Polo Tee" style="max-width: 100%; width: 100%; height: auto; display: block; border-radius: 12px; border: 1px solid #e2e8f0;" />
+                            <p style="margin: 12px 0 0 0; font-size: 16px; font-weight: 600; color: #1e293b;">ACS140 Polo Tee (BACK IN STOCK)</p>
+                            <p style="margin: 4px 0 0 0; font-size: 14px; color: #64748b;">Shop now →</p>
+                          </a>
+                        </td>
+                        <td style="width: 50%; vertical-align: top; padding-left: 12px; padding-bottom: 16px;">
+                          <a href="https://acsoba.org/product/acs140-decal/" style="text-decoration: none; color: inherit;">
+                            <img src="https://acsoba.org/wp-content/uploads/2026/02/1.jpeg" alt="ACS140 Car Decal" style="max-width: 100%; width: 100%; height: auto; display: block; border-radius: 12px; border: 1px solid #e2e8f0;" />
+                            <p style="margin: 12px 0 0 0; font-size: 16px; font-weight: 600; color: #1e293b;">ACS140 Car Decal (New)</p>
+                            <p style="margin: 4px 0 0 0; font-size: 14px; color: #64748b;">Shop now →</p>
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
 
