@@ -581,13 +581,7 @@ export async function getTableAssignmentEmail(
                             <p style="margin: 4px 0 0 0; font-size: 14px; color: #64748b;">Shop now →</p>
                           </a>
                         </td>
-                        <td style="width: 50%; vertical-align: top; padding-left: 12px; padding-bottom: 16px;">
-                          <a href="https://acsoba.org/product/acs140-decal/" style="text-decoration: none; color: inherit;">
-                            <img src="https://acsoba.org/wp-content/uploads/2026/02/1.jpeg" alt="ACS140 Car Decal" style="max-width: 100%; width: 100%; height: auto; display: block; border-radius: 12px; border: 1px solid #e2e8f0;" />
-                            <p style="margin: 12px 0 0 0; font-size: 16px; font-weight: 600; color: #1e293b;">ACS140 Car Decal (New)</p>
-                            <p style="margin: 4px 0 0 0; font-size: 14px; color: #64748b;">Shop now →</p>
-                          </a>
-                        </td>
+                        <!-- Blank merchandise cell for future content -->
                       </tr>
                     </table>
                   </td>
