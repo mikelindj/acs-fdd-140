@@ -13,7 +13,6 @@ function getTableAssignmentImageUrls(): { url: string; cid: string; filename: st
     { url: `${base}/images/acs-logo.png`, cid: "acslogo", filename: "acs-logo.png" },
     { url: `${base}/images/wavy-pattern.jpg`, cid: "wavypattern", filename: "wavy-pattern.jpg" },
     { url: "https://acsoba.org/wp-content/uploads/2026/01/140polo-4.png", cid: "polotee", filename: "140polo-4.png" },
-    { url: "https://acsoba.org/wp-content/uploads/2026/02/1.jpeg", cid: "cardecal", filename: "cardecal.jpeg" },
   ]
 }
 
@@ -141,6 +140,31 @@ export async function sendTableAssignmentEmails(): Promise<
   } catch (err) {
     console.error("Send table assignment emails error:", err)
     return { error: err instanceof Error ? err.message : "Failed to send table assignment emails" }
+  }
+}
+
+/** Send table assignment email for a single booking to its actual recipient (override or buyer email). */
+export async function sendTableAssignmentEmailForBooking(
+  bookingId: string
+): Promise<{ success?: true; email?: string; error?: string }> {
+  try {
+    const b = await prisma.booking.findUnique({
+      where: { id: bookingId, status: "PAID" },
+      include: { buyer: { select: { email: true, name: true } } },
+    })
+    if (!b) return { error: "Booking not found or not paid" }
+    const email = b.broadcastOverrideEmail ?? b.buyer?.email ?? null
+    if (!email) return { error: "No email (set buyer or override email)" }
+    const raw = b.assignedTableNumbers as string[] | null
+    const assignedTables = Array.isArray(raw) ? raw : []
+    const buyerName = b.broadcastOverrideName ?? b.buyer?.name ?? "Guest"
+    const html = await getTableAssignmentEmail(buyerName, assignedTables)
+    const { html: htmlWithCid, attachments } = await prepareInlineImages(html, getTableAssignmentImageUrls())
+    await sendEmail({ to: email, subject: TABLE_ASSIGNMENT_EMAIL_SUBJECT, html: htmlWithCid, attachments })
+    return { success: true, email }
+  } catch (err) {
+    console.error("Send single table assignment error:", err)
+    return { error: err instanceof Error ? err.message : "Failed to send" }
   }
 }
 

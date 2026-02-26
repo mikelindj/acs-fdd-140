@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
-import { sendBroadcast, getTableAssignmentPreview, getBroadcastPreview, sendTableAssignmentEmails, sendTableAssignmentTestEmail, sendBroadcastTestEmail } from "@/app/actions/broadcast"
+import { sendBroadcast, getTableAssignmentPreview, getBroadcastPreview, sendTableAssignmentEmails, sendTableAssignmentTestEmail, sendBroadcastTestEmail, sendTableAssignmentEmailForBooking } from "@/app/actions/broadcast"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -54,9 +54,11 @@ export default function BroadcastPage() {
   const [broadcastPreviewHtml, setBroadcastPreviewHtml] = useState<string | null>(null)
   const [broadcastPreviewLoading, setBroadcastPreviewLoading] = useState(false)
   const [broadcastPreviewMode, setBroadcastPreviewMode] = useState<"desktop" | "mobile">("desktop")
+  const [previewOrderId, setPreviewOrderId] = useState<string | null>(null)
   const [previewBuyerName, setPreviewBuyerName] = useState("")
   const [previewAssignedTables, setPreviewAssignedTables] = useState<string[]>([])
   const [previewTestEmail, setPreviewTestEmail] = useState("")
+  const [sendingSingle, setSendingSingle] = useState(false)
   const [broadcastPreviewTestEmail, setBroadcastPreviewTestEmail] = useState("")
   const [tableAssignmentTestSending, setTableAssignmentTestSending] = useState(false)
   const [broadcastTestSending, setBroadcastTestSending] = useState(false)
@@ -188,6 +190,7 @@ export default function BroadcastPage() {
         setPreviewOpen(false)
       } else if (result.html) {
         setPreviewHtml(result.html)
+        setPreviewOrderId(order.id)
         setPreviewBuyerName(order.overrideBuyerName ?? order.buyerName)
         setPreviewAssignedTables(tables)
       }
@@ -513,6 +516,29 @@ export default function BroadcastPage() {
                     Mobile
                   </Button>
                 </div>
+                {previewOrderId && (
+                  <Button
+                    type="button"
+                    className="h-8 px-3 text-xs"
+                    disabled={sendingSingle}
+                    onClick={async () => {
+                      if (!previewOrderId) return
+                      setSendingSingle(true)
+                      try {
+                        const result = await sendTableAssignmentEmailForBooking(previewOrderId)
+                        if (result.error) {
+                          toast({ title: "Send failed", description: result.error, variant: "destructive" })
+                        } else {
+                          toast({ title: "Sent", description: `Table assignment email sent to ${result.email}` })
+                        }
+                      } finally {
+                        setSendingSingle(false)
+                      }
+                    }}
+                  >
+                    {sendingSingle ? "Sending…" : "Send"}
+                  </Button>
+                )}
                 <div className="flex items-center gap-2 flex-1 min-w-[200px]">
                   <Label htmlFor="preview-test-email" className="text-xs whitespace-nowrap text-slate-600">Send test to</Label>
                   <Input
