@@ -559,11 +559,33 @@ export async function getTableAssignmentEmail(
                 </tr>
               </table>
 
+              <p style="margin: 0 0 24px 0; font-size: 16px; color: #1e293b; line-height: 1.6;">We look forward to seeing you at 6:30pm.</p>
+
               <p style="margin: 0 0 24px 0; font-size: 16px; color: #1e293b; line-height: 1.6;">You have been assigned the following tables:</p>
               <!-- Large table numbers -->
               <div style="margin: 0 0 32px 0; text-align: center;">
                 ${tableNumbersHtml || `<span style="font-size: 18px; color: #64748b;">No table numbers entered.</span>`}
               </div>
+
+              <!-- Table seating card -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f8fafc; border-radius: 12px; padding: 24px; margin: 0 0 32px 0; border: 1px solid #e2e8f0;">
+                <tr>
+                  <td>
+                    <p style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600; color: #1e293b;">Table seating</p>
+                    <p style="margin: 0 0 16px 0; font-size: 15px; color: #475569; line-height: 1.5;">View the table layout to find your seat:</p>
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0;">
+                      <tr>
+                        <td style="padding: 0 12px 8px 0; vertical-align: top;">
+                          <a href="https://acsoba.org/wp-content/uploads/2026/02/140FDD-Table-Map-by-Cohort.png" style="display: inline-block; background-color: #1e293b; color: #ffffff !important; text-decoration: none; padding: 12px 20px; border-radius: 8px; font-size: 14px; font-weight: 600;">Table Map by Cohort</a>
+                        </td>
+                        <td style="padding: 0 0 8px 0; vertical-align: top;">
+                          <a href="https://acsoba.org/wp-content/uploads/2026/02/140FDD-Table-Map-by-Numbers.png" style="display: inline-block; background-color: #1e293b; color: #ffffff !important; text-decoration: none; padding: 12px 20px; border-radius: 8px; font-size: 14px; font-weight: 600;">Table Map by Number</a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
 
               <p style="margin: 0 0 24px 0; font-size: 14px; color: #64748b; line-height: 1.6;">If you have any questions, please contact our support team at admin@acsoba.org.</p>
 
