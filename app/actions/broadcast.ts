@@ -114,14 +114,14 @@ export async function sendTableAssignmentEmails(): Promise<
 
     const results: { email: string; success: boolean; error?: string }[] = []
     for (const b of bookings) {
-      const email = b.buyer?.email
+      const email = b.broadcastOverrideEmail ?? b.buyer?.email ?? null
       if (!email) {
-        results.push({ email: "(no email)", success: false, error: "Buyer has no email" })
+        results.push({ email: "(no email)", success: false, error: "No email (buyer or override)" })
         continue
       }
       const raw = b.assignedTableNumbers as string[] | null
       const assignedTables = Array.isArray(raw) ? raw : []
-      const buyerName = b.buyer?.name ?? "Guest"
+      const buyerName = b.broadcastOverrideName ?? b.buyer?.name ?? "Guest"
       try {
         const html = await getTableAssignmentEmail(buyerName, assignedTables)
         const { html: htmlWithCid, attachments } = await prepareInlineImages(html, getTableAssignmentImageUrls())

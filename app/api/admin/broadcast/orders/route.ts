@@ -27,6 +27,8 @@ export async function GET() {
         quantity: b.quantity,
         buyerName: b.buyer.name,
         buyerEmail: b.buyer.email ?? null,
+        overrideBuyerName: b.broadcastOverrideName ?? null,
+        overrideBuyerEmail: b.broadcastOverrideEmail ?? null,
         assignedTableNumbers,
       }
     })
@@ -49,20 +51,32 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { bookingId, assignedTableNumbers } = body as {
+    const {
+      bookingId,
+      assignedTableNumbers,
+      overrideBuyerName,
+      overrideBuyerEmail,
+    } = body as {
       bookingId: string
-      assignedTableNumbers: string[]
+      assignedTableNumbers?: string[]
+      overrideBuyerName?: string | null
+      overrideBuyerEmail?: string | null
     }
-    if (!bookingId || !Array.isArray(assignedTableNumbers)) {
-      return NextResponse.json(
-        { error: "bookingId and assignedTableNumbers (array) required" },
-        { status: 400 }
-      )
+    if (!bookingId) {
+      return NextResponse.json({ error: "bookingId required" }, { status: 400 })
+    }
+
+    const data: { assignedTableNumbers?: string[]; broadcastOverrideName?: string | null; broadcastOverrideEmail?: string | null } = {}
+    if (Array.isArray(assignedTableNumbers)) data.assignedTableNumbers = assignedTableNumbers
+    if (overrideBuyerName !== undefined) data.broadcastOverrideName = overrideBuyerName || null
+    if (overrideBuyerEmail !== undefined) data.broadcastOverrideEmail = overrideBuyerEmail || null
+    if (Object.keys(data).length === 0) {
+      return NextResponse.json({ error: "No updatable fields provided" }, { status: 400 })
     }
 
     await prisma.booking.update({
       where: { id: bookingId },
-      data: { assignedTableNumbers },
+      data,
     })
     return NextResponse.json({ ok: true })
   } catch (error) {

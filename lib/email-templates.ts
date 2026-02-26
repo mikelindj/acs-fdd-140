@@ -14,7 +14,7 @@ export async function getBookingConfirmationEmail(buyerName: string, bookingDeta
 }): Promise<string> {
   const { getEventSettings } = await import("@/lib/event-settings")
   const eventSettings = await getEventSettings()
-  const eventName = eventSettings.eventName || "ACS Founders' Day Dinner"
+  const eventName = eventSettings.eventName || "ACS Founder's Day Dinner"
   const baseUrl = getEmailBaseUrl()
   const logoUrl = `${baseUrl}/images/acs-140-logo.jpg`
   const footerLogoUrl = `${baseUrl}/images/acs-logo.png`
@@ -137,7 +137,7 @@ export async function getBookingConfirmationEmail(buyerName: string, bookingDeta
 export async function getInviteEmail(inviteCode: string, buyerName: string, guestName: string): Promise<string> {
   const { getEventSettings } = await import("@/lib/event-settings")
   const eventSettings = await getEventSettings()
-  const eventName = eventSettings.eventName || "ACS Founders' Day Dinner"
+  const eventName = eventSettings.eventName || "ACS Founder's Day Dinner"
 const baseUrl = getEmailBaseUrl()
   const logoUrl = `${baseUrl}/images/acs-140-logo.jpg`
   const footerLogoUrl = `${baseUrl}/images/acs-logo.png`
@@ -246,7 +246,7 @@ export async function getPurchaseConfirmationEmail(
 ): Promise<string> {
   const { getEventSettings } = await import("@/lib/event-settings")
   const eventSettings = await getEventSettings()
-  const eventName = eventSettings.eventName || "ACS Founders' Day Dinner"
+  const eventName = eventSettings.eventName || "ACS Founder's Day Dinner"
   const baseUrl = getEmailBaseUrl()
   const logoUrl = `${baseUrl}/images/acs-140-logo.jpg`
   const footerLogoUrl = `${baseUrl}/images/acs-logo.png`
@@ -474,7 +474,7 @@ export async function getTableAssignmentEmail(
 ): Promise<string> {
   const { getEventSettings } = await import("@/lib/event-settings")
   const eventSettings = await getEventSettings()
-  const eventName = eventSettings.eventName || "ACS Founders' Day Dinner"
+  const eventName = eventSettings.eventName || "ACS Founder's Day Dinner"
   const baseUrl = getEmailBaseUrl()
   const logoUrl = `${baseUrl}/images/acs-140-logo.jpg`
   const footerLogoUrl = `${baseUrl}/images/acs-logo.png`
@@ -691,7 +691,7 @@ export async function getBroadcastEmail(subject: string, content: string): Promi
               <div style="font-size: 16px; color: #1e293b; line-height: 1.6;">
                 ${content}
               </div>
-              <p style="margin: 30px 0 0 0; font-size: 14px; color: #64748b; line-height: 1.6;">This is an automated message from the ACS Founders' Day Dinner team.</p>
+              <p style="margin: 30px 0 0 0; font-size: 14px; color: #64748b; line-height: 1.6;">This is an automated message from the ACS Founder's Day Dinner team.</p>
             </td>
           </tr>
 

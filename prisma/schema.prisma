@@ -78,6 +78,8 @@ model Booking {
   gradYear        Int?
   cuisine         String?         // Chinese, Chinese-Vegetarian, or Halal
   assignedTableNumbers Json?       // string[] e.g. ["1", "2", "3"] for table assignment emails
+  broadcastOverrideName  String?  // override buyer name for broadcast/table assignment emails
+  broadcastOverrideEmail String? // override email for table assignment send
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
   buyer           Guest           @relation("GuestBookings", fields: [buyerId], references: [id])

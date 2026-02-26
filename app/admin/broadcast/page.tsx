@@ -32,6 +32,8 @@ type Order = {
   quantity: number
   buyerName: string
   buyerEmail: string | null
+  overrideBuyerName: string | null
+  overrideBuyerEmail: string | null
   assignedTableNumbers: string[]
 }
 
@@ -46,6 +48,7 @@ export default function BroadcastPage() {
   const [previewLoading, setPreviewLoading] = useState(false)
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop")
   const [savingId, setSavingId] = useState<string | null>(null)
+  const [savingOverrideId, setSavingOverrideId] = useState<string | null>(null)
   const [sendingTableAssignment, setSendingTableAssignment] = useState(false)
   const [broadcastPreviewOpen, setBroadcastPreviewOpen] = useState(false)
   const [broadcastPreviewHtml, setBroadcastPreviewHtml] = useState<string | null>(null)
@@ -144,19 +147,48 @@ export default function BroadcastPage() {
     }
   }
 
+  const setOverride = (bookingId: string, field: "overrideBuyerName" | "overrideBuyerEmail", value: string) => {
+    setOrders((prev) =>
+      prev.map((o) => (o.id === bookingId ? { ...o, [field]: value === "" ? null : value } : o))
+    )
+  }
+
+  const saveOverrides = async (bookingId: string) => {
+    const order = orders.find((o) => o.id === bookingId)
+    if (!order) return
+    setSavingOverrideId(bookingId)
+    try {
+      const res = await fetch("/api/admin/broadcast/orders", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bookingId,
+          overrideBuyerName: order.overrideBuyerName ?? null,
+          overrideBuyerEmail: order.overrideBuyerEmail ?? null,
+        }),
+      })
+      if (!res.ok) throw new Error("Failed to save")
+    } catch {
+      toast({ title: "Error", description: "Failed to save name/email overrides", variant: "destructive" })
+    } finally {
+      setSavingOverrideId(null)
+    }
+  }
+
   const handlePreview = async (order: Order) => {
     const tables = assignments[order.id] ?? Array.from({ length: order.quantity }, () => "")
+    const displayName = order.overrideBuyerName ?? order.buyerName
     setPreviewLoading(true)
     setPreviewHtml(null)
     setPreviewOpen(true)
     try {
-      const result = await getTableAssignmentPreview(order.buyerName, tables)
+      const result = await getTableAssignmentPreview(displayName, tables)
       if (result.error) {
         toast({ title: "Preview failed", description: result.error, variant: "destructive" })
         setPreviewOpen(false)
       } else if (result.html) {
         setPreviewHtml(result.html)
-        setPreviewBuyerName(order.buyerName)
+        setPreviewBuyerName(order.overrideBuyerName ?? order.buyerName)
         setPreviewAssignedTables(tables)
       }
     } catch {
@@ -292,8 +324,33 @@ export default function BroadcastPage() {
                     {orders.map((order) => (
                       <tr key={order.id} className="border-b border-slate-100 hover:bg-slate-50/50">
                         <td className="py-3 px-4 text-slate-900">{order.id.slice(-8)}</td>
-                        <td className="py-3 px-4 text-slate-900">{order.buyerName}</td>
-                        <td className="py-3 px-4 text-slate-600">{order.buyerEmail ?? "—"}</td>
+                        <td className="py-3 px-4">
+                          <Input
+                            type="text"
+                            className="h-8 text-sm min-w-[120px]"
+                            placeholder={order.buyerName}
+                            value={order.overrideBuyerName != null ? order.overrideBuyerName : order.buyerName}
+                            onChange={(e) => setOverride(order.id, "overrideBuyerName", e.target.value)}
+                            onBlur={() => saveOverrides(order.id)}
+                          />
+                          {(order.overrideBuyerName != null && order.overrideBuyerName !== order.buyerName) && (
+                            <span className="text-xs text-amber-600 ml-1">override</span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4">
+                          <Input
+                            type="email"
+                            className="h-8 text-sm min-w-[180px]"
+                            placeholder={order.buyerEmail ?? "—"}
+                            value={order.overrideBuyerEmail != null ? order.overrideBuyerEmail : order.buyerEmail ?? ""}
+                            onChange={(e) => setOverride(order.id, "overrideBuyerEmail", e.target.value)}
+                            onBlur={() => saveOverrides(order.id)}
+                          />
+                          {savingOverrideId === order.id && <span className="text-xs text-slate-500 ml-1">Saving...</span>}
+                          {(order.overrideBuyerEmail != null && order.overrideBuyerEmail !== (order.buyerEmail ?? "")) && (
+                            <span className="text-xs text-amber-600 ml-1">override</span>
+                          )}
+                        </td>
                         <td className="py-3 px-4 text-slate-600">{order.type}</td>
                         <td className="py-3 px-4 text-slate-600">{order.quantity}</td>
                         <td className="py-3 px-4">
