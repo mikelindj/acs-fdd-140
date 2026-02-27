@@ -12,8 +12,7 @@ function getTableAssignmentImageUrls(): { url: string; cid: string; filename: st
     { url: `${base}/images/acs-140-logo.jpg`, cid: "acs140logo", filename: "acs-140-logo.jpg" },
     { url: `${base}/images/acs-logo.png`, cid: "acslogo", filename: "acs-logo.png" },
     { url: `${base}/images/wavy-pattern.jpg`, cid: "wavypattern", filename: "wavy-pattern.jpg" },
-    { url: "https://acsoba.org/wp-content/uploads/2026/01/140polo-4.png", cid: "polotee", filename: "140polo-4.png" },
-  ]
+    { url: "https://acsoba.org/wp-content/uploads/2026/01/140polo-4.png", cid: "polotee", filename: "140polo-4.png" }  ]
 }
 
 function getBroadcastImageUrls(): { url: string; cid: string; filename: string }[] {
